@@ -257,6 +257,16 @@ rep("    const placed = [], isFront = i => D[i].dot(camDir) >= -0.05;", '''    c
 
 rep("  .d-media { min-height: auto; }", "  .d-media { min-height: auto; overflow: visible; }")
 
+# ---------- one-off topics: background flair (label + lines), not clickable, not in Filter ----------
+rep("    tagPairs.forEach(q => { q.w = w[q.i][q.j]; q.keep = q.w >= 1 && counts[q.i] >= MIN_SHARED && counts[q.j] >= MIN_SHARED; });",
+    "    tagPairs.forEach(q => { q.w = w[q.i][q.j]; q.keep = q.w >= 1; });")
+rep("      labelEls[i].innerHTML = `${esc(t.name)}<small>${counts[i]}</small>`;", '''      const solo = counts[i] < MIN_SHARED;
+      labelEls[i].innerHTML = solo ? esc(t.name) : `${esc(t.name)}<small>${counts[i]}</small>`;
+      labelEls[i].classList.toggle('solo', solo); labelEls[i].disabled = solo; labelEls[i].setAttribute('aria-hidden', String(solo));''')
+rep("      el.dataset.base = inFocus || counts[i] < MIN_SHARED ? 0 :", "      el.dataset.base = inFocus ? 0 : counts[i] < MIN_SHARED ? (h ? 0.12 : 0.5) :")
+rep("      if (op >= 0.2) labelHits.push(", "      if (op >= 0.2 && counts[i] >= MIN_SHARED) labelHits.push(")
+rep(".tag-label.on { color: var(--link); }", ".tag-label.on { color: var(--link); }\n.tag-label.solo { color: var(--muted); font-size: 14px; cursor: default; }\n.tag-label.solo::before { width: 3px; height: 3px; }")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)

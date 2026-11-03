@@ -36,6 +36,8 @@ body { background: var(--bg); color: var(--ink); font-family: var(--sans); overf
 .tag-label::before { content: ""; width: 5px; height: 5px; background: currentColor; }
 .tag-label small { font-size: 12px; color: var(--muted); }
 .tag-label.on { color: var(--link); }
+.tag-label.solo { color: var(--muted); font-size: 14px; cursor: default; }
+.tag-label.solo::before { width: 3px; height: 3px; }
 .tag-label:focus-visible { outline: 1px solid var(--link); }
 
 .ui { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
@@ -442,11 +444,13 @@ fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(C
       for (const a of f.ti) for (const b of f.ti) if (a < b) w[a][b]++;
     });
     const maxW = Math.max(1, ...tagPairs.map(q => w[q.i][q.j]));
-    tagPairs.forEach(q => { q.w = w[q.i][q.j]; q.keep = q.w >= 1 && counts[q.i] >= MIN_SHARED && counts[q.j] >= MIN_SHARED; });
+    tagPairs.forEach(q => { q.w = w[q.i][q.j]; q.keep = q.w >= 1; });
     document.getElementById('status').textContent = [CONTENT.role, `${frames.length} projects`].filter(Boolean).join(' · ');
     tagList.forEach((t, i) => {
       chipEls[t.name].innerHTML = `${esc(t.name)}<span>${counts[i]}</span>`; chipEls[t.name].hidden = counts[i] < MIN_SHARED;
-      labelEls[i].innerHTML = `${esc(t.name)}<small>${counts[i]}</small>`;
+      const solo = counts[i] < MIN_SHARED;
+      labelEls[i].innerHTML = solo ? esc(t.name) : `${esc(t.name)}<small>${counts[i]}</small>`;
+      labelEls[i].classList.toggle('solo', solo); labelEls[i].disabled = solo; labelEls[i].setAttribute('aria-hidden', String(solo));
     });
     measureLabels();
     if (view === 'focus') { layoutFocus(); retarget(() => 0); }
@@ -480,7 +484,7 @@ fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(C
     labelEls.forEach((el, i) => {
       el.classList.toggle('on', h && h.tag === i);
       const linked = h && tagPairs.some(q => q.keep && ((q.i === h.tag && q.j === i) || (q.j === h.tag && q.i === i)));
-      el.dataset.base = inFocus || counts[i] < MIN_SHARED ? 0 : (!h || h.tag === i || linked) ? 1 : 0.25;
+      el.dataset.base = inFocus ? 0 : counts[i] < MIN_SHARED ? (h ? 0.12 : 0.5) : (!h || h.tag === i || linked) ? 1 : 0.25;
     });
   }
   function setHl(key) { if (view !== 'globe') return; hl = key; paint(); }
@@ -793,7 +797,7 @@ fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(C
         else if (front) placed.push(r);
       }
       el.style.opacity = op;
-      if (op >= 0.2) labelHits.push([i, x - sz[0] / 2, y - sz[1] / 2, x + sz[0] / 2, y + sz[1] / 2]);
+      if (op >= 0.2 && counts[i] >= MIN_SHARED) labelHits.push([i, x - sz[0] / 2, y - sz[1] / 2, x + sz[0] / 2, y + sz[1] / 2]);
     });
 
     { // project titles under the tiles while a topic is open

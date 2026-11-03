@@ -26,11 +26,19 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   check(t0.length === content.projects.length && t0.every(t => !t.img), `${name}: globe shows ${content.projects.length} plain squares, no images`, t0.length);
   const buttons = await p.evaluate(() => [...document.querySelectorAll('.m-bar button')].filter(b => !b.hidden).map(b => b.textContent));
   check(JSON.stringify(buttons) === '["Filter","About","CV"]', `${name}: menu is Filter, About, CV`, buttons);
-  const single = await p.evaluate(() => ({
-    labels: [...document.querySelectorAll('.tag-label')].filter(e => +getComputedStyle(e).opacity > 0.05 && e.querySelector('small').textContent === '1').map(e => e.firstChild.textContent),
+  // one-off topics: quiet background labels (no count, can't be tapped); only shared topics are chips and open a view
+  await sleep(500);
+  const lab = await p.evaluate(() => ({
+    solo: [...document.querySelectorAll('.tag-label.solo')].filter(e => +getComputedStyle(e).opacity > 0.3).map(e => ({ t: e.textContent, r: e.getBoundingClientRect().toJSON() })),
+    soloWithCount: [...document.querySelectorAll('.tag-label.solo small')].length,
+    shared: [...document.querySelectorAll('.tag-label:not(.solo)')].filter(e => +getComputedStyle(e).opacity > 0.3).map(e => e.firstChild.textContent),
     chips: [...document.querySelectorAll('.m-panel .chip')].filter(e => !e.hidden && e.querySelector('span')?.textContent === '1').map(e => e.firstChild.textContent) }));
-  check(!single.labels.length && !single.chips.length, `${name}: only topics shared by 2+ projects show`, single);
-
+  check(lab.solo.length > 0 && !lab.soloWithCount && !lab.chips.length, `${name}: one-off topics show as background labels, not in Filter`, { solo: lab.solo.map(x => x.t), chips: lab.chips });
+  const so = lab.solo[0].r;
+  if (opts.hasTouch) await p.touchscreen.tap(so.x + so.width / 2, so.y + so.height / 2); else await p.mouse.click(so.x + so.width / 2, so.y + so.height / 2);
+  await sleep(900);
+  check(await p.evaluate(() => document.body.dataset.view) === 'globe', `${name}: tapping a one-off label opens nothing`, lab.solo[0].t);
+  await p.keyboard.press('Escape'); await sleep(400);
   await tap(p.locator('.m-bar [data-sec=topics]')); await sleep(600); await p.screenshot({ path: `${OUT}/${name}-2-filter.png` });
   await tap(p.locator('.chip', { hasText: /^website/ }).first()); await sleep(2400);
   const expect = content.projects.filter(x => x.tags.includes('website')).length;

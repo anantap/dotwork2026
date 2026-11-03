@@ -30,7 +30,8 @@ A project looks like this:
 
 - `images`: the first one is the tile in a topic view; all of them show, stacked, when the project opens. Use JPGs of
   about 1200–1600px wide.
-- `tags`: the topics. A topic appears on the globe and in Filter once two or more projects share it, so reuse the
+- `tags`: the topics. Every topic shows on the globe; one used by a single project is a quiet grey label for texture.
+  A topic becomes clickable and appears in Filter once two or more projects share it, so reuse the
   same words across projects ("website", not "web site" in one and "website" in another).
 - `years` and `link` are optional.
 - `name`, `role`, `intro`, `photo`, `links` and `cv` at the top fill the title, About and CV.
