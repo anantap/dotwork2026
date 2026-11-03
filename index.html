@@ -30,7 +30,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--sans); overf
 #stage canvas { display: block; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 #labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
 
-.tag-label { position: absolute; left: 0; top: 0; white-space: nowrap; pointer-events: auto; cursor: pointer; background: none; border: 0; padding: 2px 4px;
+.tag-label { position: absolute; left: 0; top: 0; white-space: nowrap; pointer-events: none; cursor: pointer; background: none; border: 0; padding: 2px 4px;
   font: 400 16px var(--pixel); color: var(--ink); letter-spacing: .02em; transition: opacity .25s, color .2s; display: flex; align-items: center; gap: 6px; }
 .tag-label::before { content: ""; width: 5px; height: 5px; background: currentColor; }
 .tag-label small { font-size: 12px; color: var(--muted); }
@@ -41,14 +41,14 @@ body { background: var(--bg); color: var(--ink); font-family: var(--sans); overf
   padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
   padding-block: max(28px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-bottom, 0px)); }
 .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-.top > *, .bottom > * { pointer-events: auto; }
-.lead { position: relative; max-width: 440px; }
-.head, .tags { transition: opacity .35s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
+.lead { position: relative; max-width: 440px; } /* the title never blocks a drag on the globe; only the tag-view header takes clicks */
+.head { transition: opacity .35s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
 h1 { margin: 0; font: 400 48px/1 var(--pixel); letter-spacing: -0.01em; }
 h1 sup { color: var(--mark); font-size: 24px; margin-left: 2px; }
-.lede { margin: 12px 0 0; font-size: 17px; line-height: 1.35; text-wrap: balance; }
-.status { margin-top: 14px; font: 400 16px var(--pixel); color: var(--live); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
-.foot { margin-top: 6px; font-size: 11.5px; color: var(--muted); max-width: 340px; line-height: 1.45; }
+.lede { margin: 0; font-size: 15px; line-height: 1.4; text-wrap: balance; }
+.status { margin-top: 10px; font: 400 16px var(--pixel); color: var(--live); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.foot { margin-top: 8px; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+.hint { margin-top: 8px; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
 .foot b { color: var(--mark); font-weight: 400; }
 
 .focus-head { position: absolute; left: 0; top: 0; width: min(440px, 90vw); opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .4s ease .15s, transform .55s cubic-bezier(.2,.7,.2,1) .15s; }
@@ -60,22 +60,29 @@ body[data-view="globe"] .focus-head { transition-delay: 0s; }
 .fwith { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); }
 .fwith span { margin-right: 4px; }
 
-.tags { width: 236px; max-height: calc(100vh - 150px); overflow-y: auto; display: flex; flex-direction: column; gap: 14px; scrollbar-width: none; }
-.tags::-webkit-scrollbar { display: none; }
-.axis h2 { margin: 0 0 6px; font: 400 13px var(--pixel); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+/* Menu: one row of small buttons at the bottom; each opens its panel just above the row */
+.menu { position: relative; width: min(560px, 100%); margin-inline: auto; display: flex; justify-content: center; }
+.m-bar { pointer-events: auto; display: flex; gap: 2px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.m-bar button { font: 400 12px var(--sans); color: var(--ink); background: transparent; border: 0; border-radius: 999px; padding: 6px 11px; cursor: pointer; white-space: nowrap; transition: background-color .2s, color .2s; }
+.m-bar button[aria-expanded="true"] { background: var(--ink); color: var(--bg); }
+.m-panel { position: absolute; left: 0; right: 0; bottom: calc(100% + 8px); box-sizing: border-box; padding: 14px; border: 1px solid var(--line); border-radius: 16px;
+  background: rgba(0,0,0,.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); max-height: 50vh; overflow-y: auto; scrollbar-width: none;
+  opacity: 0; transform: translateY(8px); visibility: hidden; pointer-events: auto; transition: opacity .25s ease, transform .4s cubic-bezier(.2,.7,.2,1), visibility 0s linear .4s; }
+.m-panel::-webkit-scrollbar { display: none; }
+.menu.open .m-panel { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
+.m-panel section[hidden] { display: none; }
+.m-panel .toggle { margin-top: 12px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
 .chip { font: 400 12px var(--sans); border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 3px 9px; cursor: pointer; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .chip span { color: var(--muted); margin-left: 3px; }
 .toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; }
 .toggle input { accent-color: var(--ink); }
 button:focus-visible, input:focus-visible { outline: 1px solid var(--link); outline-offset: 2px; }
 
-body[data-view="focus"] .head, body[data-view="focus"] .tags { opacity: 0; pointer-events: none; }
-body[data-view="focus"] .head { transform: translateY(-10px); }
-body[data-view="focus"] .tags { transform: translateX(14px); }
+body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 
-.bottom { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
-.scrub { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 16px 4px 4px; width: min(560px, 100%); background: rgba(0,0,0,.6); }
+.bottom { display: flex; justify-content: center; }
+.scrub { display: flex; align-items: center; gap: 12px; }
 .play { width: 32px; height: 32px; flex: none; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; display: grid; place-items: center; }
 .track { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding-top: 4px; }
 .track input { width: 100%; margin: 0; accent-color: var(--ink); height: 14px; }
@@ -119,10 +126,11 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
 .d-rel button { padding: 0; border: 0; background: #111; cursor: pointer; aspect-ratio: 1; overflow: hidden; border-radius: 2px; }
 .d-rel img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .2s; }
 
-/* Short landscape screens (phones on their side): the paragraphs covered most of the globe */
+/* Short landscape screens (phones on their side) */
 @media (max-height: 500px) and (orientation: landscape) {
-  .lede, .foot { display: none; }
-  .status { margin-top: 8px; }
+  h1 { font-size: 28px; }
+  .status { margin-top: 6px; font-size: 14px; }
+  .m-panel { max-height: calc(100vh - 110px); }
 }
 
 /* Hover styles only where there is a real hover: on touch they stuck on after a tap */
@@ -134,13 +142,10 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
 
 @media (max-width: 760px) {
   .ui { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: max(18px, env(safe-area-inset-top, 0px)); }
-  .top { flex-direction: column; gap: 12px; }
   h1 { font-size: 34px; }
-  .lede { font-size: 15px; }
+  .status { font-size: 14px; }
   .ftitle { font-size: 40px; }
-  .tags { width: auto; max-height: none; flex-direction: row; overflow-x: auto; gap: 16px; padding-bottom: 2px; align-self: stretch; } /* stretch: otherwise the row grows to its content width and never scrolls */
-  .axis, .toggle { flex: none; }
-  .chips { flex-wrap: nowrap; }
+  .m-bar button { padding: 6px 9px; }
   .months span:nth-child(even) { visibility: hidden; }
   #detail { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 20px; overflow-y: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .d-media { min-height: auto; } /* keep the row as tall as the photo; min-height: 0 let it shrink so the photo spilled over the caption */
@@ -156,9 +161,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     <div class="lead">
       <header class="head">
         <h1>Roll a Month<sup>*</sup></h1>
-        <p class="lede">A map of what I keep pointing the camera at, one roll per month in 2027.</p>
         <div class="status" id="status">0 frames</div>
-        <div class="foot"><b>*</b> January holds 11 real test scans. February to December are sample frames with made-up tags.</div>
       </header>
       <div class="focus-head" id="focusHead">
         <button type="button" class="back" id="back">← Globe</button>
@@ -167,16 +170,34 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
         <div class="fwith" id="fWith"></div>
       </div>
     </div>
-    <aside class="tags" id="tagPanel" aria-label="Tags"></aside>
   </div>
   <div class="bottom">
-    <div class="scrub">
-      <button class="play" id="play" aria-label="Replay the year"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg></button>
-      <div class="track">
-        <input id="month" type="range" min="1" max="12" value="12" aria-label="Show rolls up to month">
-        <div class="months" id="months"></div>
+    <nav class="menu" id="menu" aria-label="Browse">
+      <div class="m-panel" id="mPanel">
+        <section data-sec="time" aria-label="Time" hidden>
+          <div class="scrub">
+            <button class="play" id="play" aria-label="Replay the year"><svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg></button>
+            <div class="track">
+              <input id="month" type="range" min="1" max="12" value="12" aria-label="Show rolls up to month">
+              <div class="months" id="months"></div>
+            </div>
+          </div>
+        </section>
+        <section data-sec="about" aria-label="About" hidden>
+          <p class="lede">A map of what I keep pointing the camera at, one roll per month in 2027.</p>
+          <div class="foot"><b>*</b> January holds 11 real test scans. February to December are sample frames with made-up tags.</div>
+          <div class="hint">Drag to turn the globe, pinch or scroll to zoom. Click or tap a frame to open it; on a phone, hold a finger on one to preview it.</div>
+        </section>
       </div>
-    </div>
+      <div class="m-bar" id="mBar">
+        <button type="button" data-sec="subject" aria-expanded="false" aria-controls="mPanel">Subject</button>
+        <button type="button" data-sec="light" aria-expanded="false" aria-controls="mPanel">Light</button>
+        <button type="button" data-sec="distance" aria-expanded="false" aria-controls="mPanel">Distance</button>
+        <button type="button" data-sec="mood" aria-expanded="false" aria-controls="mPanel">Mood</button>
+        <button type="button" data-sec="time" aria-expanded="false" aria-controls="mPanel">Time</button>
+        <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel">About</button>
+      </div>
+    </nav>
   </div>
 </div>
 <div id="tip"></div>
@@ -196,14 +217,13 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 (() => {
   // Without three.js or WebGL there is no map: say so where the frame count goes, and drop the controls that need it
   const cantDraw = msg => {
     document.body.dataset.view = 'globe';
     document.getElementById('status').textContent = msg;
-    for (const sel of ['#tagPanel', '.scrub']) document.querySelector(sel).style.display = 'none';
+    document.getElementById('menu').style.display = 'none';
   };
   if (!window.THREE) return cantDraw('The map didn’t load. Check your connection and reload.');
   const probe = document.createElement('canvas');
@@ -297,11 +317,42 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   scene.fog = new THREE.Fog(0x000000, 40, 64);
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 300);
   camera.position.set(0, 10, 58);
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true; controls.dampingFactor = 0.07; controls.enablePan = false;
-  controls.autoRotate = !reduced; controls.autoRotateSpeed = 0.3;
-  controls.minDistance = 18; controls.maxDistance = 110;
-  controls.addEventListener('start', () => { controls.autoRotate = false; });
+  // Free orbit: a drag turns the globe any way, over the poles too. (OrbitControls stopped dead at the poles, and once
+  // there a sideways drag only spun the view in place.) Same feel as before: a screen height of drag is a full turn,
+  // inertia, a slow spin until you first touch it, pinch and wheel zoom.
+  const controls = (() => {
+    const el = renderer.domElement, ptrs = new Map(), DAMP = 0.07, q = new THREE.Quaternion(), right = new THREE.Vector3(), fwd = new THREE.Vector3();
+    const c = { enabled: true, autoRotate: !reduced, minDistance: 18, maxDistance: 110 };
+    let rx = 0, ry = 0, pinchFrom = 0, pinchDist = 0;
+    const zoomTo = d => camera.position.setLength(Math.max(c.minDistance, Math.min(c.maxDistance, d)));
+    const pinchGap = () => { const [a, b] = [...ptrs.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]); };
+    el.addEventListener('pointerdown', e => {
+      if (!c.enabled) return;
+      el.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); c.autoRotate = false;
+      if (ptrs.size === 2) { pinchFrom = pinchGap(); pinchDist = camera.position.length(); }
+    });
+    el.addEventListener('pointermove', e => {
+      const prev = ptrs.get(e.pointerId); if (!prev) return;
+      ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+      if (!c.enabled) return;
+      if (ptrs.size === 1) { rx += 2 * Math.PI * (e.clientX - prev[0]) / el.clientHeight; ry += 2 * Math.PI * (e.clientY - prev[1]) / el.clientHeight; }
+      else if (ptrs.size === 2 && pinchFrom) zoomTo(pinchDist * pinchFrom / Math.max(1, pinchGap()));
+    });
+    const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinchFrom = 0; };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    el.addEventListener('wheel', e => { if (!c.enabled) return; e.preventDefault(); c.autoRotate = false; zoomTo(camera.position.length() * Math.pow(0.95, -Math.sign(e.deltaY))); }, { passive: false });
+    c.update = () => {
+      if (c.autoRotate) rx += 2 * Math.PI / 3600 * 0.3;
+      const sx = rx * DAMP, sy = ry * DAMP; rx -= sx; ry -= sy;
+      // drag right: the camera swings left round its own up axis; drag down: it swings up round its right axis
+      q.setFromAxisAngle(camera.up, -sx); camera.position.applyQuaternion(q);
+      fwd.copy(camera.position).negate().normalize(); right.crossVectors(fwd, camera.up).normalize();
+      q.setFromAxisAngle(right, -sy); camera.position.applyQuaternion(q); camera.up.applyQuaternion(q);
+      fwd.copy(camera.position).normalize(); camera.up.addScaledVector(fwd, -camera.up.dot(fwd)).normalize();
+      camera.lookAt(0, 0, 0);
+    };
+    return c;
+  })();
 
   const cssColor = k => new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue(k).trim());
   const C = { sample: cssColor('--sample'), wire: cssColor('--wire'), link: cssColor('--link'), frame: cssColor('--frame'), ink: cssColor('--ink') };
@@ -388,12 +439,14 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     });
   }
   let camTw = null;
-  function flyTo(to, dur) { camTw = { from: camera.position.clone(), to: to.clone(), t0: performance.now(), dur: reduced ? 0 : dur }; controls.enabled = false; }
+  const WORLD_UP = new THREE.Vector3(0, 1, 0);
+  // Flights also bring the camera's up back to world up, so contact sheets are never tilted after a free spin
+  function flyTo(to, dur) { camTw = { from: camera.position.clone(), to: to.clone(), upFrom: camera.up.clone(), qUp: new THREE.Quaternion().setFromUnitVectors(camera.up.clone().normalize(), WORLD_UP), t0: performance.now(), dur: reduced ? 0 : dur }; controls.enabled = false; }
   const BLACK = new THREE.Color(0, 0, 0), tmpC = new THREE.Color();
   const dim = (c, k) => tmpC.copy(c).multiplyScalar(k);
 
   // Panel, labels
-  const labelsEl = document.getElementById('labels'), panel = document.getElementById('tagPanel');
+  const labelsEl = document.getElementById('labels'), menu = document.getElementById('menu'), mPanel = document.getElementById('mPanel');
   const chipEls = {}, labelEls = [];
   const hoverable = (el, key) => {
     // Mouse only: touch fires emulated mouseenter on tap but never mouseleave, which left a highlight stuck on
@@ -402,20 +455,35 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     el.addEventListener('focus', () => setHl(key)); el.addEventListener('blur', () => setHl(null));
   };
   const addSection = (title, names) => {
-    const sec = document.createElement('section'); sec.className = 'axis';
-    sec.innerHTML = `<h2>${title}</h2><div class="chips"></div>`;
+    const sec = document.createElement('section'); sec.dataset.sec = title; sec.hidden = true; sec.setAttribute('aria-label', title);
+    sec.innerHTML = `<div class="chips"></div>`;
     names.forEach((name, k) => {
       const key = name;
       const b = document.createElement('button'); b.className = 'chip'; b.type = 'button';
       b.addEventListener('click', () => enterFocus(key)); hoverable(b, key);
       sec.querySelector('.chips').appendChild(b); chipEls[key] = b;
     });
-    panel.appendChild(sec);
+    mPanel.insertBefore(sec, mPanel.querySelector('[data-sec="time"]'));
   };
   AXES.forEach(a => addSection(a, TAGS[a]));
   const tg = document.createElement('label'); tg.className = 'toggle';
   tg.innerHTML = '<input type="checkbox" id="showPriv" checked> Count private frames as outlines';
-  panel.appendChild(tg);
+  mPanel.querySelector('[data-sec="about"]').appendChild(tg);
+
+  // Menu: a button opens its panel, the same button (or Esc, or a tap on the globe) closes it
+  let menuSec = null;
+  function setMenu(sec) {
+    const was = menuSec; menuSec = sec;
+    menu.classList.toggle('open', !!sec);
+    menu.querySelectorAll('.m-bar button').forEach(b => b.setAttribute('aria-expanded', String(b.dataset.sec === sec)));
+    if (sec) {
+      mPanel.querySelectorAll('section').forEach(el => { el.hidden = el.dataset.sec !== sec; });
+      if (was && was !== sec && !reduced) mPanel.querySelector(`[data-sec="${sec}"]`).animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: EASE });
+    } else setHl(null);
+    measureUI();
+  }
+  const closeMenu = () => { if (menuSec) setMenu(null); };
+  menu.querySelector('.m-bar').addEventListener('click', e => { const b = e.target.closest('button[data-sec]'); if (b) setMenu(menuSec === b.dataset.sec ? null : b.dataset.sec); });
   tagList.forEach(t => {
     const b = document.createElement('button'); b.className = 'tag-label'; b.type = 'button';
     b.addEventListener('click', () => enterFocus(t.name)); hoverable(b, t.name);
@@ -520,6 +588,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     withEl.innerHTML = near.length ? '<span>Often with</span>' + near.map(t => `<button type="button" class="chip" data-tag="${t}">${t}</button>`).join('') : '';
   }
   function enterFocus(key) {
+    closeMenu();
     hl = null; focus = parseKey(key); view = 'focus';
     document.body.dataset.view = 'focus';
     controls.autoRotate = false;
@@ -645,7 +714,9 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
       else if (e.key === 'ArrowRight') step(1);
       return;
     }
-    if (e.key === 'Escape') exitFocus();
+    if (e.key !== 'Escape') return;
+    if (menuSec) { const b = menu.querySelector(`.m-bar [data-sec="${menuSec}"]`); closeMenu(); if (menu.contains(document.activeElement)) b.focus(); }
+    else exitFocus();
   });
 
   // Hover + click on frames
@@ -665,7 +736,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     else if (pressT && downXY && Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) > 5) { clearTimeout(pressT); pressT = null; }
   });
   renderer.domElement.addEventListener('contextmenu', e => { if (pressing) e.preventDefault(); });
-  renderer.domElement.addEventListener('pointerleave', () => { hoverXY = null; tip.style.opacity = 0; renderer.domElement.style.cursor = ''; });
+  renderer.domElement.addEventListener('pointerleave', () => { hoverXY = null; tip.style.opacity = 0; renderer.domElement.style.cursor = ''; hoverLabel(null); });
   const pickable = () => frames.filter(f => f.grow > 0.5 && (view === 'globe' || f.inF) && f.opT > 0.1).map(f => f.obj);
   // slop: for fingers, frames on the globe are only a few pixels across, so a near miss takes the closest frame facing us
   function hitAt(x, y, slop = 0) {
@@ -701,10 +772,13 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     if (!downXY || e.pointerId !== downId || e.target !== renderer.domElement) { downXY = null; return; }
     const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]); downXY = null;
     if (moved > 5) return;
-    const f = hitAt(e.clientX, e.clientY, e.pointerType === 'mouse' ? 0 : SLOP);
-    if (!f && view !== 'focus') return;
+    const li = view === 'globe' ? labelAt(e.clientX, e.clientY) : -1;
+    if (li >= 0) { if (e.pointerType !== 'mouse') swallowClickUntil = performance.now() + 700; hoverLabel(null); enterFocus(tagList[li].name); return; }
+    const f = hitAt(e.clientX, e.clientY, e.pointerType === 'mouse' ? 0 : SLOP), hadMenu = !!menuSec;
+    closeMenu();
+    if (!f && (view !== 'focus' || hadMenu)) return; // a tap beside the frames closes the menu before it leaves the tag view
     // On touch the browser fires a click after this pointerup at the same spot. By then the light box
-    // (or the tag panel) is under the finger, so that click would close it again or pick a chip.
+    // (or the fading menu) is under the finger, so that click would close it again or pick a chip.
     if (e.pointerType !== 'mouse') swallowClickUntil = performance.now() + 700;
     if (f) openDetail(f); else exitFocus();
   }, true);
@@ -712,9 +786,17 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   addEventListener('click', e => {
     if (performance.now() < swallowClickUntil) { swallowClickUntil = 0; e.stopPropagation(); e.preventDefault(); }
   }, true);
-  let tipFrame = null;
+  // Tag labels let drags through to the globe (as buttons they were dead spots for spinning), so the canvas
+  // finds them itself: hover highlights, a tap or click opens the tag. Keyboard focus and Enter still work on the buttons.
+  const labelHits = [];
+  const labelAt = (x, y) => { for (let k = labelHits.length - 1; k >= 0; k--) { const [i, l, t, r, b] = labelHits[k]; if (x >= l - 4 && x <= r + 4 && y >= t - 4 && y <= b + 4) return i; } return -1; };
+  let tipFrame = null, labelHover = null;
+  function hoverLabel(name) { if (name === labelHover) return; const was = labelHover; labelHover = name; if (name) setHl(name); else if (hl === was) setHl(null); }
   function updateTip() {
     if (!hoverXY || !det.hidden) return;
+    const li = pressing || view !== 'globe' ? -1 : labelAt(hoverXY[0], hoverXY[1]);
+    hoverLabel(li >= 0 ? tagList[li].name : null);
+    if (li >= 0) { renderer.domElement.style.cursor = 'pointer'; tip.style.opacity = 0; return; }
     const f = hitAt(hoverXY[0], hoverXY[1], pressing ? SLOP : 0);
     renderer.domElement.style.cursor = f ? 'pointer' : '';
     if (!f) { tip.style.opacity = 0; return; }
@@ -736,7 +818,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     labelSize = labelEls.map(el => [el.offsetWidth, el.offsetHeight]);
   }
   function measureUI() {
-    uiRects = ['.head', '#tagPanel', '.scrub'].map(sel => document.querySelector(sel).getBoundingClientRect()).filter(r => r.width).map(r => [r.left - 6, r.top - 4, r.right + 6, r.bottom + 4]);
+    uiRects = ['.head', '.m-bar', ...(menuSec ? ['.m-panel'] : [])].map(sel => document.querySelector(sel).getBoundingClientRect()).filter(r => r.width).map(r => [r.left - 6, r.top - 4, r.right + 6, r.bottom + 4]);
   }
   function resize() {
     renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight;
@@ -747,7 +829,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   }
   addEventListener('resize', resize);
   // Re-measure when anything moves the UI or label boxes (resize, Geist arriving late, wrapping)
-  if (window.ResizeObserver) { const ro = new ResizeObserver(measureUI); ['.head', '#tagPanel', '.scrub'].forEach(sel => ro.observe(document.querySelector(sel))); }
+  if (window.ResizeObserver) { const ro = new ResizeObserver(measureUI); ['.head', '.m-bar', '.m-panel'].forEach(sel => ro.observe(document.querySelector(sel))); }
   addEventListener('resize', measureUI);
   document.fonts.addEventListener?.('loadingdone', () => { measureUI(); measureLabels(); });
   document.fonts.ready.then(() => { measureUI(); measureLabels(); });
@@ -760,6 +842,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
       va.copy(camTw.from).normalize(); vb.copy(camTw.to).normalize();
       qa.setFromUnitVectors(va, vb); qi.identity().slerp(qa, e);
       camera.position.copy(va.applyQuaternion(qi)).multiplyScalar(camTw.from.length() + (camTw.to.length() - camTw.from.length()) * e);
+      camera.up.copy(camTw.upFrom).applyQuaternion(qi.identity().slerp(camTw.qUp, e));
       camera.lookAt(0, 0, 0);
       if (e >= 1) { camTw = null; if (view === 'globe') controls.enabled = true; }
     } else if (view === 'globe') controls.update();
@@ -783,6 +866,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     // Tag labels: drop any that would sit on the header, chips or scrubber, run off the screen, or collide with a
     // label already placed (front labels first, then by frame count)
     const placed = [], isFront = i => D[i].dot(camDir) >= -0.05;
+    labelHits.length = 0;
     labelOrder.sort((a, b) => isFront(b) - isFront(a) || counts[b] - counts[a]).forEach(i => {
       const el = labelEls[i], sz = labelSize[i];
       tmp.copy(D[i]).multiplyScalar(RAD + 2.2).project(camera);
@@ -796,7 +880,8 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
         if (r[0] < 4 || r[2] > innerWidth - 4 || uiRects.some(hits) || placed.some(hits)) op = 0;
         else if (front) placed.push(r);
       }
-      el.style.opacity = op; el.style.pointerEvents = op < 0.2 ? 'none' : 'auto';
+      el.style.opacity = op;
+      if (op >= 0.2) labelHits.push([i, x - sz[0] / 2, y - sz[1] / 2, x + sz[0] / 2, y + sz[1] / 2]);
     });
 
     updateTip();

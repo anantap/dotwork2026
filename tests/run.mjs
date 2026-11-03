@@ -132,6 +132,8 @@ async function runOne(engineName, devName) {
     }
 
     // Tag view
+    await page.locator('.m-bar [data-sec=subject]').click(); await sleep(600);
+    await shot('1b-menu-subject');
     const chip = page.locator('.chip', { hasText: /^interior/ }).first();
     await chip.click();
     await sleep(2200);

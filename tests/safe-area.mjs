@@ -19,7 +19,7 @@ for (const c of cases) {
   await p.goto(BASE); await p.waitForTimeout(3000);
   const res = await p.evaluate(ins => {
     const bad = [];
-    for (const sel of ['h1', '.status', '.tags', '.scrub', '.back']) {
+    for (const sel of ['h1', '.status', '.m-bar', '.back']) {
       const e = document.querySelector(sel); if (!e) continue; const r = e.getBoundingClientRect(); if (!r.width || getComputedStyle(e).opacity === '0') continue;
       if (r.top < ins.top || r.left < ins.left || r.right > innerWidth - ins.right || r.bottom > innerHeight - ins.bottom) bad.push(`${sel} ${Math.round(r.left)},${Math.round(r.top)}–${Math.round(r.right)},${Math.round(r.bottom)}`);
     }

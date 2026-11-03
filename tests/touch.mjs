@@ -122,16 +122,22 @@ await touch('touchEnd', []); await sleep(500);
 check('touch drag shows no hover card', maxTip < 0.1, { maxTip });
 await closeAll();
 
-// 7. Tap a chip → tag view → tap empty space → back on globe; the same tap must not land on a chip and re-enter a tag view
+// 7. Menu: Subject → interior chip → tag view. Reopen the menu; a tap on the globe closes the menu first (stays in the
+//    tag view), the next tap on empty space goes back to the globe. Nothing else may be picked up by the ghost click.
 const chip = page.locator('.chip', { hasText: /^interior/ }).first();
+const openSubject = async () => { await page.locator('.m-bar [data-sec=subject]').tap(); await sleep(500); };
+const enterInterior = async () => { await openSubject(); await chip.tap(); await sleep(2000); };
+const menuOpen = () => page.evaluate(() => document.getElementById('menu').classList.contains('open'));
+await openSubject();
+check('Subject button opens the menu panel', await menuOpen());
 await chip.tap(); await sleep(2000);
-s = await state(); check('chip tap enters tag view', s.view === 'focus', s);
-const chipBox = await page.locator('.chip', { hasText: /^window/ }).first().boundingBox();
-const emptyPt = chipBox ? [chipBox.x + chipBox.width / 2, chipBox.y + chipBox.height / 2] : [10, 10];
-const hitEmpty = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.tagName, emptyPt);
+s = await state(); check('chip tap enters tag view and closes the menu', s.view === 'focus' && !(await menuOpen()), s);
+await openSubject();
+const emptyPt = await page.evaluate(() => { for (const [fx, fy] of [[0.95, 0.12], [0.05, 0.95], [0.95, 0.95], [0.5, 0.03]]) { const x = innerWidth * fx, y = innerHeight * fy; if (document.elementFromPoint(x, y)?.tagName === 'CANVAS') return [x, y]; } return null; });
+await page.touchscreen.tap(...emptyPt); await sleep(900);
+s = await state(); check('tap on the globe with the menu open closes the menu and stays in the tag view', s.view === 'focus' && !(await menuOpen()), { ...s, at: emptyPt.map(Math.round) });
 await page.touchscreen.tap(...emptyPt); await sleep(1800);
-s = await state();
-check('tap on empty space (where a hidden chip sits) returns to globe', s.view === 'globe', { ...s, topElement: hitEmpty, at: emptyPt.map(Math.round) });
+s = await state(); check('next tap on empty space returns to the globe', s.view === 'globe' && !(await menuOpen()), s);
 await closeAll();
 
 // 8. After returning to the globe on touch, no hover highlight is stuck on
@@ -140,7 +146,7 @@ check('no stuck highlight after leaving tag view', s.hlDim < 50, { dimmedTiles: 
 
 // 9. In the tag view, tapping the first scan opens the light box and it stays open
 await reload();
-await chip.tap(); await sleep(2000);
+await enterInterior();
 t = await page.evaluate(() => window.__tileXY().filter(t => t.inF).sort((a, b) => a.order - b.order)[0]);
 await page.touchscreen.tap(t.x, t.y); await sleep(1000);
 s = await state();
@@ -148,7 +154,7 @@ check('tap on tag-view tile opens light box and it stays open', s.detail, s);
 await closeAll();
 
 // 10. Escape twice in quick succession from the light box returns to the globe
-await chip.tap(); await sleep(2000);
+await enterInterior();
 t = await page.evaluate(() => window.__tileXY().filter(t => t.inF).sort((a, b) => a.order - b.order)[0]);
 await page.touchscreen.tap(t.x, t.y); await sleep(900);
 await page.keyboard.press('Escape'); await sleep(150); await page.keyboard.press('Escape'); await sleep(1600);

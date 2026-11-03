@@ -16,7 +16,7 @@
         "view": "globe",
         "detail": true,
         "camDist": 72,
-        "camX": -5.147,
+        "camX": -4.628,
         "hlDim": 0
       }
     },
@@ -27,18 +27,18 @@
         "view": "globe",
         "detail": true,
         "camDist": 72,
-        "camX": -6.904,
+        "camX": -6.414,
         "hlDim": 0,
-        "tapMs": 249,
+        "tapMs": 246,
         "tile": {
           "id": 124,
           "real": false,
           "inF": false,
-          "op": 0.449999999993563,
-          "x": 203.91233920404565,
-          "y": 323.5808750963571,
-          "z": 0.9972095232816853,
-          "front": 0.9983199462911765
+          "op": 0.44999999996873574,
+          "x": 202.47483454226955,
+          "y": 323.59638354738973,
+          "z": 0.9972092977794556,
+          "front": 0.9985865314169072
         }
       }
     },
@@ -46,8 +46,8 @@
       "name": "40px drag rotates, no light box",
       "ok": true,
       "detail": {
-        "before": -7.226,
-        "after": -31.389,
+        "before": -6.744,
+        "after": -31.222,
         "detail": false
       }
     },
@@ -67,7 +67,7 @@
         "view": "globe",
         "detail": false,
         "camDist": 72,
-        "camX": -4.481,
+        "camX": -4.635,
         "hlDim": 0
       }
     },
@@ -78,7 +78,7 @@
         "view": "globe",
         "detail": false,
         "camDist": 63.53,
-        "camX": -3.996,
+        "camX": -4.122,
         "hlDim": 0
       }
     },
@@ -86,17 +86,17 @@
       "name": "long press shows the frame card above the finger",
       "ok": true,
       "detail": {
-        "op": "1",
+        "op": "0.999579",
         "text": "Roll 06 · Jun · frame 18 · sample",
         "rect": {
-          "x": 99.76893615722656,
-          "y": 223.60284423828125,
-          "width": 221.99998474121094,
+          "x": 100.3426513671875,
+          "y": 223.59576416015625,
+          "width": 222,
           "height": 72,
-          "top": 223.60284423828125,
-          "right": 321.7689208984375,
-          "bottom": 295.60284423828125,
-          "left": 99.76893615722656
+          "top": 223.59576416015625,
+          "right": 322.3426513671875,
+          "bottom": 295.59576416015625,
+          "left": 100.3426513671875
         },
         "fingerY": 324
       }
@@ -117,7 +117,11 @@
       }
     },
     {
-      "name": "chip tap enters tag view",
+      "name": "Subject button opens the menu panel",
+      "ok": true
+    },
+    {
+      "name": "chip tap enters tag view and closes the menu",
       "ok": true,
       "detail": {
         "view": "focus",
@@ -128,19 +132,29 @@
       }
     },
     {
-      "name": "tap on empty space (where a hidden chip sits) returns to globe",
+      "name": "tap on the globe with the menu open closes the menu and stays in the tag view",
+      "ok": true,
+      "detail": {
+        "view": "focus",
+        "detail": false,
+        "camDist": 40,
+        "camX": 29.393,
+        "hlDim": 213,
+        "at": [
+          371,
+          80
+        ]
+      }
+    },
+    {
+      "name": "next tap on empty space returns to the globe",
       "ok": true,
       "detail": {
         "view": "globe",
         "detail": false,
         "camDist": 72,
-        "camX": 52.903,
-        "hlDim": 0,
-        "topElement": "CANVAS",
-        "at": [
-          151,
-          229
-        ]
+        "camX": 52.904,
+        "hlDim": 0
       }
     },
     {
@@ -168,7 +182,7 @@
         "view": "globe",
         "detail": false,
         "camDist": 72,
-        "camX": 52.858,
+        "camX": 52.894,
         "hlDim": 0
       }
     },

@@ -24,7 +24,7 @@
       "ua": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/60.5 Safari/605.1.15",
       "innerHeight": 862,
       "waapi": "function",
-      "frames": 121,
+      "frames": 102,
       "decode": "function",
       "gpu": "WebKit WebGL",
       "webgl": true,
@@ -37,9 +37,9 @@
       "innerWidth": 1440,
       "threeWebGL2": true
     },
-    "fpsTag": 38.5,
+    "fpsTag": 32.5,
     "errs": [],
-    "fpsGlobe": 33.2
+    "fpsGlobe": 26.6
   },
   {
     "engine": "webkitgtk",
@@ -66,7 +66,7 @@
       "ua": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/60.5 Safari/605.1.15",
       "innerHeight": 806,
       "waapi": "function",
-      "frames": 197,
+      "frames": 154,
       "decode": "function",
       "gpu": "WebKit WebGL",
       "webgl": true,
@@ -79,8 +79,8 @@
       "innerWidth": 447,
       "threeWebGL2": true
     },
-    "fpsTag": 60,
+    "fpsTag": 57.9,
     "errs": [],
-    "fpsGlobe": 60
+    "fpsGlobe": 53.1
   }
 ]

@@ -1,6 +1,6 @@
 # Roll a Month
 
-Single-page photo globe (three.js r147 from jsDelivr, Geist from Google Fonts, Geist Pixel inline).
+Single-page photo globe (three.js r147 core from jsDelivr, own free-orbit controls, Geist from Google Fonts, Geist Pixel inline).
 Static: `index.html`, `thumbs/`, `full/`. No build step.
 
 ## Run locally
@@ -23,10 +23,11 @@ npm test             # in another
 ```
 
 - `tests/run.mjs`: Chromium, Firefox and WebKit × desktop 1440×900, iPhone 14 and Pixel 7. Loads the globe, opens the
-  `interior` tag view, opens the first scan, then →, Esc, Esc, and measures frame rate. Writes screenshots and
+  `interior` tag view through the Subject menu, opens the first scan, then →, Esc, Esc, and measures frame rate. Writes screenshots and
   `report.json` to `tests/out/`.
 - `tests/touch.mjs`: tap vs drag (5px threshold), pinch, two-finger tap, long-press preview, ghost clicks, stuck hover (Chromium, CDP touch).
 - `tests/safe-area.mjs`: fakes iPhone notch/home-indicator insets and checks the UI stays inside them (Chromium).
+- `tests/drag.mjs`: the globe turns freely over the poles, drags starting anywhere (labels included) turn it, labels still hover and open.
 - `tests/labels.mjs`: globe tag labels never sit on the UI, off screen, or on each other (Chromium, 4 sizes).
 - `tests/fallback.mjs`: with WebGL off, or three.js unreachable, the page says so without script errors.
 
