@@ -36,7 +36,8 @@ body { background: var(--bg); color: var(--ink); font-family: var(--sans); overf
 .tag-label::before { content: ""; width: 5px; height: 5px; background: currentColor; }
 .tag-label small { font-size: 12px; color: var(--muted); }
 .tag-label.on { color: var(--link); }
-.tag-label.solo { color: var(--muted); font-size: 14px; cursor: default; }
+.tag-label.solo { color: var(--muted); font-size: 14px; }
+.tag-label.solo.on { color: var(--link); }
 .tag-label.solo::before { width: 3px; height: 3px; }
 .tag-label:focus-visible { outline: 1px solid var(--link); }
 
@@ -424,7 +425,7 @@ fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(C
   menu.querySelector('.m-bar').addEventListener('click', e => { const b = e.target.closest('button[data-sec]'); if (b) setMenu(menuSec === b.dataset.sec ? null : b.dataset.sec); });
   tagList.forEach(t => {
     const b = document.createElement('button'); b.className = 'tag-label'; b.type = 'button';
-    b.addEventListener('click', () => enterFocus(t.name)); hoverable(b, t.name);
+    b.addEventListener('click', () => openTopic(t.name)); hoverable(b, t.name);
     labelsEl.appendChild(b); labelEls.push(b);
   });
 
@@ -450,7 +451,7 @@ fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(C
       chipEls[t.name].innerHTML = `${esc(t.name)}<span>${counts[i]}</span>`; chipEls[t.name].hidden = counts[i] < MIN_SHARED;
       const solo = counts[i] < MIN_SHARED;
       labelEls[i].innerHTML = solo ? esc(t.name) : `${esc(t.name)}<small>${counts[i]}</small>`;
-      labelEls[i].classList.toggle('solo', solo); labelEls[i].disabled = solo; labelEls[i].setAttribute('aria-hidden', String(solo));
+      labelEls[i].classList.toggle('solo', solo);
     });
     measureLabels();
     if (view === 'focus') { layoutFocus(); retarget(() => 0); }
@@ -484,7 +485,7 @@ fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(C
     labelEls.forEach((el, i) => {
       el.classList.toggle('on', h && h.tag === i);
       const linked = h && tagPairs.some(q => q.keep && ((q.i === h.tag && q.j === i) || (q.j === h.tag && q.i === i)));
-      el.dataset.base = inFocus ? 0 : counts[i] < MIN_SHARED ? (h ? 0.12 : 0.5) : (!h || h.tag === i || linked) ? 1 : 0.25;
+      el.dataset.base = inFocus ? 0 : counts[i] < MIN_SHARED ? (h ? (h.tag === i ? 1 : 0.12) : 0.5) : (!h || h.tag === i || linked) ? 1 : 0.25;
     });
   }
   function setHl(key) { if (view !== 'globe') return; hl = key; paint(); }
@@ -523,6 +524,10 @@ fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(C
     const withEl = document.getElementById('fWith');
     const near = tagPairs.filter(q => q.keep && (q.i === focus.tag || q.j === focus.tag)).sort((a, b) => b.w - a.w).slice(0, 4).map(q => tagList[q.i === focus.tag ? q.j : q.i].name);
     withEl.innerHTML = near.length ? '<span>Also</span>' + near.map(t => `<button type="button" class="chip" data-tag="${esc(t)}">${esc(t)}</button>`).join('') : '';
+  }
+  function openTopic(name) {
+    const only = frames.filter(f => f.tags.includes(name));
+    if (only.length === 1) { closeMenu(); setHl(null); openDetail(only[0]); } else enterFocus(name);
   }
   function enterFocus(key) {
     closeMenu();
@@ -682,7 +687,7 @@ fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(C
     const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]); downXY = null;
     if (moved > 5) return;
     const li = view === 'globe' ? labelAt(e.clientX, e.clientY) : -1;
-    if (li >= 0) { if (e.pointerType !== 'mouse') swallowClickUntil = performance.now() + 700; hoverLabel(null); enterFocus(tagList[li].name); return; }
+    if (li >= 0) { if (e.pointerType !== 'mouse') swallowClickUntil = performance.now() + 700; hoverLabel(null); openTopic(tagList[li].name); return; }
     const f = hitAt(e.clientX, e.clientY, e.pointerType === 'mouse' ? 0 : SLOP), hadMenu = !!menuSec;
     closeMenu();
     if (!f && (view !== 'focus' || hadMenu)) return; // a tap beside the frames closes the menu before it leaves the tag view
@@ -797,7 +802,7 @@ fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(C
         else if (front) placed.push(r);
       }
       el.style.opacity = op;
-      if (op >= 0.2 && counts[i] >= MIN_SHARED) labelHits.push([i, x - sz[0] / 2, y - sz[1] / 2, x + sz[0] / 2, y + sz[1] / 2]);
+      if (op >= 0.2) labelHits.push([i, x - sz[0] / 2, y - sz[1] / 2, x + sz[0] / 2, y + sz[1] / 2]);
     });
 
     { // project titles under the tiles while a topic is open

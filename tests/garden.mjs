@@ -33,12 +33,14 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     soloWithCount: [...document.querySelectorAll('.tag-label.solo small')].length,
     shared: [...document.querySelectorAll('.tag-label:not(.solo)')].filter(e => +getComputedStyle(e).opacity > 0.3).map(e => e.firstChild.textContent),
     chips: [...document.querySelectorAll('.m-panel .chip')].filter(e => !e.hidden && e.querySelector('span')?.textContent === '1').map(e => e.firstChild.textContent) }));
-  check(lab.solo.length > 0 && !lab.soloWithCount && !lab.chips.length, `${name}: one-off topics show as background labels, not in Filter`, { solo: lab.solo.map(x => x.t), chips: lab.chips });
+  check(lab.solo.length > 0 && !lab.soloWithCount && !lab.chips.length, `${name}: one-off topics show as quiet labels, not in Filter`, { solo: lab.solo.map(x => x.t), chips: lab.chips });
   const so = lab.solo[0].r;
   if (opts.hasTouch) await p.touchscreen.tap(so.x + so.width / 2, so.y + so.height / 2); else await p.mouse.click(so.x + so.width / 2, so.y + so.height / 2);
   await sleep(900);
-  check(await p.evaluate(() => document.body.dataset.view) === 'globe', `${name}: tapping a one-off label opens nothing`, lab.solo[0].t);
-  await p.keyboard.press('Escape'); await sleep(400);
+  const solo = await p.evaluate(() => ({ view: document.body.dataset.view, detail: !document.getElementById('detail').hidden, title: document.getElementById('dCode').textContent }));
+  const owner = content.projects.find(x => x.tags.includes(lab.solo[0].t)).title;
+  check(solo.view === 'globe' && solo.detail && solo.title === owner, `${name}: tapping a one-off label ("${lab.solo[0].t}") opens its project directly`, solo);
+  await p.keyboard.press('Escape'); await sleep(900);
   await tap(p.locator('.m-bar [data-sec=topics]')); await sleep(600); await p.screenshot({ path: `${OUT}/${name}-2-filter.png` });
   await tap(p.locator('.chip', { hasText: /^website/ }).first()); await sleep(2400);
   const expect = content.projects.filter(x => x.tags.includes('website')).length;
