@@ -324,7 +324,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const r = RAD + 0.9;
     f.home = dir.clone().multiplyScalar(r);
     const obj = new THREE.Mesh(geoS, new THREE.MeshBasicMaterial({ map: loader.load(f.thumb), transparent: true, depthWrite: false }));
-    f.base = 8; // projects are few, so each tile is big
+    f.base = 3.6; // projects are few, so tiles are bigger than photos (1.8), but still small on the globe
     obj.position.copy(f.home); obj.userData.f = f; obj.scale.setScalar(0.001);
     obj.material.opacity = 0; obj.lookAt(f.home.clone().multiplyScalar(2));
     f.obj = obj; f.grow = 0; f.sz = f.base; f.gpos = null; f.gscale = 1; f.inF = false; f.opT = 0;

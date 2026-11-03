@@ -189,7 +189,7 @@ rep("  const loader = new THREE.TextureLoader();", '''  const loader = new THREE
     if (f === g) return; const d = f.dir.angleTo(g.dir); if (d > 1.05) return;
     f.dir.addScaledVector(new THREE.Vector3().subVectors(f.dir, g.dir).normalize(), (1.05 - d) * 0.1).normalize();
   }));''')
-rep("    f.base = 4.2; // projects are few, so each tile is big", "    f.base = 8; // projects are few, so each tile is big")
+rep("    f.base = 4.2; // projects are few, so each tile is big", "    f.base = 3.6; // projects are few, so tiles are bigger than photos (1.8), but still small on the globe")
 # tiles always face the viewer: a project is a picture, not a plate on the surface
 rep("      if (f.facing && e > 0) dummy.quaternion.copy(camera.quaternion);", "      if (true) dummy.quaternion.copy(camera.quaternion); // always facing the viewer")
 
