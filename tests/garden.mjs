@@ -18,6 +18,11 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   await p.goto(BASE); await p.waitForFunction(() => window.__frames > 30); await sleep(3000);
   await p.screenshot({ path: `${OUT}/${name}-1-globe.png` });
   check((await p.textContent('#status')).includes('6 projects'), `${name}: status line`, await p.textContent('#status'));
+  const single = await p.evaluate(() => ({
+    labels: [...document.querySelectorAll('.tag-label')].filter(e => +getComputedStyle(e).opacity > 0.05 && e.querySelector('small').textContent === '1').map(e => e.firstChild.textContent),
+    chips: [...document.querySelectorAll('.m-panel .chip')].filter(e => !e.hidden && e.querySelector('span')?.textContent === '1').map(e => e.firstChild.textContent),
+    buttons: [...document.querySelectorAll('.m-bar button')].filter(b => !b.hidden).map(b => b.textContent) }));
+  check(!single.labels.length && !single.chips.length && !single.buttons.includes('Type'), `${name}: only categories shared by 2+ projects are nodes`, single);
   await tap(p.locator('.m-bar [data-sec=work]')); await sleep(600); await p.screenshot({ path: `${OUT}/${name}-2-menu-work.png` });
   await tap(p.locator('.chip', { hasText: /^website/ }).first()); await sleep(2200);
   check(await p.textContent('#fTitle') === 'website' && (await p.textContent('#fSub')).startsWith('4 projects'), `${name}: "website" tag view`, await p.textContent('#fSub'));

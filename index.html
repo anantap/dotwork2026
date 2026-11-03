@@ -319,16 +319,19 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   camera.position.set(0, 10, 58);
   // Free orbit: a drag turns the globe any way, over the poles too. (OrbitControls stopped dead at the poles, and once
   // there a sideways drag only spun the view in place.) Same feel as before: a screen height of drag is a full turn,
-  // inertia, a slow spin until you first touch it, pinch and wheel zoom.
+  // inertia, pinch and wheel zoom. When left alone it turns by itself on a diagonal, about a turn every 90 seconds,
+  // and picks that up again a few seconds after you let go.
   const controls = (() => {
     const el = renderer.domElement, ptrs = new Map(), DAMP = 0.07, q = new THREE.Quaternion(), right = new THREE.Vector3(), fwd = new THREE.Vector3();
-    const c = { enabled: true, autoRotate: !reduced, minDistance: 18, maxDistance: 110 };
+    const c = { enabled: true, autoRotate: !reduced, hold: false, minDistance: 18, maxDistance: 110 }; // hold: pause the spin (pointer over a frame or label)
+    const SPIN = 2 * Math.PI / 90, SPIN_ANGLE = 0.5, IDLE_MS = 4000; // radians a second, tilt of the spin (about 30°), wait before resuming
+    let lastTouch = -IDLE_MS, lastT = performance.now();
     let rx = 0, ry = 0, pinchFrom = 0, pinchDist = 0;
     const zoomTo = d => camera.position.setLength(Math.max(c.minDistance, Math.min(c.maxDistance, d)));
     const pinchGap = () => { const [a, b] = [...ptrs.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]); };
     el.addEventListener('pointerdown', e => {
       if (!c.enabled) return;
-      el.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); c.autoRotate = false;
+      el.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); lastTouch = performance.now();
       if (ptrs.size === 2) { pinchFrom = pinchGap(); pinchDist = camera.position.length(); }
     });
     el.addEventListener('pointermove', e => {
@@ -340,9 +343,12 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     });
     const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinchFrom = 0; };
     el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
-    el.addEventListener('wheel', e => { if (!c.enabled) return; e.preventDefault(); c.autoRotate = false; zoomTo(camera.position.length() * Math.pow(0.95, -Math.sign(e.deltaY))); }, { passive: false });
+    el.addEventListener('wheel', e => { if (!c.enabled) return; e.preventDefault(); lastTouch = performance.now(); zoomTo(camera.position.length() * Math.pow(0.95, -Math.sign(e.deltaY))); }, { passive: false });
     c.update = () => {
-      if (c.autoRotate) rx += 2 * Math.PI / 3600 * 0.3;
+      const now = performance.now(), dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+      if (ptrs.size || c.hold) lastTouch = now;
+      if (c.autoRotate && now - lastTouch > IDLE_MS) { const a = SPIN * dt; rx += a * Math.cos(SPIN_ANGLE); ry += a * Math.sin(SPIN_ANGLE); } // with the damping below, the steady turn is SPIN
+      if (c.hold && !ptrs.size) { rx *= 0.6; ry *= 0.6; } // pointer on a frame: stop within a few frames instead of coasting
       const sx = rx * DAMP, sy = ry * DAMP; rx -= sx; ry -= sy;
       // drag right: the camera swings left round its own up axis; drag down: it swings up round its right axis
       q.setFromAxisAngle(camera.up, -sx); camera.position.applyQuaternion(q);
@@ -591,7 +597,6 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     closeMenu();
     hl = null; focus = parseKey(key); view = 'focus';
     document.body.dataset.view = 'focus';
-    controls.autoRotate = false;
     tip.style.opacity = 0;
     layoutFocus();
     flyTo(focusGoal, 1300);
@@ -736,7 +741,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     else if (pressT && downXY && Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) > 5) { clearTimeout(pressT); pressT = null; }
   });
   renderer.domElement.addEventListener('contextmenu', e => { if (pressing) e.preventDefault(); });
-  renderer.domElement.addEventListener('pointerleave', () => { hoverXY = null; tip.style.opacity = 0; renderer.domElement.style.cursor = ''; hoverLabel(null); });
+  renderer.domElement.addEventListener('pointerleave', () => { hoverXY = null; controls.hold = false; tip.style.opacity = 0; renderer.domElement.style.cursor = ''; hoverLabel(null); });
   const pickable = () => frames.filter(f => f.grow > 0.5 && (view === 'globe' || f.inF) && f.opT > 0.1).map(f => f.obj);
   // slop: for fingers, frames on the globe are only a few pixels across, so a near miss takes the closest frame facing us
   function hitAt(x, y, slop = 0) {
@@ -796,9 +801,10 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     if (!hoverXY || !det.hidden) return;
     const li = pressing || view !== 'globe' ? -1 : labelAt(hoverXY[0], hoverXY[1]);
     hoverLabel(li >= 0 ? tagList[li].name : null);
+    controls.hold = li >= 0;
     if (li >= 0) { renderer.domElement.style.cursor = 'pointer'; tip.style.opacity = 0; return; }
     const f = hitAt(hoverXY[0], hoverXY[1], pressing ? SLOP : 0);
-    renderer.domElement.style.cursor = f ? 'pointer' : '';
+    renderer.domElement.style.cursor = f ? 'pointer' : ''; controls.hold = !!f; // a frame under the pointer stays put
     if (!f) { tip.style.opacity = 0; return; }
     if (f !== tipFrame) { // rebuild only when the frame changes, not every animation frame
       tipFrame = f;
@@ -831,6 +837,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   // Re-measure when anything moves the UI or label boxes (resize, Geist arriving late, wrapping)
   if (window.ResizeObserver) { const ro = new ResizeObserver(measureUI); ['.head', '.m-bar', '.m-panel'].forEach(sel => ro.observe(document.querySelector(sel))); }
   addEventListener('resize', measureUI);
+  mPanel.addEventListener('transitionend', measureUI); // the panel slides 8px into place; measure where it ends up
   document.fonts.addEventListener?.('loadingdone', () => { measureUI(); measureLabels(); });
   document.fonts.ready.then(() => { measureUI(); measureLabels(); });
 

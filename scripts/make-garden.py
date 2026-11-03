@@ -233,6 +233,20 @@ rep("    document.getElementById('dText').textContent = f.text;", '''    documen
       document.getElementById('dContact').innerHTML = f.links.map(([l, h]) => `<a class="d-link" href="${h}"${h.startsWith('mailto:') ? '' : ' target="_blank" rel="noopener"'}>${l}</a>`).join('') + `<div class="d-addr">${f.email}</div>`;
     }''')
 
+# ---------- a category is a node only when it groups two or more projects ----------
+rep("    tagPairs.forEach(q => { q.w = w[q.i][q.j]; q.keep = q.w >= 1; });",
+    "    tagPairs.forEach(q => { q.w = w[q.i][q.j]; q.keep = q.w >= 1 && counts[q.i] >= MIN_SHARED && counts[q.j] >= MIN_SHARED; });")
+rep("      chipEls[t.name].innerHTML = `${t.name}<span>${counts[i]}</span>`;",
+    "      chipEls[t.name].innerHTML = `${t.name}<span>${counts[i]}</span>`; chipEls[t.name].hidden = counts[i] < MIN_SHARED;")
+rep("      el.dataset.base = inFocus || counts[i] === 0 ? 0 :", "      el.dataset.base = inFocus || counts[i] < MIN_SHARED ? 0 :")
+rep('''      return ts.length ? `<dt>${a}</dt><dd>${ts.map(t => `<button type="button" class="chip" data-tag="${t}">${t}</button>`).join('')}</dd>` : '';''',
+    '''      return ts.length ? `<dt>${a}</dt><dd>${ts.map(t => counts[tagIdx[t]] >= MIN_SHARED ? `<button type="button" class="chip" data-tag="${t}">${t}</button>` : `<span class="tag-plain">${t}</span>`).join('')}</dd>` : '';''')
+rep("  const RAD = 14;", "  const RAD = 14;\n  const MIN_SHARED = 2; // a category gets a label, a chip and a tag view only when two or more projects share it")
+rep(".d-axis dd { margin: 0; display: flex; flex-wrap: wrap; gap: 4px; }", ".d-axis dd { margin: 0; display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }\n.tag-plain { font-size: 12px; color: var(--muted); padding: 3px 4px; }")
+# a menu button whose panel would hold fewer than two categories is left out
+rep("  document.getElementById('mAbout').addEventListener(", '''  AXES.forEach(a => { if (TAGS[a].filter(t => frames.filter(f => f.tags.includes(t)).length >= MIN_SHARED).length < 2) menu.querySelector(`.m-bar [data-sec="${a}"]`).hidden = true; });
+  document.getElementById('mAbout').addEventListener(''')
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)
