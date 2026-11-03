@@ -16,7 +16,7 @@
         "view": "globe",
         "detail": true,
         "camDist": 72,
-        "camX": -4.56,
+        "camX": -4.746,
         "hlDim": 0
       }
     },
@@ -27,16 +27,27 @@
         "view": "globe",
         "detail": true,
         "camDist": 72,
-        "camX": -6.026,
-        "hlDim": 0
+        "camX": -6.167,
+        "hlDim": 0,
+        "tapMs": 182,
+        "tile": {
+          "id": 124,
+          "real": false,
+          "inF": false,
+          "op": 0.44999999991033474,
+          "x": 215.75402839079885,
+          "y": 408.87170114372714,
+          "z": 0.9972093342171745,
+          "front": 0.9985434576844544
+        }
       }
     },
     {
       "name": "40px drag rotates, no light box",
       "ok": true,
       "detail": {
-        "before": -6.219,
-        "after": -25.396,
+        "before": -6.403,
+        "after": -25.483,
         "detail": false
       }
     },
@@ -56,7 +67,7 @@
         "view": "globe",
         "detail": false,
         "camDist": 72,
-        "camX": -4.659,
+        "camX": -4.114,
         "hlDim": 0
       }
     },
@@ -67,8 +78,42 @@
         "view": "globe",
         "detail": false,
         "camDist": 63.53,
-        "camX": -4.16,
+        "camX": -3.669,
         "hlDim": 0
+      }
+    },
+    {
+      "name": "long press shows the frame card above the finger",
+      "ok": true,
+      "detail": {
+        "op": "0.983521",
+        "text": "Roll 06 · Jun · frame 18 · sample",
+        "rect": {
+          "x": 110.79425048828125,
+          "y": 308.8938293457031,
+          "width": 222,
+          "height": 72,
+          "top": 308.8938293457031,
+          "right": 332.79425048828125,
+          "bottom": 380.8938293457031,
+          "left": 110.79425048828125
+        },
+        "fingerY": 409
+      }
+    },
+    {
+      "name": "releasing a long press hides the card and opens nothing",
+      "ok": true,
+      "detail": {
+        "tipAfter": "0",
+        "detail": false
+      }
+    },
+    {
+      "name": "touch drag shows no hover card",
+      "ok": true,
+      "detail": {
+        "maxTip": 0
       }
     },
     {
@@ -89,7 +134,7 @@
         "view": "globe",
         "detail": false,
         "camDist": 72,
-        "camX": 52.907,
+        "camX": 52.898,
         "hlDim": 0,
         "topElement": "CANVAS",
         "at": [
@@ -123,7 +168,7 @@
         "view": "globe",
         "detail": false,
         "camDist": 72,
-        "camX": 52.87,
+        "camX": 52.867,
         "hlDim": 0
       }
     },

@@ -7,8 +7,12 @@
     "failedRequests": [],
     "steps": {
       "globe": {
-        "lit": 0.0827,
-        "blue": 0.0451
+        "lit": 0.0822,
+        "blue": 0.0452
+      },
+      "hoverCard": {
+        "op": "1",
+        "code": "Roll 06 · Jun · frame 18 · sample"
       },
       "tagView": {
         "view": "focus",
@@ -63,14 +67,14 @@
       "mobileLayout": false
     },
     "fpsTag": {
-      "fps": 25.5,
-      "p95ms": 50.1,
+      "fps": 28.5,
+      "p95ms": 50,
       "worstMs": 83.3
     },
     "fpsGlobe": {
-      "fps": 26.8,
-      "p95ms": 66.7,
-      "worstMs": 100
+      "fps": 30.4,
+      "p95ms": 50.1,
+      "worstMs": 83.3
     }
   },
   {
@@ -81,8 +85,8 @@
     "failedRequests": [],
     "steps": {
       "globe": {
-        "lit": 0.1606,
-        "blue": 0.0751
+        "lit": 0.1493,
+        "blue": 0.0763
       },
       "tagView": {
         "view": "focus",
@@ -137,14 +141,14 @@
       "mobileLayout": true
     },
     "fpsTag": {
-      "fps": 34.3,
+      "fps": 36.7,
       "p95ms": 50,
-      "worstMs": 83.3
+      "worstMs": 66.7
     },
     "fpsGlobe": {
-      "fps": 31.4,
-      "p95ms": 66.7,
-      "worstMs": 116.7
+      "fps": 36.4,
+      "p95ms": 49.9,
+      "worstMs": 66.7
     }
   },
   {
@@ -155,8 +159,8 @@
     "failedRequests": [],
     "steps": {
       "globe": {
-        "lit": 0.1429,
-        "blue": 0.0719
+        "lit": 0.1383,
+        "blue": 0.0725
       },
       "tagView": {
         "view": "focus",
@@ -211,56 +215,14 @@
       "mobileLayout": true
     },
     "fpsTag": {
-      "fps": 31.2,
+      "fps": 33.2,
       "p95ms": 50,
-      "worstMs": 116.7
+      "worstMs": 116.6
     },
     "fpsGlobe": {
-      "fps": 29.6,
-      "p95ms": 66.7,
+      "fps": 31.4,
+      "p95ms": 50.1,
       "worstMs": 83.3
     }
-  },
-  {
-    "engine": "firefox",
-    "device": "desktop",
-    "issues": [
-      "could not launch: browserType.launch: Executable doesn't exist at /opt/pw-browsers/firefox-1543/firefox/firefox"
-    ]
-  },
-  {
-    "engine": "firefox",
-    "device": "iphone-14",
-    "issues": [
-      "could not launch: browserType.launch: Executable doesn't exist at /opt/pw-browsers/firefox-1543/firefox/firefox"
-    ]
-  },
-  {
-    "engine": "firefox",
-    "device": "pixel-7",
-    "issues": [
-      "could not launch: browserType.launch: Executable doesn't exist at /opt/pw-browsers/firefox-1543/firefox/firefox"
-    ]
-  },
-  {
-    "engine": "webkit",
-    "device": "desktop",
-    "issues": [
-      "could not launch: browserType.launch: Executable doesn't exist at /opt/pw-browsers/webkit-2359/pw_run.sh"
-    ]
-  },
-  {
-    "engine": "webkit",
-    "device": "iphone-14",
-    "issues": [
-      "could not launch: browserType.launch: Executable doesn't exist at /opt/pw-browsers/webkit-2359/pw_run.sh"
-    ]
-  },
-  {
-    "engine": "webkit",
-    "device": "pixel-7",
-    "issues": [
-      "could not launch: browserType.launch: Executable doesn't exist at /opt/pw-browsers/webkit-2359/pw_run.sh"
-    ]
   }
 ]

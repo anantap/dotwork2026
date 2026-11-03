@@ -120,6 +120,17 @@ async function runOne(engineName, devName) {
     r.steps.globe = await litShare(page, g);
     if (r.steps.globe.lit < 0.01) r.issues.push('globe looks blank');
 
+    // Mouse hover over a frame shows its card (desktop only)
+    if (!ctxOpts.hasTouch) {
+      const ft = await page.evaluate(() => window.__tileXY().filter(t => t.front > 0.8 && t.op > 0.3 && t.x > 40 && t.x < innerWidth - 40 && t.y > 40 && t.y < innerHeight - 40 && document.elementFromPoint(t.x, t.y)?.tagName === 'CANVAS').sort((a, b) => (b.real - a.real) || (b.front - a.front))[0]);
+      if (ft) {
+        await page.mouse.move(ft.x, ft.y); await sleep(400);
+        r.steps.hoverCard = await page.evaluate(() => ({ op: getComputedStyle(document.getElementById('tip')).opacity, code: document.querySelector('#tip .code')?.textContent }));
+        if (+r.steps.hoverCard.op < 0.5) r.issues.push('hovering a frame shows no card');
+        await page.mouse.move(5, (ctxOpts.viewport?.height || 800) - 5); await sleep(300);
+      }
+    }
+
     // Tag view
     const chip = page.locator('.chip', { hasText: /^interior/ }).first();
     await chip.click();

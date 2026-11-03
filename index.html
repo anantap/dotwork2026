@@ -20,10 +20,6 @@
   --mark: #ff3b30;
   --frame: #9aa0aa;
   --sample: #8fbcff;
-  --ch-r: #ff5a5a;
-  --ch-g: #59e08a;
-  --ch-b: #5a80ff;
-  --ch-mono: #d9d9d9;
   --sans: "Geist", "Helvetica Neue", Arial, sans-serif;
   --pixel: "Geist Pixel", ui-monospace, Menlo, monospace;
   color-scheme: dark;
@@ -31,16 +27,15 @@
 html, body { height: 100%; }
 body { background: var(--bg); color: var(--ink); font-family: var(--sans); overflow: hidden; -webkit-font-smoothing: antialiased; }
 #stage { position: fixed; inset: 0; }
-#stage canvas { display: block; touch-action: none; }
+#stage canvas { display: block; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 #labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
 
 .tag-label { position: absolute; left: 0; top: 0; white-space: nowrap; pointer-events: auto; cursor: pointer; background: none; border: 0; padding: 2px 4px;
   font: 400 16px var(--pixel); color: var(--ink); letter-spacing: .02em; transition: opacity .25s, color .2s; display: flex; align-items: center; gap: 6px; }
 .tag-label::before { content: ""; width: 5px; height: 5px; background: currentColor; }
 .tag-label small { font-size: 12px; color: var(--muted); }
-.tag-label.on, .tag-label:hover { color: var(--link); }
+.tag-label.on { color: var(--link); }
 .tag-label:focus-visible { outline: 1px solid var(--link); }
-.ch-label { position: absolute; left: 0; top: 0; font: 400 18px var(--pixel); letter-spacing: .1em; text-transform: uppercase; color: var(--c); pointer-events: none; transition: opacity .4s; }
 
 .ui { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
   padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
@@ -48,7 +43,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--sans); overf
 .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
 .top > *, .bottom > * { pointer-events: auto; }
 .lead { position: relative; max-width: 440px; }
-.head, .tags, .pill { transition: opacity .35s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
+.head, .tags { transition: opacity .35s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
 h1 { margin: 0; font: 400 48px/1 var(--pixel); letter-spacing: -0.01em; }
 h1 sup { color: var(--mark); font-size: 24px; margin-left: 2px; }
 .lede { margin: 12px 0 0; font-size: 17px; line-height: 1.35; text-wrap: balance; }
@@ -60,7 +55,6 @@ h1 sup { color: var(--mark); font-size: 24px; margin-left: 2px; }
 body[data-view="focus"] .focus-head { opacity: 1; transform: none; pointer-events: auto; }
 body[data-view="globe"] .focus-head { transition-delay: 0s; }
 .back { font: 400 13px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
-.back:hover { border-color: var(--ink); }
 .ftitle { margin-top: 14px; font: 400 56px/1 var(--pixel); color: var(--link); }
 .fsub { margin-top: 10px; font: 400 15px var(--pixel); color: var(--live); }
 .fwith { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); }
@@ -72,20 +66,15 @@ body[data-view="globe"] .focus-head { transition-delay: 0s; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .chip { font: 400 12px var(--sans); border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 3px 9px; cursor: pointer; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .chip span { color: var(--muted); margin-left: 3px; }
-.chip:hover { border-color: var(--ink); }
-.chip.rgb::before { content: ""; display: inline-block; width: 6px; height: 6px; background: var(--c); margin-right: 6px; vertical-align: 1px; }
 .toggle { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); cursor: pointer; }
 .toggle input { accent-color: var(--ink); }
 button:focus-visible, input:focus-visible { outline: 1px solid var(--link); outline-offset: 2px; }
 
-body[data-view="focus"] .head, body[data-view="focus"] .tags, body[data-view="focus"] .pill { opacity: 0; pointer-events: none; }
+body[data-view="focus"] .head, body[data-view="focus"] .tags { opacity: 0; pointer-events: none; }
 body[data-view="focus"] .head { transform: translateY(-10px); }
 body[data-view="focus"] .tags { transform: translateX(14px); }
 
 .bottom { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
-.pill { display: flex; align-items: center; gap: 4px; background: var(--ink); color: var(--bg); border-radius: 999px; padding: 4px; }
-.pill button { font: 400 13px var(--sans); border: 0; background: transparent; color: var(--bg); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
-.pill button[aria-pressed="true"] { background: var(--bg); color: var(--ink); }
 .scrub { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 16px 4px 4px; width: min(560px, 100%); background: rgba(0,0,0,.6); }
 .play { width: 32px; height: 32px; flex: none; border-radius: 50%; border: 0; background: var(--ink); color: var(--bg); cursor: pointer; display: grid; place-items: center; }
 .track { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding-top: 4px; }
@@ -116,29 +105,32 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
 .d-kind { margin-top: 6px; font: 400 13px var(--pixel); color: var(--live); }
 .d-kind.sample { color: var(--muted); }
 .d-x { width: 36px; height: 36px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; display: grid; place-items: center; }
-.d-x:hover { border-color: var(--ink); }
 .d-nav { display: flex; align-items: center; gap: 10px; font: 400 14px var(--pixel); color: var(--muted); }
 .d-nav button { font: 400 13px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
-.d-nav button:hover:not(:disabled) { border-color: var(--ink); }
 .d-nav button:disabled { opacity: .3; cursor: default; }
 .d-info h3 { margin: 0 0 8px; font: 400 13px var(--pixel); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .d-axis { display: grid; grid-template-columns: 72px 1fr; gap: 6px 8px; align-items: baseline; }
 .d-axis dt { font-size: 12px; color: var(--muted); }
 .d-axis dd { margin: 0; display: flex; flex-wrap: wrap; gap: 4px; }
-.bars { display: grid; gap: 6px; }
-.bar { display: grid; grid-template-columns: 16px 1fr 40px; gap: 8px; align-items: center; font: 400 13px var(--pixel); font-variant-numeric: tabular-nums; }
-.bar i { display: block; height: 6px; background: var(--line); position: relative; }
-.bar i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); background: var(--c); }
-.bar span:last-child { text-align: right; color: var(--muted); }
-.dom { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
-.dom b { font-weight: 400; color: var(--c); }
 .kv { display: grid; grid-template-columns: 72px 1fr; gap: 6px 8px; font-size: 13px; }
 .kv dt { color: var(--muted); } .kv dd { margin: 0; }
 .kv .pub { color: var(--live); } .kv .prv { color: var(--mark); }
 .d-rel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .d-rel button { padding: 0; border: 0; background: #111; cursor: pointer; aspect-ratio: 1; overflow: hidden; border-radius: 2px; }
 .d-rel img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity .2s; }
-.d-rel button:hover img { opacity: .75; }
+
+/* Short landscape screens (phones on their side): the paragraphs covered most of the globe */
+@media (max-height: 500px) and (orientation: landscape) {
+  .lede, .foot { display: none; }
+  .status { margin-top: 8px; }
+}
+
+/* Hover styles only where there is a real hover: on touch they stuck on after a tap */
+@media (hover: hover) {
+  .tag-label:hover { color: var(--link); }
+  .back:hover, .chip:hover, .d-x:hover, .d-nav button:hover:not(:disabled) { border-color: var(--ink); }
+  .d-rel button:hover img { opacity: .75; }
+}
 
 @media (max-width: 760px) {
   .ui { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: max(18px, env(safe-area-inset-top, 0px)); }
@@ -207,6 +199,15 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
 <script>
 (() => {
+  // Without three.js or WebGL there is no map: say so where the frame count goes, and drop the controls that need it
+  const cantDraw = msg => {
+    document.body.dataset.view = 'globe';
+    document.getElementById('status').textContent = msg;
+    for (const sel of ['#tagPanel', '.scrub']) document.querySelector(sel).style.display = 'none';
+  };
+  if (!window.THREE) return cantDraw('The map didn’t load. Check your connection and reload.');
+  const probe = document.createElement('canvas');
+  if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return cantDraw('This map needs WebGL, which is turned off or unavailable in this browser.');
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const AXES = ['subject','light','distance','mood'];
   const TAGS = {
@@ -216,8 +217,6 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     mood: ['quiet','busy']
   };
   const AXIS_OF = Object.fromEntries(AXES.flatMap(a => TAGS[a].map(t => [t, a])));
-  const CH = ['R', 'G', 'B', 'mono'];
-  const CH_VAR = ['--ch-r', '--ch-g', '--ch-b', '--ch-mono'];
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const RAD = 14;
 
@@ -288,7 +287,9 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
 
   // Scene
   const stage = document.getElementById('stage');
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true }); }
+  catch (e) { return cantDraw('This map needs WebGL, which is turned off or unavailable in this browser.'); }
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 1);
   stage.appendChild(renderer.domElement);
@@ -303,13 +304,16 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   controls.addEventListener('start', () => { controls.autoRotate = false; });
 
   const cssColor = k => new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue(k).trim());
-  const C = { sample: cssColor('--sample'), wire: cssColor('--wire'), link: cssColor('--link'), frame: cssColor('--frame'), ink: cssColor('--ink'), ch: CH_VAR.map(cssColor) };
+  const C = { sample: cssColor('--sample'), wire: cssColor('--wire'), link: cssColor('--link'), frame: cssColor('--frame'), ink: cssColor('--ink') };
   const hex = c => '#' + c.getHexString();
 
   // Frames: 3:2 plates just above the surface, facing outward. Real scans carry their image.
-  const geoL = new THREE.PlaneGeometry(0.62, 0.41), geoP = new THREE.PlaneGeometry(0.41, 0.62);
-  const edgeGeo = new THREE.EdgesGeometry(geoL);
-  const BANDS = [0.78, 0.26, -0.26, -0.78];
+  // Tiles are see-through and visible from both sides. three.js draws a transparent DoubleSide mesh twice (back pass, then front),
+  // so each plane carries its own back faces instead and is drawn once with FrontSide: same picture, half the draw calls.
+  const twoFaced = g => { const idx = Array.from(g.index.array); for (let i = 0, n = idx.length; i < n; i += 3) idx.push(idx[i], idx[i + 2], idx[i + 1]); g.setIndex(idx); return g; };
+  const plane = new THREE.PlaneGeometry(0.62, 0.41);
+  const edgeGeo = new THREE.EdgesGeometry(plane);
+  const geoL = twoFaced(plane.clone()), geoP = twoFaced(new THREE.PlaneGeometry(0.41, 0.62));
   const loader = new THREE.TextureLoader();
   frames.forEach(f => {
     const rest = new THREE.Vector3(); f.ti.slice(1).forEach(i => rest.add(D[i]));
@@ -318,18 +322,16 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     dir.add(new THREE.Vector3(rnd() - .5, rnd() - .5, rnd() - .5).multiplyScalar(0.2)).normalize();
     const r = RAD + (f.real ? 0.6 : 0.15 + rnd() * 0.3);
     f.home = dir.clone().multiplyScalar(r);
-    const lon = Math.atan2(dir.z, dir.x), lat = BANDS[f.ch] + Math.asin(dir.y) * 0.12;
-    f.cpos = new THREE.Vector3(Math.cos(lat) * Math.cos(lon), Math.sin(lat), Math.cos(lat) * Math.sin(lon)).multiplyScalar(r);
     let obj;
     if (f.real) {
       const tex = loader.load(`thumbs/${pad(f.n)}.jpg`);
-      obj = new THREE.Mesh(f.aspect < 1 ? geoP : geoL, new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+      obj = new THREE.Mesh(f.aspect < 1 ? geoP : geoL, new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
     } else if (f.priv) {
       obj = new THREE.LineSegments(edgeGeo, new THREE.LineDashedMaterial({ dashSize: 0.07, gapSize: 0.05, transparent: true }));
       obj.computeLineDistances();
       obj.material.color.copy(C.sample);
     } else {
-      obj = new THREE.Mesh(geoL, new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+      obj = new THREE.Mesh(geoL, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false }));
       obj.material.color.copy(C.sample);
     }
     f.base = f.real ? 1.8 : 1;
@@ -341,12 +343,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     scene.add(obj);
   });
 
-  // Colour-mode latitude rings
-  const rings = BANDS.map((lat, i) => {
-    const pts = []; for (let k = 0; k <= 128; k++) { const a = k / 128 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(lat) * Math.cos(a), Math.sin(lat), Math.cos(lat) * Math.sin(a)).multiplyScalar(RAD + 0.9)); }
-    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: C.ch[i], transparent: true, opacity: 0 }));
-    scene.add(l); return l;
-  });
+
 
   // The connections are the globe: tag-to-tag arcs along the surface, plus a web between neighbouring frames that share a tag. One line weight throughout.
   const arcPts = (a, b, r, n) => { const out = []; for (let k = 0; k <= n; k++) out.push(a.clone().lerp(b, k / n).normalize().multiplyScalar(r)); return out; };
@@ -384,7 +381,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     const now = performance.now();
     frames.forEach(f => {
       const focused = view === 'focus' && f.inF;
-      const to = focused ? f.gpos : mode === 'colour' ? f.cpos : f.home, sTo = focused ? f.gscale : f.base;
+      const to = focused ? f.gpos : f.home, sTo = focused ? f.gscale : f.base;
       if (f.pTo.equals(to) && f.sTo === sTo) return;
       f.pFrom = f.obj.position.clone(); f.pTo = to.clone(); f.sFrom = f.sz; f.sTo = sTo; f.facing = focused;
       f.t0 = now + (reduced ? 0 : stagger(f)); f.dur = reduced ? 0 : 1100;
@@ -404,13 +401,12 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     el.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') setHl(null); });
     el.addEventListener('focus', () => setHl(key)); el.addEventListener('blur', () => setHl(null));
   };
-  const addSection = (title, names, cls, pre) => {
+  const addSection = (title, names) => {
     const sec = document.createElement('section'); sec.className = 'axis';
     sec.innerHTML = `<h2>${title}</h2><div class="chips"></div>`;
     names.forEach((name, k) => {
-      const key = pre ? pre + k : name;
-      const b = document.createElement('button'); b.className = 'chip' + (cls ? ' ' + cls : ''); b.type = 'button';
-      if (pre) b.style.setProperty('--c', `var(${CH_VAR[k]})`);
+      const key = name;
+      const b = document.createElement('button'); b.className = 'chip'; b.type = 'button';
       b.addEventListener('click', () => enterFocus(key)); hoverable(b, key);
       sec.querySelector('.chips').appendChild(b); chipEls[key] = b;
     });
@@ -425,24 +421,23 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     b.addEventListener('click', () => enterFocus(t.name)); hoverable(b, t.name);
     labelsEl.appendChild(b); labelEls.push(b);
   });
-  const chLabels = CH.map((c, i) => { const d = document.createElement('div'); d.className = 'ch-label'; d.textContent = i < 3 ? `${c} channel` : 'mono'; d.style.setProperty('--c', `var(${CH_VAR[i]})`); labelsEl.appendChild(d); return d; });
 
   // State
-  let month = 12, showPriv = true, mode = 'tags', view = 'globe', focus = null, hl = null, focusGoal = null, focusList = [];
-  const counts = new Array(T).fill(0), chCounts = [0, 0, 0, 0];
+  let month = 12, showPriv = true, view = 'globe', focus = null, hl = null, focusGoal = null, focusList = [];
+  const counts = new Array(T).fill(0);
   const shown = f => f.month <= month && (showPriv || !f.priv);
-  const parseKey = key => key == null ? null : key.startsWith('ch:') ? { ch: +key.slice(3), key } : { tag: tagIdx[key], key };
-  const matches = (f, k) => k.ch != null ? f.ch === k.ch : f.ti.includes(k.tag);
-  const keyName = k => k.ch != null ? (k.ch < 3 ? `${CH[k.ch]} channel` : 'mono') : tagList[k.tag].name;
+  const parseKey = key => key == null ? null : { tag: tagIdx[key], key };
+  const matches = (f, k) => f.ti.includes(k.tag);
+  const keyName = k => tagList[k.tag].name;
 
   function recount() {
-    counts.fill(0); chCounts.fill(0);
+    counts.fill(0);
     const w = Array.from({ length: T }, () => new Float32Array(T));
     let vis = 0, priv = 0, scans = 0;
     frames.forEach(f => {
       if (f.month > month) return;
       if (f.priv) { priv++; if (!showPriv) return; }
-      vis++; if (f.real) scans++; chCounts[f.ch]++; f.ti.forEach(i => counts[i]++);
+      vis++; if (f.real) scans++; f.ti.forEach(i => counts[i]++);
       for (const a of f.ti) for (const b of f.ti) if (a < b) w[a][b]++;
     });
     const maxW = Math.max(1, ...tagPairs.map(q => w[q.i][q.j]));
@@ -452,6 +447,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
       chipEls[t.name].innerHTML = `${t.name}<span>${counts[i]}</span>`;
       labelEls[i].innerHTML = `${t.name}<small>${counts[i]}</small>`;
     });
+    measureLabels();
     document.querySelectorAll('#months span').forEach((el, i) => el.classList.toggle('on', i < month));
     if (view === 'focus') { layoutFocus(); retarget(() => 0); }
     paint();
@@ -470,19 +466,19 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     const k = inFocus ? 0.12 : 1;
     paintSpans(tagLines, tagPairs, q => {
       if (!q.keep) return BLACK;
-      if (h && h.tag != null) return q.i === h.tag || q.j === h.tag ? dim(C.ink, 0.85) : dim(C.wire, 0.35);
+      if (h) return q.i === h.tag || q.j === h.tag ? dim(C.ink, 0.85) : dim(C.wire, 0.35);
       return dim(C.wire, (h ? 0.45 : 1) * k);
     });
     paintSpans(webLines, webEdges, e => {
-      if (mode === 'colour' || !shown(e.f) || !shown(e.g)) return BLACK;
+      if (!shown(e.f) || !shown(e.g)) return BLACK;
       if (inFocus) return dim(C.wire, 0.05);
-      if (h) return matches(e.f, h) && matches(e.g, h) ? dim(h.ch != null ? C.ch[h.ch] : C.link, 0.8) : dim(C.wire, 0.12);
+      if (h) return matches(e.f, h) && matches(e.g, h) ? dim(C.link, 0.8) : dim(C.wire, 0.12);
       return dim(C.wire, 0.55);
     });
     labelEls.forEach((el, i) => {
       el.classList.toggle('on', h && h.tag === i);
-      const linked = h && h.tag != null && tagPairs.some(q => q.keep && ((q.i === h.tag && q.j === i) || (q.j === h.tag && q.i === i)));
-      el.dataset.base = inFocus || counts[i] === 0 || mode === 'colour' ? 0 : (h && h.ch != null ? 0.3 : (!h || h.tag === i || linked) ? 1 : 0.25);
+      const linked = h && tagPairs.some(q => q.keep && ((q.i === h.tag && q.j === i) || (q.j === h.tag && q.i === i)));
+      el.dataset.base = inFocus || counts[i] === 0 ? 0 : (!h || h.tag === i || linked) ? 1 : 0.25;
     });
   }
   function setHl(key) { if (view !== 'globe') return; hl = key; paint(); }
@@ -490,9 +486,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   // Tag view: fly to the tag and lay its frames out as a contact sheet in front of the camera
   const viewDist = () => innerWidth < 760 ? 72 : 58;
   function focusDir() {
-    let n;
-    if (focus.tag != null) n = D[focus.tag].clone();
-    else { n = camera.position.clone().normalize(); n.y = BANDS[focus.ch] * 0.7; }
+    const n = D[focus.tag].clone();
     n.y = Math.max(-0.55, Math.min(0.55, n.y));
     return n.normalize();
   }
@@ -520,12 +514,10 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     // header
     const scans = focusList.filter(f => f.real).length;
     document.getElementById('fTitle').textContent = keyName(focus);
-    document.getElementById('fSub').textContent = `${focusList.length} frames · ${scans} scan${scans === 1 ? '' : 's'}${focus.tag != null ? ' · ' + tagList[focus.tag].axis : ''}`;
+    document.getElementById('fSub').textContent = `${focusList.length} frames · ${scans} scan${scans === 1 ? '' : 's'} · ${tagList[focus.tag].axis}`;
     const withEl = document.getElementById('fWith');
-    if (focus.tag != null) {
-      const near = tagPairs.filter(q => q.keep && (q.i === focus.tag || q.j === focus.tag)).sort((a, b) => b.w - a.w).slice(0, 4).map(q => tagList[q.i === focus.tag ? q.j : q.i].name);
-      withEl.innerHTML = near.length ? '<span>Often with</span>' + near.map(t => `<button type="button" class="chip" data-tag="${t}">${t}</button>`).join('') : '';
-    } else withEl.innerHTML = '';
+    const near = tagPairs.filter(q => q.keep && (q.i === focus.tag || q.j === focus.tag)).sort((a, b) => b.w - a.w).slice(0, 4).map(q => tagList[q.i === focus.tag ? q.j : q.i].name);
+    withEl.innerHTML = near.length ? '<span>Often with</span>' + near.map(t => `<button type="button" class="chip" data-tag="${t}">${t}</button>`).join('') : '';
   }
   function enterFocus(key) {
     hl = null; focus = parseKey(key); view = 'focus';
@@ -550,7 +542,6 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   document.getElementById('back').addEventListener('click', exitFocus);
   document.getElementById('fWith').addEventListener('click', e => { const t = e.target.closest('[data-tag]'); if (t) enterFocus(t.dataset.tag); });
 
-  const setMode = m => { if (m === mode) return; mode = m; retarget(f => Math.random() * 450); document.getElementById('arTags').setAttribute('aria-pressed', String(m === 'tags')); document.getElementById('arCol').setAttribute('aria-pressed', String(m === 'colour')); paint(); };
 
   // Month scrubber
   document.getElementById('months').innerHTML = MONTHS.map(m => `<span>${m}</span>`).join('');
@@ -661,28 +652,56 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   const tip = document.getElementById('tip');
   const ray = new THREE.Raycaster();
   const mouse = new THREE.Vector2(); let hoverXY = null, downXY = null;
-  renderer.domElement.addEventListener('pointermove', e => { hoverXY = [e.clientX, e.clientY]; });
+  // Touch has no hover: holding a finger still on a frame for a moment shows the same card the mouse gets
+  let pressT = null, pressing = false, pressCtl = false;
+  const endPress = () => {
+    clearTimeout(pressT); pressT = null;
+    if (!pressing) return false;
+    pressing = false; hoverXY = null; tip.style.opacity = 0; controls.enabled = pressCtl;
+    return true;
+  };
+  renderer.domElement.addEventListener('pointermove', e => {
+    if (e.pointerType === 'mouse' || pressing) hoverXY = [e.clientX, e.clientY];
+    else if (pressT && downXY && Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) > 5) { clearTimeout(pressT); pressT = null; }
+  });
+  renderer.domElement.addEventListener('contextmenu', e => { if (pressing) e.preventDefault(); });
   renderer.domElement.addEventListener('pointerleave', () => { hoverXY = null; tip.style.opacity = 0; renderer.domElement.style.cursor = ''; });
   const pickable = () => frames.filter(f => f.grow > 0.5 && (view === 'globe' || f.inF) && f.opT > 0.1).map(f => f.obj);
-  function hitAt(x, y) {
+  // slop: for fingers, frames on the globe are only a few pixels across, so a near miss takes the closest frame facing us
+  function hitAt(x, y, slop = 0) {
     mouse.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1);
     ray.setFromCamera(mouse, camera);
-    const h = ray.intersectObjects(pickable(), false)[0];
-    return h ? h.object.userData.f : null;
+    const objs = pickable(), h = ray.intersectObjects(objs, false)[0];
+    if (h || !slop) return h ? h.object.userData.f : null;
+    let best = null, bd = slop;
+    for (const o of objs) {
+      if (view === 'globe' && tmp.copy(o.position).normalize().dot(camDir) < 0.2) continue;
+      tmp.copy(o.position).project(camera);
+      const d = Math.hypot((tmp.x + 1) / 2 * innerWidth - x, (1 - tmp.y) / 2 * innerHeight - y);
+      if (d < bd) { bd = d; best = o.userData.f; }
+    }
+    return best;
   }
+  const SLOP = 14;
   // A tap is one pointer that goes down and up on the canvas within 5px; a second finger (pinch) cancels it
   const downIds = new Set(); let downId = null, swallowClickUntil = 0;
   renderer.domElement.addEventListener('pointerdown', e => {
     downIds.add(e.pointerId);
-    if (downIds.size === 1) { downXY = [e.clientX, e.clientY]; downId = e.pointerId; } else downXY = null;
+    if (downIds.size === 1) { downXY = [e.clientX, e.clientY]; downId = e.pointerId; } else { downXY = null; endPress(); }
+    if (downIds.size === 1 && e.pointerType !== 'mouse' && det.hidden) pressT = setTimeout(() => {
+      pressT = null;
+      if (!downXY || !hitAt(downXY[0], downXY[1], SLOP)) return;
+      pressing = true; pressCtl = controls.enabled; controls.enabled = false; hoverXY = downXY.slice();
+    }, 500);
   }, true);
-  addEventListener('pointercancel', e => { downIds.delete(e.pointerId); downXY = null; }, true);
+  addEventListener('pointercancel', e => { downIds.delete(e.pointerId); downXY = null; endPress(); }, true);
   addEventListener('pointerup', e => {
     downIds.delete(e.pointerId);
+    if (endPress()) { downXY = null; swallowClickUntil = performance.now() + 700; return; } // a long press only previews
     if (!downXY || e.pointerId !== downId || e.target !== renderer.domElement) { downXY = null; return; }
     const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]); downXY = null;
     if (moved > 5) return;
-    const f = hitAt(e.clientX, e.clientY);
+    const f = hitAt(e.clientX, e.clientY, e.pointerType === 'mouse' ? 0 : SLOP);
     if (!f && view !== 'focus') return;
     // On touch the browser fires a click after this pointerup at the same spot. By then the light box
     // (or the tag panel) is under the finger, so that click would close it again or pick a chip.
@@ -693,16 +712,32 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   addEventListener('click', e => {
     if (performance.now() < swallowClickUntil) { swallowClickUntil = 0; e.stopPropagation(); e.preventDefault(); }
   }, true);
+  let tipFrame = null;
   function updateTip() {
     if (!hoverXY || !det.hidden) return;
-    const f = hitAt(hoverXY[0], hoverXY[1]);
+    const f = hitAt(hoverXY[0], hoverXY[1], pressing ? SLOP : 0);
     renderer.domElement.style.cursor = f ? 'pointer' : '';
     if (!f) { tip.style.opacity = 0; return; }
-    tip.innerHTML = `${f.real ? `<img src="thumbs/${pad(f.n)}.jpg" alt="">` : ''}<div class="code">${frameCode(f)}${f.real ? '' : ' · sample'}</div><div class="t">${f.tags.join(' · ')}</div>${f.priv ? '<div class="priv">Private · family, image not shown</div>' : ''}`;
-    tip.style.transform = `translate(${Math.min(hoverXY[0] + 14, innerWidth - 216)}px, ${Math.min(hoverXY[1] + 14, innerHeight - (f.real ? 260 : 100))}px)`;
+    if (f !== tipFrame) { // rebuild only when the frame changes, not every animation frame
+      tipFrame = f;
+      tip.innerHTML = `${f.real ? `<img src="thumbs/${pad(f.n)}.jpg" alt="">` : ''}<div class="code">${frameCode(f)}${f.real ? '' : ' · sample'}</div><div class="t">${f.tags.join(' · ')}</div>${f.priv ? '<div class="priv">Private · family, image not shown</div>' : ''}`;
+    }
+    const tipH = f.real ? 260 : 100;
+    if (pressing) { // above the finger, so it isn't hidden under it
+      const x = Math.max(8, Math.min(hoverXY[0] - 100, innerWidth - 208)), y = Math.max(8, hoverXY[1] - tip.offsetHeight - 28);
+      tip.style.transform = `translate(${x}px, ${y}px)`;
+    } else tip.style.transform = `translate(${Math.min(hoverXY[0] + 14, innerWidth - 216)}px, ${Math.min(hoverXY[1] + 14, innerHeight - tipH)}px)`;
     tip.style.opacity = 1;
   }
 
+  let labelSize = labelEls.map(() => [0, 0]), uiRects = [];
+  const labelOrder = labelEls.map((_, i) => i);
+  function measureLabels() {
+    labelSize = labelEls.map(el => [el.offsetWidth, el.offsetHeight]);
+  }
+  function measureUI() {
+    uiRects = ['.head', '#tagPanel', '.scrub'].map(sel => document.querySelector(sel).getBoundingClientRect()).filter(r => r.width).map(r => [r.left - 6, r.top - 4, r.right + 6, r.bottom + 4]);
+  }
   function resize() {
     renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight;
     if (view === 'globe' && !camTw) camera.position.setLength(viewDist());
@@ -711,9 +746,13 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     if (view === 'focus') { layoutFocus(); camera.position.copy(focusGoal); camera.lookAt(0, 0, 0); retarget(() => 0); }
   }
   addEventListener('resize', resize);
+  // Re-measure when anything moves the UI or label boxes (resize, Geist arriving late, wrapping)
+  if (window.ResizeObserver) { const ro = new ResizeObserver(measureUI); ['.head', '#tagPanel', '.scrub'].forEach(sel => ro.observe(document.querySelector(sel))); }
+  addEventListener('resize', measureUI);
+  document.fonts.addEventListener?.('loadingdone', () => { measureUI(); measureLabels(); });
+  document.fonts.ready.then(() => { measureUI(); measureLabels(); });
 
   const tmp = new THREE.Vector3(), camDir = new THREE.Vector3(), look = new THREE.Vector3(), dummy = new THREE.Object3D(), qa = new THREE.Quaternion(), qi = new THREE.Quaternion(), va = new THREE.Vector3(), vb = new THREE.Vector3();
-  const place = (el, v) => { tmp.copy(v).project(camera); el.style.transform = `translate(${(tmp.x + 1) / 2 * innerWidth}px, ${(1 - tmp.y) / 2 * innerHeight}px) translate(-50%, -50%)`; };
   function tick() {
     const now = performance.now();
     if (camTw) {
@@ -741,23 +780,30 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
       lineAnim--;
       [tagLines, webLines].forEach(set => { const a = set.line.geometry.attributes.color, arr = a.array, t = set.target, kk = lineAnim === 0 ? 1 : 0.1; for (let i = 0; i < arr.length; i++) arr[i] += (t[i] - arr[i]) * kk; a.needsUpdate = true; });
     }
-    rings.forEach(r => r.material.opacity += ((mode === 'colour' && view === 'globe' ? 0.7 : 0) - r.material.opacity) * 0.08);
-    labelEls.forEach((el, i) => {
-      place(el, D[i].clone().multiplyScalar(RAD + 2.2));
-      const op = (+el.dataset.base || 0) * (D[i].dot(camDir) < -0.05 ? 0.12 : 1);
+    // Tag labels: drop any that would sit on the header, chips or scrubber, run off the screen, or collide with a
+    // label already placed (front labels first, then by frame count)
+    const placed = [], isFront = i => D[i].dot(camDir) >= -0.05;
+    labelOrder.sort((a, b) => isFront(b) - isFront(a) || counts[b] - counts[a]).forEach(i => {
+      const el = labelEls[i], sz = labelSize[i];
+      tmp.copy(D[i]).multiplyScalar(RAD + 2.2).project(camera);
+      const x = (tmp.x + 1) / 2 * innerWidth, y = (1 - tmp.y) / 2 * innerHeight;
+      el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+      const front = isFront(i);
+      let op = (+el.dataset.base || 0) * (front ? 1 : 0.12);
+      if (op > 0) {
+        const r = [x - sz[0] / 2, y - sz[1] / 2, x + sz[0] / 2, y + sz[1] / 2];
+        const hits = q => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1];
+        if (r[0] < 4 || r[2] > innerWidth - 4 || uiRects.some(hits) || placed.some(hits)) op = 0;
+        else if (front) placed.push(r);
+      }
       el.style.opacity = op; el.style.pointerEvents = op < 0.2 ? 'none' : 'auto';
     });
-    const az = Math.atan2(camera.position.z, camera.position.x) + (innerWidth < 760 ? 0.45 : 0.95);
-    chLabels.forEach((el, i) => {
-      const lat = BANDS[i];
-      place(el, new THREE.Vector3(Math.cos(lat) * Math.cos(az), Math.sin(lat), Math.cos(lat) * Math.sin(az)).multiplyScalar(RAD + 2.6));
-      el.style.opacity = mode === 'colour' && view === 'globe' ? 1 : 0;
-    });
+
     updateTip();
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   }
   document.body.dataset.view = 'globe';
-  resize(); recount(); tick();
+  resize(); recount(); measureUI(); tick();
 })();
 </script>

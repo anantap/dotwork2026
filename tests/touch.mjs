@@ -32,7 +32,7 @@ const lerp = (a, b, n) => Array.from({ length: n + 1 }, (_, k) => a.map((p, i) =
 const state = () => page.evaluate(() => ({ view: document.body.dataset.view, detail: !document.getElementById('detail').hidden, camDist: +window.__camera.position.length().toFixed(2), camX: +window.__camera.position.x.toFixed(3), hlDim: window.__tileXY().filter(t => t.op < 0.1).length }));
 async function frontTile() {
   // nearest-facing tile that is not under any UI; scans first
-  return page.evaluate(() => window.__tileXY().filter(t => t.front > 0.5 && t.op > 0.3 && t.x > 40 && t.x < innerWidth - 40 && t.y > 40 && t.y < innerHeight - 40)
+  return page.evaluate(() => window.__tileXY().filter(t => t.front > 0.8 && t.op > 0.3 && t.x > 40 && t.x < innerWidth - 40 && t.y > 40 && t.y < innerHeight - 40)
     .filter(t => document.elementFromPoint(t.x, t.y)?.tagName === 'CANVAS').sort((a, b) => (b.real - a.real) || (b.front - a.front))[0]);
 }
 async function reload() {
@@ -61,9 +61,12 @@ await closeAll();
 
 // 2. Tap with 3px of finger jitter still counts as a tap
 t = await frontTile();
-await gesture(lerp([[t.x, t.y]], [[t.x + 3, t.y + 1]], 4));
-await sleep(900); s = await state();
-check('tap with 3px jitter opens light box', s.detail, s);
+// one jittered move, no pauses: a real tap is ~100ms and 500ms counts as a long press, and each CDP event can take a frame here
+const tapStart = Date.now();
+await gesture([[[t.x, t.y]], [[t.x + 3, t.y + 1]]], 1, 0);
+const tapMs = Date.now() - tapStart;
+await sleep(900); s = await state(); s.tapMs = tapMs;
+check('tap with 3px jitter opens light box', s.detail, { ...s, tile: t });
 await closeAll();
 
 // 3. A 40px drag rotates and does not open anything
@@ -96,6 +99,27 @@ for (let k = 1; k <= 4; k++) { await touch('touchMove', [[t.x, t.y], [t.x + 60 +
 await touch('touchEnd', [[t.x, t.y]]); await sleep(30); await touch('touchEnd', []);
 await sleep(900); s = await state();
 check('small pinch with a stationary finger does not open light box', !s.detail, s);
+await closeAll();
+
+// 6b. Long press on a tile shows the hover card; releasing doesn't open the light box
+await reload();
+t = await frontTile();
+await touch('touchStart', [[t.x, t.y]]); await sleep(700);
+const tipShown = await page.evaluate(() => ({ op: getComputedStyle(document.getElementById('tip')).opacity, text: document.querySelector('#tip .code')?.textContent, rect: document.getElementById('tip').getBoundingClientRect().toJSON() }));
+await page.screenshot({ path: path.join(here, 'out', `long-press-${DEVICE.replace(/\s+/g, '-').toLowerCase()}.png`) });
+await touch('touchEnd', []); await sleep(900); s = await state();
+const tipAfter = await page.evaluate(() => getComputedStyle(document.getElementById('tip')).opacity);
+check('long press shows the frame card above the finger', +tipShown.op > 0.5 && tipShown.rect.bottom <= t.y, { ...tipShown, fingerY: Math.round(t.y) });
+check('releasing a long press hides the card and opens nothing', +tipAfter < 0.1 && !s.detail, { tipAfter, detail: s.detail });
+await closeAll();
+
+// 6c. Dragging across tiles on touch shows no card
+t = await frontTile();
+await touch('touchStart', [[t.x, t.y]]);
+let maxTip = 0;
+for (let k = 1; k <= 10; k++) { await touch('touchMove', [[t.x + k * 6, t.y]]); await sleep(30); maxTip = Math.max(maxTip, +await page.evaluate(() => getComputedStyle(document.getElementById('tip')).opacity)); }
+await touch('touchEnd', []); await sleep(500);
+check('touch drag shows no hover card', maxTip < 0.1, { maxTip });
 await closeAll();
 
 // 7. Tap a chip → tag view → tap empty space → back on globe; the same tap must not land on a chip and re-enter a tag view
