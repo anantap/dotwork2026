@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Roll a Month Map</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -142,11 +146,12 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   h1 { font-size: 34px; }
   .lede { font-size: 15px; }
   .ftitle { font-size: 40px; }
-  .tags { width: auto; max-height: none; flex-direction: row; overflow-x: auto; gap: 16px; padding-bottom: 2px; }
+  .tags { width: auto; max-height: none; flex-direction: row; overflow-x: auto; gap: 16px; padding-bottom: 2px; align-self: stretch; } /* stretch: otherwise the row grows to its content width and never scrolls */
   .axis, .toggle { flex: none; }
   .chips { flex-wrap: nowrap; }
   .months span:nth-child(even) { visibility: hidden; }
   #detail { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 20px; overflow-y: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .d-media { min-height: auto; } /* keep the row as tall as the photo; min-height: 0 let it shrink so the photo spilled over the caption */
   .d-media img { max-height: 58vh; }
   .d-info { overflow: visible; }
 }
@@ -394,7 +399,9 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   const labelsEl = document.getElementById('labels'), panel = document.getElementById('tagPanel');
   const chipEls = {}, labelEls = [];
   const hoverable = (el, key) => {
-    el.addEventListener('mouseenter', () => setHl(key)); el.addEventListener('mouseleave', () => setHl(null));
+    // Mouse only: touch fires emulated mouseenter on tap but never mouseleave, which left a highlight stuck on
+    el.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') setHl(key); });
+    el.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') setHl(null); });
     el.addEventListener('focus', () => setHl(key)); el.addEventListener('blur', () => setHl(null));
   };
   const addSection = (title, names, cls, pre) => {
@@ -641,7 +648,7 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
   det.querySelector('.d-media').addEventListener('click', e => { if (e.target === e.currentTarget) closeDetail(); });
 
   addEventListener('keydown', e => {
-    if (!det.hidden) {
+    if (!det.hidden && !closing) {
       if (e.key === 'Escape') closeDetail();
       else if (e.key === 'ArrowLeft') step(-1);
       else if (e.key === 'ArrowRight') step(1);
@@ -663,13 +670,28 @@ body[data-view="focus"] .tags { transform: translateX(14px); }
     const h = ray.intersectObjects(pickable(), false)[0];
     return h ? h.object.userData.f : null;
   }
-  renderer.domElement.addEventListener('pointerdown', e => { downXY = [e.clientX, e.clientY]; }, true);
+  // A tap is one pointer that goes down and up on the canvas within 5px; a second finger (pinch) cancels it
+  const downIds = new Set(); let downId = null, swallowClickUntil = 0;
+  renderer.domElement.addEventListener('pointerdown', e => {
+    downIds.add(e.pointerId);
+    if (downIds.size === 1) { downXY = [e.clientX, e.clientY]; downId = e.pointerId; } else downXY = null;
+  }, true);
+  addEventListener('pointercancel', e => { downIds.delete(e.pointerId); downXY = null; }, true);
   addEventListener('pointerup', e => {
-    if (!downXY || e.target !== renderer.domElement) { downXY = null; return; }
+    downIds.delete(e.pointerId);
+    if (!downXY || e.pointerId !== downId || e.target !== renderer.domElement) { downXY = null; return; }
     const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]); downXY = null;
     if (moved > 5) return;
     const f = hitAt(e.clientX, e.clientY);
-    if (f) openDetail(f); else if (view === 'focus') exitFocus();
+    if (!f && view !== 'focus') return;
+    // On touch the browser fires a click after this pointerup at the same spot. By then the light box
+    // (or the tag panel) is under the finger, so that click would close it again or pick a chip.
+    if (e.pointerType !== 'mouse') swallowClickUntil = performance.now() + 700;
+    if (f) openDetail(f); else exitFocus();
+  }, true);
+  addEventListener('mousedown', e => { if (performance.now() < swallowClickUntil) e.preventDefault(); }, true); // no focus (and so no highlight) on what the ghost click lands on
+  addEventListener('click', e => {
+    if (performance.now() < swallowClickUntil) { swallowClickUntil = 0; e.stopPropagation(); e.preventDefault(); }
   }, true);
   function updateTip() {
     if (!hoverXY || !det.hidden) return;

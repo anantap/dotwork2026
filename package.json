@@ -1,0 +1,14 @@
+{
+  "name": "roll-a-month",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "serve . -l 3000",
+    "test": "node tests/run.mjs && node tests/touch.mjs --device \"iPhone 14\" && node tests/touch.mjs --device \"Pixel 7\" && node tests/safe-area.mjs",
+    "test:install": "playwright install chromium firefox webkit"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0",
+    "serve": "^14.2.4"
+  }
+}

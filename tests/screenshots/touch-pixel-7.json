@@ -1,0 +1,136 @@
+{
+  "device": "Pixel 7",
+  "results": [
+    {
+      "name": "layout viewport matches device width",
+      "ok": true,
+      "detail": {
+        "innerWidth": 412,
+        "viewport": "width=device-width, initial-scale=1, viewport-fit=cover"
+      }
+    },
+    {
+      "name": "tap on globe tile opens light box and it stays open",
+      "ok": true,
+      "detail": {
+        "view": "globe",
+        "detail": true,
+        "camDist": 72,
+        "camX": -4.56,
+        "hlDim": 0
+      }
+    },
+    {
+      "name": "tap with 3px jitter opens light box",
+      "ok": true,
+      "detail": {
+        "view": "globe",
+        "detail": true,
+        "camDist": 72,
+        "camX": -6.026,
+        "hlDim": 0
+      }
+    },
+    {
+      "name": "40px drag rotates, no light box",
+      "ok": true,
+      "detail": {
+        "before": -6.219,
+        "after": -25.396,
+        "detail": false
+      }
+    },
+    {
+      "name": "pinch-out zooms in (camera distance decreases), no light box",
+      "ok": true,
+      "detail": {
+        "before": 72,
+        "after": 18,
+        "detail": false
+      }
+    },
+    {
+      "name": "two-finger tap does not open light box",
+      "ok": true,
+      "detail": {
+        "view": "globe",
+        "detail": false,
+        "camDist": 72,
+        "camX": -4.659,
+        "hlDim": 0
+      }
+    },
+    {
+      "name": "small pinch with a stationary finger does not open light box",
+      "ok": true,
+      "detail": {
+        "view": "globe",
+        "detail": false,
+        "camDist": 63.53,
+        "camX": -4.16,
+        "hlDim": 0
+      }
+    },
+    {
+      "name": "chip tap enters tag view",
+      "ok": true,
+      "detail": {
+        "view": "focus",
+        "detail": false,
+        "camDist": 40,
+        "camX": 29.393,
+        "hlDim": 213
+      }
+    },
+    {
+      "name": "tap on empty space (where a hidden chip sits) returns to globe",
+      "ok": true,
+      "detail": {
+        "view": "globe",
+        "detail": false,
+        "camDist": 72,
+        "camX": 52.907,
+        "hlDim": 0,
+        "topElement": "CANVAS",
+        "at": [
+          151,
+          229
+        ]
+      }
+    },
+    {
+      "name": "no stuck highlight after leaving tag view",
+      "ok": true,
+      "detail": {
+        "dimmedTiles": 0
+      }
+    },
+    {
+      "name": "tap on tag-view tile opens light box and it stays open",
+      "ok": true,
+      "detail": {
+        "view": "focus",
+        "detail": true,
+        "camDist": 40,
+        "camX": 29.393,
+        "hlDim": 213
+      }
+    },
+    {
+      "name": "Esc, Esc (150ms apart) from light box returns to globe",
+      "ok": true,
+      "detail": {
+        "view": "globe",
+        "detail": false,
+        "camDist": 72,
+        "camX": 52.87,
+        "hlDim": 0
+      }
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "detail": []
+    }
+  ]
+}
