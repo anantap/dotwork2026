@@ -52,7 +52,7 @@ rep('''        <button type="button" data-sec="subject" aria-expanded="false" ar
         <button type="button" data-sec="work" aria-expanded="false" aria-controls="mPanel">Work</button>
         <button type="button" data-sec="sector" aria-expanded="false" aria-controls="mPanel">Sector</button>
         <button type="button" data-sec="type" aria-expanded="false" aria-controls="mPanel">Type</button>
-        <a href="about.html">About</a>''')
+        <button type="button" id="mAbout">About</button>''')
 rep('<nav class="menu" id="menu" aria-label="Browse">', '<nav class="menu" id="menu" aria-label="Browse projects">')
 rep('<div class="d-media"><img id="dImg" alt=""><div class="d-ph" id="dPh" hidden>Sample frame<br>no scan yet</div></div>', '<div class="d-media"><img id="dImg" alt=""></div>')
 rep('<button type="button" id="dPrev" aria-label="Previous frame">', '<button type="button" id="dPrev" aria-label="Previous project">')
@@ -69,6 +69,10 @@ i = s.index("  const MONTHS = ['Jan'"); j = s.index("  const tagList = AXES.flat
 s = s[:i] + r"""  // Projects: the five client projects from ananta.work, plus bami.blog. Edit here to add more.
   const AXES = ['work', 'sector', 'type'];
   const PROJECTS = [
+    { slug: 'about', about: true, title: 'Ananta Mulyono', role: 'UX designer',
+      text: 'My work is about making complexity legible. I observe, ask questions, challenge assumptions, and bring structure across stakeholders, processes, and the design itself. I’m drawn to problems where the answer isn’t just on the screen, but in the people and context around it.',
+      cv: [['2023 — Now', 'Gemeente Den Haag'], ['2021 — 2023', 'Eneco'], ['2019 — 2021', 'Harborn (fka Connect Holland)'], ['2017 — 2019', 'Silo']],
+      links: [['Email', 'mailto:anantadotwork@gmail.com'], ['LinkedIn', 'https://www.linkedin.com/in/anantadotpm/']], email: 'anantadotwork@gmail.com' },
     { slug: 'nvd', title: 'Nationale Veteranendag', type: 'client',
       text: 'For Nationale Veteranendag I applied a new campaign identity to the website, restructuring the information hierarchy to balance campaign messaging with veterans’ personal stories.',
       work: ['website', 'content architecture', 'campaign identity'], sector: ['public sector'] },
@@ -88,14 +92,14 @@ s = s[:i] + r"""  // Projects: the five client projects from ananta.work, plus b
       text: 'A logbook of instant noodles. Every pack gets a photo, a number, a flag and a rating out of five.',
       work: ['website', 'code', 'logbook'], sector: ['food'] }
   ];
-  const TAGS = Object.fromEntries(AXES.map(a => [a, [...new Set(PROJECTS.flatMap(p => [].concat(p[a])))]]));
+  const TAGS = Object.fromEntries(AXES.map(a => [a, [...new Set(PROJECTS.filter(p => !p.about).flatMap(p => [].concat(p[a])))]]));
   const AXIS_OF = Object.fromEntries(AXES.flatMap(a => TAGS[a].map(t => [t, a])));
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const RAD = 14;
 
   const prng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const rnd = prng(20260601);
-  const frames = PROJECTS.map((p, n) => ({ ...p, n, tags: AXES.flatMap(a => [].concat(p[a])), real: true, aspect: 1, thumb: `img/${p.slug}-sm.jpg`, full: `img/${p.slug}.jpg` }));
+  const frames = PROJECTS.map((p, n) => ({ ...p, n, tags: p.about ? [] : AXES.flatMap(a => [].concat(p[a])), real: true, aspect: 1, thumb: `img/${p.slug}-sm.jpg`, full: `img/${p.slug}.jpg` }));
 """ + s[j:]
 
 # ---------- tiles: square, bigger, all images ----------
@@ -121,7 +125,7 @@ s = s[:i] + """    frames.forEach(f => {
     });
 """ + s[j:]
 rep("    document.getElementById('status').textContent = `${vis} frames · ${scans} scans · ${counts.filter(c => c > 0).length} tags · ${priv} private`;",
-    "    document.getElementById('status').textContent = `UX designer · ${frames.length} projects`;")
+    "    document.getElementById('status').textContent = `UX designer · ${frames.filter(f => !f.about).length} projects`;")
 rep("    document.querySelectorAll('#months span').forEach((el, i) => el.classList.toggle('on', i < month));\n", "")
 rep("      if (inFocus) op = f.inF ? (f.real ? 1 : f.priv ? 0.6 : 0.42) : 0.025;", "      if (inFocus) op = f.inF ? 1 : 0.025;")
 rep("      else if (h) op = matches(f, h) ? 1 : 0.06;", "      else if (h) op = matches(f, h) ? 1 : 0.12;")
@@ -136,10 +140,11 @@ rep("      f.gscale = Math.min(s * 0.9 / 0.62, 6);", "      f.gscale = Math.min(
 rep("  AXES.forEach(a => addSection(a, TAGS[a]));", """  AXES.forEach(a => addSection(a, TAGS[a]));
   { // Projects: one chip per project, straight to its light box
     const sec = document.createElement('section'); sec.dataset.sec = 'projects'; sec.hidden = true; sec.setAttribute('aria-label', 'Projects');
-    sec.innerHTML = `<div class="chips">${frames.map(f => `<button type="button" class="chip" data-id="${f.id}">${f.title}</button>`).join('')}</div>`;
+    sec.innerHTML = `<div class="chips">${frames.filter(f => !f.about).map(f => `<button type="button" class="chip" data-id="${f.id}">${f.title}</button>`).join('')}</div>`;
     sec.addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) { closeMenu(); openDetail(frames[+b.dataset.id]); } });
     mPanel.prepend(sec);
-  }""")
+  }
+  document.getElementById('mAbout').addEventListener('click', () => { closeMenu(); openDetail(frames.find(f => f.about)); });""")
 rep("    mPanel.insertBefore(sec, mPanel.querySelector('[data-sec=\"time\"]'));", "    mPanel.appendChild(sec);")
 cut("  const tg = document.createElement('label'); tg.className = 'toggle';", "mPanel.querySelector('[data-sec=\"about\"]').appendChild(tg);")
 cut("  document.getElementById('months').innerHTML", "playT = setInterval(")
@@ -169,7 +174,7 @@ rep("if (!detList.includes(detFrame)) detList = frames.filter(g => g.real && sho
 
 # ---------- hover card ----------
 rep("tip.innerHTML = `${f.real ? `<img src=\"thumbs/${pad(f.n)}.jpg\" alt=\"\">` : ''}<div class=\"code\">${frameCode(f)}${f.real ? '' : ' · sample'}</div><div class=\"t\">${f.tags.join(' · ')}</div>${f.priv ? '<div class=\"priv\">Private · family, image not shown</div>' : ''}`;",
-    "tip.innerHTML = `<div class=\"code\">${f.title}</div><div class=\"t\">${f.work.join(' · ')}</div>`;")
+    "tip.innerHTML = `<div class=\"code\">${f.title}</div><div class=\"t\">${f.about ? f.role + ' · about, CV and contact' : f.work.join(' · ')}</div>`;")
 rep("    const tipH = f.real ? 260 : 100;", "    const tipH = 80;")
 
 rep("\n\n  // Month scrubber\n", "\n")
@@ -200,6 +205,33 @@ rep("    const placed = [], isFront = i => D[i].dot(camDir) >= -0.05;", '''    c
       const x = (tmp.x + 1) / 2 * innerWidth, y = (1 - tmp.y) / 2 * innerHeight, h = 0.31 * f.obj.scale.x * pxPerUnit / dist;
       return [x - h, y - h, x + h, y + h];
     }), isFront = i => D[i].dot(camDir) >= -0.05;''')
+
+# ---------- About is a node: portrait tile, linked to every project, CV and contact in its light box ----------
+rep("  frames.forEach(f => { f.dir = new THREE.Vector3(); f.ti.forEach(i => f.dir.add(D[i]));",
+    "  frames.forEach(f => { f.dir = f.about ? new THREE.Vector3(0, 1, 0.4) : new THREE.Vector3(); f.ti.forEach(i => f.dir.add(D[i]));")
+rep("  const webLines = buildLines(webEdges, 6,", '''  frames.filter(f => f.about).forEach(f => frames.forEach(g => { if (g !== f) webEdges.push({ f, g, a: f.home.clone().normalize(), b: g.home.clone().normalize() }); }));
+  const webLines = buildLines(webEdges, 6,''')
+rep('    <section><p class="d-text" id="dText"></p>', '''    <section><p class="d-text" id="dText"></p>''')
+rep('    <section><h3>Tags</h3><dl class="d-axis" id="dTags"></dl></section>', '''    <section id="dAboutS" hidden><h3>Work</h3><ul class="d-cv" id="dCv"></ul></section>
+    <section id="dContactS" hidden><h3>Contact</h3><div class="d-contact" id="dContact"></div></section>
+    <section id="dTagsS"><h3>Tags</h3><dl class="d-axis" id="dTags"></dl></section>''')
+rep("#detail[hidden], #dRelS[hidden], #dLink[hidden] { display: none; }", '''#detail[hidden], #dRelS[hidden], #dLink[hidden], #dAboutS[hidden], #dContactS[hidden], #dTagsS[hidden] { display: none; }
+.d-cv { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.d-cv li { display: grid; grid-template-columns: 92px 1fr; gap: 8px; align-items: baseline; font-size: 13px; }
+.d-cv .yrs { font: 400 13px var(--pixel); color: var(--muted); font-variant-numeric: tabular-nums; }
+.d-contact { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.d-contact .d-link { margin-top: 0; }
+.d-addr { flex-basis: 100%; margin-top: 4px; font-size: 12px; color: var(--muted); user-select: all; }''')
+rep("    img.src = f.thumb; img.alt = `${f.title}: ${f.tags.join(', ')}`;", "    img.src = f.thumb; img.alt = f.about ? 'Portraits of Ananta' : `${f.title}: ${f.tags.join(', ')}`;")
+rep("    kind.textContent = [f.type === 'client' ? 'Client' : 'Side project', f.years].filter(Boolean).join(' · '); kind.className = 'd-kind';",
+    "    kind.textContent = f.about ? f.role : [f.type === 'client' ? 'Client' : 'Side project', f.years].filter(Boolean).join(' · '); kind.className = 'd-kind';")
+rep("    document.getElementById('dText').textContent = f.text;", '''    document.getElementById('dText').textContent = f.text;
+    document.getElementById('dTagsS').hidden = !f.tags.length;
+    document.getElementById('dAboutS').hidden = document.getElementById('dContactS').hidden = !f.about;
+    if (f.about) {
+      document.getElementById('dCv').innerHTML = f.cv.map(([y, p]) => `<li><span class="yrs">${y}</span><span>${p}</span></li>`).join('');
+      document.getElementById('dContact').innerHTML = f.links.map(([l, h]) => `<a class="d-link" href="${h}"${h.startsWith('mailto:') ? '' : ' target="_blank" rel="noopener"'}>${l}</a>`).join('') + `<div class="d-addr">${f.email}</div>`;
+    }''')
 
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)

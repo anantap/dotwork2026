@@ -1,4 +1,4 @@
-// Project map (garden/): loads, menus open, a tag view and a project light box work, About page renders.
+// Project map (garden/): loads, menus open, a tag view and a project light box work, About opens as a node.
 //   node tests/garden.mjs [--base http://localhost:3000/garden/] [--three-dir /path/to/three/package]
 import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
@@ -35,9 +35,13 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   check(bd.title === 'bami.blog' && bd.link, `${name}: bami.blog from the Projects menu, with its link`, bd);
   await p.screenshot({ path: `${OUT}/${name}-5-bami.png` });
   await p.keyboard.press('Escape'); await sleep(800);
-  await tap(p.locator('.m-bar a', { hasText: 'About' })); await p.waitForLoadState('load'); await sleep(800);
-  check(/about(\.html)?$/.test(p.url()) && (await p.locator('.cv li').count()) === 4, `${name}: About page with CV`);
-  await p.screenshot({ path: `${OUT}/${name}-6-about.png`, fullPage: true });
+  await tap(p.locator('#mAbout')); await sleep(1200);
+  const ab = await p.evaluate(() => ({ open: !document.getElementById('detail').hidden, title: document.getElementById('dCode').textContent, cv: document.querySelectorAll('#dCv li').length, links: [...document.querySelectorAll('#dContact a')].map(a => a.textContent), tags: !document.getElementById('dTagsS').hidden }));
+  check(ab.open && ab.title === 'Ananta Mulyono' && ab.cv === 4 && ab.links.length === 2 && !ab.tags, `${name}: About opens as a node with CV and contact`, ab);
+  await p.screenshot({ path: `${OUT}/${name}-6-about.png` });
+  await p.keyboard.press('Escape'); await sleep(800);
+  const lines = await p.evaluate(() => window.__tileXY().length);
+  check(lines === 7, `${name}: 7 nodes on the globe (6 projects + About)`, lines);
   check(!errs.length, `${name}: no errors`, errs);
   await ctx.close();
 }

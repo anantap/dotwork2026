@@ -90,7 +90,13 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 #detail { position: fixed; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.95); display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 32px;
   padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
   padding-block: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px)); }
-#detail[hidden], #dRelS[hidden], #dLink[hidden] { display: none; }
+#detail[hidden], #dRelS[hidden], #dLink[hidden], #dAboutS[hidden], #dContactS[hidden], #dTagsS[hidden] { display: none; }
+.d-cv { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.d-cv li { display: grid; grid-template-columns: 92px 1fr; gap: 8px; align-items: baseline; font-size: 13px; }
+.d-cv .yrs { font: 400 13px var(--pixel); color: var(--muted); font-variant-numeric: tabular-nums; }
+.d-contact { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.d-contact .d-link { margin-top: 0; }
+.d-addr { flex-basis: 100%; margin-top: 4px; font-size: 12px; color: var(--muted); user-select: all; }
 .d-media img { transition: filter .3s; }
 .d-media { min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }
 .d-media img { max-width: 100%; max-height: calc(100vh - 48px); object-fit: contain; display: block; box-shadow: 0 0 0 1px var(--line); border-radius: 4px; }
@@ -171,7 +177,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
         <button type="button" data-sec="work" aria-expanded="false" aria-controls="mPanel">Work</button>
         <button type="button" data-sec="sector" aria-expanded="false" aria-controls="mPanel">Sector</button>
         <button type="button" data-sec="type" aria-expanded="false" aria-controls="mPanel">Type</button>
-        <a href="about.html">About</a>
+        <button type="button" id="mAbout">About</button>
       </div>
     </nav>
   </div>
@@ -187,7 +193,9 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     </div>
     <div class="d-nav"><button type="button" id="dPrev" aria-label="Previous project">←</button><span id="dPos"></span><button type="button" id="dNext" aria-label="Next project">→</button></div>
     <section><p class="d-text" id="dText"></p><a class="d-link" id="dLink" target="_blank" rel="noopener" hidden></a></section>
-    <section><h3>Tags</h3><dl class="d-axis" id="dTags"></dl></section>
+    <section id="dAboutS" hidden><h3>Work</h3><ul class="d-cv" id="dCv"></ul></section>
+    <section id="dContactS" hidden><h3>Contact</h3><div class="d-contact" id="dContact"></div></section>
+    <section id="dTagsS"><h3>Tags</h3><dl class="d-axis" id="dTags"></dl></section>
     <section id="dRelS"><h3>Shares the most work</h3><div class="d-rel" id="dRel"></div></section>
   </aside>
 </div>
@@ -207,6 +215,10 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   // Projects: the five client projects from ananta.work, plus bami.blog. Edit here to add more.
   const AXES = ['work', 'sector', 'type'];
   const PROJECTS = [
+    { slug: 'about', about: true, title: 'Ananta Mulyono', role: 'UX designer',
+      text: 'My work is about making complexity legible. I observe, ask questions, challenge assumptions, and bring structure across stakeholders, processes, and the design itself. I’m drawn to problems where the answer isn’t just on the screen, but in the people and context around it.',
+      cv: [['2023 — Now', 'Gemeente Den Haag'], ['2021 — 2023', 'Eneco'], ['2019 — 2021', 'Harborn (fka Connect Holland)'], ['2017 — 2019', 'Silo']],
+      links: [['Email', 'mailto:anantadotwork@gmail.com'], ['LinkedIn', 'https://www.linkedin.com/in/anantadotpm/']], email: 'anantadotwork@gmail.com' },
     { slug: 'nvd', title: 'Nationale Veteranendag', type: 'client',
       text: 'For Nationale Veteranendag I applied a new campaign identity to the website, restructuring the information hierarchy to balance campaign messaging with veterans’ personal stories.',
       work: ['website', 'content architecture', 'campaign identity'], sector: ['public sector'] },
@@ -226,14 +238,14 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
       text: 'A logbook of instant noodles. Every pack gets a photo, a number, a flag and a rating out of five.',
       work: ['website', 'code', 'logbook'], sector: ['food'] }
   ];
-  const TAGS = Object.fromEntries(AXES.map(a => [a, [...new Set(PROJECTS.flatMap(p => [].concat(p[a])))]]));
+  const TAGS = Object.fromEntries(AXES.map(a => [a, [...new Set(PROJECTS.filter(p => !p.about).flatMap(p => [].concat(p[a])))]]));
   const AXIS_OF = Object.fromEntries(AXES.flatMap(a => TAGS[a].map(t => [t, a])));
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const RAD = 14;
 
   const prng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const rnd = prng(20260601);
-  const frames = PROJECTS.map((p, n) => ({ ...p, n, tags: AXES.flatMap(a => [].concat(p[a])), real: true, aspect: 1, thumb: `img/${p.slug}-sm.jpg`, full: `img/${p.slug}.jpg` }));
+  const frames = PROJECTS.map((p, n) => ({ ...p, n, tags: p.about ? [] : AXES.flatMap(a => [].concat(p[a])), real: true, aspect: 1, thumb: `img/${p.slug}-sm.jpg`, full: `img/${p.slug}.jpg` }));
   const tagList = AXES.flatMap(a => TAGS[a].map(name => ({ name, axis: a })));
   const tagIdx = Object.fromEntries(tagList.map((t, i) => [t.name, i]));
   frames.forEach((f, i) => { f.id = i; f.ti = f.tags.map(t => tagIdx[t]); });
@@ -314,7 +326,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   const twoFaced = g => { const idx = Array.from(g.index.array); for (let i = 0, n = idx.length; i < n; i += 3) idx.push(idx[i], idx[i + 2], idx[i + 1]); g.setIndex(idx); return g; };
   const geoS = twoFaced(new THREE.PlaneGeometry(0.62, 0.62));
   const loader = new THREE.TextureLoader();
-  frames.forEach(f => { f.dir = new THREE.Vector3(); f.ti.forEach(i => f.dir.add(D[i])); f.dir.add(new THREE.Vector3(rnd() - .5, rnd() - .5, rnd() - .5).multiplyScalar(0.3)).normalize(); });
+  frames.forEach(f => { f.dir = f.about ? new THREE.Vector3(0, 1, 0.4) : new THREE.Vector3(); f.ti.forEach(i => f.dir.add(D[i])); f.dir.add(new THREE.Vector3(rnd() - .5, rnd() - .5, rnd() - .5).multiplyScalar(0.3)).normalize(); });
   for (let it = 0; it < 200; it++) frames.forEach(f => frames.forEach(g => {
     if (f === g) return; const d = f.dir.angleTo(g.dir); if (d > 1.05) return;
     f.dir.addScaledVector(new THREE.Vector3().subVectors(f.dir, g.dir).normalize(), (1.05 - d) * 0.1).normalize();
@@ -357,6 +369,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
         webEdges.push({ f, g: frames[gi], a: f.home.clone().normalize(), b: frames[gi].home.clone().normalize() });
       });
   });
+  frames.filter(f => f.about).forEach(f => frames.forEach(g => { if (g !== f) webEdges.push({ f, g, a: f.home.clone().normalize(), b: g.home.clone().normalize() }); }));
   const webLines = buildLines(webEdges, 6, e => (e.f.home.length() + e.g.home.length()) / 2);
   let lineAnim = 0;
   const paintSpans = (set, list, colorOf) => {
@@ -407,10 +420,11 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   AXES.forEach(a => addSection(a, TAGS[a]));
   { // Projects: one chip per project, straight to its light box
     const sec = document.createElement('section'); sec.dataset.sec = 'projects'; sec.hidden = true; sec.setAttribute('aria-label', 'Projects');
-    sec.innerHTML = `<div class="chips">${frames.map(f => `<button type="button" class="chip" data-id="${f.id}">${f.title}</button>`).join('')}</div>`;
+    sec.innerHTML = `<div class="chips">${frames.filter(f => !f.about).map(f => `<button type="button" class="chip" data-id="${f.id}">${f.title}</button>`).join('')}</div>`;
     sec.addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) { closeMenu(); openDetail(frames[+b.dataset.id]); } });
     mPanel.prepend(sec);
   }
+  document.getElementById('mAbout').addEventListener('click', () => { closeMenu(); openDetail(frames.find(f => f.about)); });
 
   // Menu: a button opens its panel, the same button (or Esc, or a tap on the globe) closes it
   let menuSec = null;
@@ -449,7 +463,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     });
     const maxW = Math.max(1, ...tagPairs.map(q => w[q.i][q.j]));
     tagPairs.forEach(q => { q.w = w[q.i][q.j]; q.keep = q.w >= 1; });
-    document.getElementById('status').textContent = `UX designer · ${frames.length} projects`;
+    document.getElementById('status').textContent = `UX designer · ${frames.filter(f => !f.about).length} projects`;
     tagList.forEach((t, i) => {
       chipEls[t.name].innerHTML = `${t.name}<span>${counts[i]}</span>`;
       labelEls[i].innerHTML = `${t.name}<small>${counts[i]}</small>`;
@@ -604,11 +618,11 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   function renderDetail() {
     const f = detFrame, i = detList.indexOf(f);
     const img = document.getElementById('dImg');
-    img.src = f.thumb; img.alt = `${f.title}: ${f.tags.join(', ')}`;
+    img.src = f.thumb; img.alt = f.about ? 'Portraits of Ananta' : `${f.title}: ${f.tags.join(', ')}`;
     const pre = new Image(); pre.onload = () => { if (detFrame === f) img.src = pre.src; }; pre.src = f.full;
     document.getElementById('dCode').textContent = frameCode(f);
     const kind = document.getElementById('dKind');
-    kind.textContent = [f.type === 'client' ? 'Client' : 'Side project', f.years].filter(Boolean).join(' · '); kind.className = 'd-kind';
+    kind.textContent = f.about ? f.role : [f.type === 'client' ? 'Client' : 'Side project', f.years].filter(Boolean).join(' · '); kind.className = 'd-kind';
     document.getElementById('dPos').textContent = `${i + 1} / ${detList.length}`;
     document.getElementById('dPrev').disabled = i <= 0;
     document.getElementById('dNext').disabled = i >= detList.length - 1;
@@ -617,6 +631,12 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
       return ts.length ? `<dt>${a}</dt><dd>${ts.map(t => `<button type="button" class="chip" data-tag="${t}">${t}</button>`).join('')}</dd>` : '';
     }).join('');
     document.getElementById('dText').textContent = f.text;
+    document.getElementById('dTagsS').hidden = !f.tags.length;
+    document.getElementById('dAboutS').hidden = document.getElementById('dContactS').hidden = !f.about;
+    if (f.about) {
+      document.getElementById('dCv').innerHTML = f.cv.map(([y, p]) => `<li><span class="yrs">${y}</span><span>${p}</span></li>`).join('');
+      document.getElementById('dContact').innerHTML = f.links.map(([l, h]) => `<a class="d-link" href="${h}"${h.startsWith('mailto:') ? '' : ' target="_blank" rel="noopener"'}>${l}</a>`).join('') + `<div class="d-addr">${f.email}</div>`;
+    }
     const link = document.getElementById('dLink'); link.hidden = !f.link;
     if (f.link) { link.href = f.link; link.textContent = `Visit ${f.linkLabel || f.link} ↗`; }
     const rel = frames.filter(g => g.real && g !== f && shown(g)).map(g => ({ g, s: g.tags.filter(t => f.tags.includes(t)).length })).filter(x => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 6);
@@ -725,7 +745,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     if (!f) { tip.style.opacity = 0; return; }
     if (f !== tipFrame) { // rebuild only when the frame changes, not every animation frame
       tipFrame = f;
-      tip.innerHTML = `<div class="code">${f.title}</div><div class="t">${f.work.join(' · ')}</div>`;
+      tip.innerHTML = `<div class="code">${f.title}</div><div class="t">${f.about ? f.role + ' · about, CV and contact' : f.work.join(' · ')}</div>`;
     }
     const tipH = 80;
     if (pressing) { // above the finger, so it isn't hidden under it
