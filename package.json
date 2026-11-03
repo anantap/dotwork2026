@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "start": "serve . -l 3000",
-    "test": "node tests/run.mjs && node tests/touch.mjs --device \"iPhone 14\" && node tests/touch.mjs --device \"Pixel 7\" && node tests/safe-area.mjs && node tests/drag.mjs && node tests/labels.mjs && node tests/fallback.mjs",
-    "test:install": "playwright install chromium firefox webkit"
+    "test": "node tests/run.mjs && node tests/touch.mjs --device \"iPhone 14\" && node tests/touch.mjs --device \"Pixel 7\" && node tests/safe-area.mjs && node tests/drag.mjs && node tests/labels.mjs && node tests/fallback.mjs && node tests/garden.mjs",
+    "test:install": "playwright install chromium firefox webkit",
+    "build:garden": "python3 scripts/make-garden.py index.html garden/index.html"
   },
   "devDependencies": {
     "playwright": "^1.63.0",
