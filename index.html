@@ -320,11 +320,11 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   // Free orbit: a drag turns the globe any way, over the poles too. (OrbitControls stopped dead at the poles, and once
   // there a sideways drag only spun the view in place.) Same feel as before: a screen height of drag is a full turn,
   // inertia, pinch and wheel zoom. When left alone it turns by itself on a diagonal, about a turn every 90 seconds,
-  // and picks that up again a few seconds after you let go.
+  // and picks that up again a couple of seconds after you let go.
   const controls = (() => {
     const el = renderer.domElement, ptrs = new Map(), DAMP = 0.07, q = new THREE.Quaternion(), right = new THREE.Vector3(), fwd = new THREE.Vector3();
     const c = { enabled: true, autoRotate: !reduced, hold: false, minDistance: 18, maxDistance: 110 }; // hold: pause the spin (pointer over a frame or label)
-    const SPIN = 2 * Math.PI / 90, SPIN_ANGLE = 0.5, IDLE_MS = 4000; // radians a second, tilt of the spin (about 30°), wait before resuming
+    const SPIN = 2 * Math.PI / 90, SPIN_ANGLE = 0.5, IDLE_MS = 2500; // radians a second, tilt of the spin (about 30°), wait before resuming
     let lastTouch = -IDLE_MS, lastT = performance.now();
     let rx = 0, ry = 0, pinchFrom = 0, pinchDist = 0;
     const zoomTo = d => camera.position.setLength(Math.max(c.minDistance, Math.min(c.maxDistance, d)));

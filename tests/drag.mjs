@@ -38,18 +38,20 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     if (Math.hypot(a[0] - z[0], a[1] - z[1], a[2] - z[2]) < 0.01) stuck.push([Math.round(x), Math.round(y), await p.evaluate(([x, y]) => { const e = document.elementFromPoint(x, y); return e.className || e.tagName; }, [x, y])]);
   }
   check(!stuck.length, `${name}: drags anywhere on the globe turn it`, stuck);
-  const lab = await p.evaluate(() => { const e = [...document.querySelectorAll('.tag-label')].find(e => +getComputedStyle(e).opacity > 0.9); const r = e.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2, e.firstChild.textContent]; });
+  // a fully visible label (few topics on some maps: wait for one to turn to the front)
+  const visibleLabel = async () => { for (let k = 0; k < 40; k++) { const v = await p.evaluate(() => { const e = [...document.querySelectorAll('.tag-label')].find(e => +getComputedStyle(e).opacity > 0.9); if (!e) return null; const r = e.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2, e.firstChild.textContent]; }); if (v) return v; await sleep(500); } throw new Error('no label came into view'); };
+  const lab = await visibleLabel();
   { const a = await cam(); await drag(lab[0], lab[1], 30, 0, 5); await sleep(400); const z = await cam(); check(Math.hypot(a[0] - z[0], a[1] - z[1], a[2] - z[2]) > 0.01 && (await p.evaluate(() => document.body.dataset.view)) === 'globe', `${name}: a drag starting on the "${lab[2]}" label turns the globe`); }
   if (!touch) { // mouse over a label highlights its tag on the globe (find it again: the drag above moved it)
     await sleep(1500);
-    const lh = await p.evaluate(() => { const e = [...document.querySelectorAll('.tag-label')].find(e => +getComputedStyle(e).opacity > 0.9); const r = e.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; });
+    const lh = await visibleLabel();
     await p.mouse.move(lh[0], lh[1]); await sleep(400);
     const lit = await p.evaluate(() => [...document.querySelectorAll('.tag-label.on')].map(e => e.firstChild.textContent));
     check(lit.length === 1, `${name}: hovering a label highlights its tag`, lit);
     await p.mouse.move(5, 5); await sleep(300);
   }
   // ... and a tap / click on a label still opens that tag
-  const lab2 = await p.evaluate(() => { const e = [...document.querySelectorAll('.tag-label')].find(e => +getComputedStyle(e).opacity > 0.9); const r = e.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2, e.firstChild.textContent]; });
+  const lab2 = await visibleLabel();
   if (touch) await p.touchscreen.tap(lab2[0], lab2[1]); else await p.mouse.click(lab2[0], lab2[1]);
   await sleep(1200);
   const fv = await p.evaluate(() => [document.body.dataset.view, document.getElementById('fTitle').textContent]);

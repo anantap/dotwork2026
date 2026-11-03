@@ -5,17 +5,38 @@ Static: `index.html`, `thumbs/`, `full/`. No build step.
 
 ## Project map (`garden/`)
 
-`garden/` is a second map built on the same engine: the projects from ananta.work (plus bami.blog) instead of photos,
-with the menu as Projects, Work, Sector, Type and About. About is a node too: a portrait tile linked to every project,
-whose light box holds the intro, CV and contact details.
+`garden/` is a second map on the same engine: Ananta's projects as small blue squares on the globe. **Filter** lists the
+topics that two or more projects share; picking one pulls those projects forward as images with their titles, and a
+project opens as its images and text. **About** and **CV** open as panels from the same bar.
 
-- Projects live in `scripts/make-garden.py` (the `PROJECTS` list): title, type, years, text, link, and the `work` and
-  `sector` tags that draw the lines between projects. Images are `garden/img/<slug>.jpg` (1200px) and `<slug>-sm.jpg` (512px).
-- `garden/index.html` is generated from the photo globe's `index.html`, so fixes there carry over:
+### Adding or changing content
 
-```bash
-npm run build:garden
+Everything on the page comes from `garden/content.json`; images live in `garden/img/`. On GitHub you can do both in
+the browser: open `garden/img`, choose *Add file → Upload files*, then edit `garden/content.json` (pencil icon) and
+commit. Vercel publishes the change a minute later.
+
+A project looks like this:
+
+```json
+{
+  "title": "Kinfill",
+  "years": "2020",
+  "text": "What you did, in a few sentences. A blank line starts a new paragraph.",
+  "images": ["img/kinfill.jpg", "img/kinfill-2.jpg"],
+  "tags": ["website", "redesign", "sustainability"],
+  "link": "https://kinfill.com"
+}
 ```
+
+- `images`: the first one is the tile in a topic view; all of them show, stacked, when the project opens. Use JPGs of
+  about 1200–1600px wide.
+- `tags`: the topics. A topic appears on the globe and in Filter once two or more projects share it, so reuse the
+  same words across projects ("website", not "web site" in one and "website" in another).
+- `years` and `link` are optional.
+- `name`, `role`, `intro`, `photo`, `links` and `cv` at the top fill the title, About and CV.
+
+`garden/index.html` itself is generated from the photo globe's `index.html` (`npm run build:garden`), so engine fixes
+carry over; you never need to edit it for content.
 
 ## Run locally
 
@@ -42,7 +63,7 @@ npm test             # in another
 - `tests/touch.mjs`: tap vs drag (5px threshold), pinch, two-finger tap, long-press preview, ghost clicks, stuck hover (Chromium, CDP touch).
 - `tests/safe-area.mjs`: fakes iPhone notch/home-indicator insets and checks the UI stays inside them (Chromium).
 - `tests/drag.mjs`: the globe turns freely over the poles, drags starting anywhere (labels included) turn it, labels still hover and open.
-- `tests/garden.mjs`: the project map: menus, a tag view, a project light box, bami.blog's link, the About node.
+- `tests/garden.mjs`: the project map: content.json, blue squares, a topic view with images and titles, the project view, About and CV.
 - `tests/labels.mjs`: globe tag labels never sit on the UI, off screen, or on each other (Chromium, 4 sizes).
 - `tests/fallback.mjs`: with WebGL off, or three.js unreachable, the page says so without script errors.
 
