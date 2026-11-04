@@ -198,6 +198,42 @@
       ]
     },
     {
+      "title": "Gino & Janneke",
+      "text": "Wedding photography for Gino and Janneke.",
+      "images": [
+        "img/gino-janneke-01.jpg",
+        "img/gino-janneke-02.jpg",
+        "img/gino-janneke-03.jpg",
+        "img/gino-janneke-04.jpg",
+        "img/gino-janneke-05.jpg",
+        "img/gino-janneke-06.jpg",
+        "img/gino-janneke-07.jpg",
+        "img/gino-janneke-08.jpg"
+      ],
+      "tags": [
+        "photography",
+        "wedding"
+      ]
+    },
+    {
+      "title": "Roza & Bas",
+      "text": "Wedding photography for Roza and Bas.",
+      "images": [
+        "img/roza-bas-01.jpg",
+        "img/roza-bas-02.jpg",
+        "img/roza-bas-03.jpg",
+        "img/roza-bas-04.jpg",
+        "img/roza-bas-05.jpg",
+        "img/roza-bas-06.jpg",
+        "img/roza-bas-07.jpg",
+        "img/roza-bas-08.jpg"
+      ],
+      "tags": [
+        "photography",
+        "wedding"
+      ]
+    },
+    {
       "title": "Texel",
       "text": "A few days on Texel in March, on medium-format film: lambing season, caravans in the dunes and low spring light.",
       "images": [
