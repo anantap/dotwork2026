@@ -245,7 +245,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const F = P.map(() => new THREE.Vector3());
     for (let i = 0; i < T; i++) for (let j = i + 1; j < T; j++) {
       const d = new THREE.Vector3().subVectors(P[j], P[i]); const L = Math.max(d.length(), 0.3);
-      d.normalize().multiplyScalar((co[i][j] / maxCo) * 0.6 * (L - 11) - 600 / (L * L));
+      d.normalize().multiplyScalar((co[i][j] / maxCo) * 0.3 * (L - 13) - 900 / (L * L));
       F[i].add(d); F[j].sub(d);
     }
     P.forEach((p, i) => p.add(F[i].clampLength(0, 0.6)).normalize().multiplyScalar(RAD));

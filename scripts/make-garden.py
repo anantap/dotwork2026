@@ -294,6 +294,11 @@ rep("      if (!shown(e.f) || !shown(e.g)) return BLACK;", "      return BLACK;"
 # "Also" in a topic view lists other shared topics only (a one-off there would open a one-tile view)
 rep("const near = tagPairs.filter(q => q.keep && (q.i === focus.tag || q.j === focus.tag))", "const near = tagPairs.filter(q => q.keep && counts[q.i] >= MIN_SHARED && counts[q.j] >= MIN_SHARED && (q.i === focus.tag || q.j === focus.tag))")
 
+# spread topics evenly over the globe (the photo map's strong pull between related tags left big empty areas here);
+# related topics still lean a little closer together
+rep("      d.normalize().multiplyScalar((co[i][j] / maxCo) * 0.6 * (L - 11) - 600 / (L * L));",
+    "      d.normalize().multiplyScalar((co[i][j] / maxCo) * 0.3 * (L - 13) - 900 / (L * L));")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)
