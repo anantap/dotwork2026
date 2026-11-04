@@ -89,28 +89,29 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     check(await p.evaluate(t => document.activeElement?.classList.contains('p-title') && document.activeElement.textContent === t, ttl), `${name}: Esc closes it and focus returns to the title`);
     await p.keyboard.press('Escape'); await sleep(1500);
   }
-  { // a project with many photos: one big image, the rest as thumbnails; a thumbnail or an arrow key swaps the big one
+  { // a project with many photos: all of them stacked, no thumbnails
     const many = content.projects.filter(x => x.images.length > 1).sort((a, b) => b.images.length - a.images.length)[0];
     if (many) {
       const shared = many.tags.find(t => content.projects.filter(x => x.tags.includes(t)).length > 1);
       await p.evaluate(t => [...document.querySelectorAll('.tag-label')].find(e => e.firstChild.textContent === t).click(), shared); await sleep(2600);
       await p.evaluate(t => [...document.querySelectorAll('.p-title')].find(e => e.textContent === t).click(), many.title); await sleep(1300);
-      const v = await p.evaluate(() => ({ big: document.querySelectorAll('#dMedia img').length, thumbs: document.querySelectorAll('#dThumbs button').length, src: document.getElementById('dImg').getAttribute('src') }));
-      check(v.big === 1 && v.thumbs === many.images.length && v.src === many.images[0], `${name}: "${many.title}" opens with one image and ${many.images.length} thumbnails`, v);
       await p.screenshot({ path: `${OUT}/${name}-4b-many-images.png` });
-      if (opts.hasTouch) { // phones: no thumbnails; the other photos follow the text at full width
-        const st = await p.evaluate(() => ({ thumbs: getComputedStyle(document.getElementById('dThumbs')).display, stack: [...document.querySelectorAll('#dStack img')].map(i => Math.round(i.getBoundingClientRect().width)), big: Math.round(document.getElementById('dImg').getBoundingClientRect().width), vw: innerWidth }));
-        check(st.thumbs === 'none' && st.stack.length === many.images.length - 1 && st.stack.every(w => w > st.vw * 0.85) && st.big > st.vw * 0.85, `${name}: "${many.title}" shows every photo at full width, one under the other`, { ...st, stack: st.stack.length });
-      } else {
-      const k = Math.min(4, many.images.length - 1);
-      await tap(p.locator('#dThumbs button').nth(k)); await sleep(700);
-      check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k], `${name}: a thumbnail shows that image big`);
-      // the caption stays put while photos of different shapes swap in
-      const tops = []; for (let j = 0; j < Math.min(6, many.images.length); j++) { await p.evaluate(j => document.querySelectorAll('#dThumbs button')[j].click(), j); await sleep(400); tops.push(Math.round(await p.evaluate(() => document.getElementById('dText').getBoundingClientRect().top))); }
-      check(new Set(tops).size === 1, `${name}: stepping through photos doesn't move the text`, tops);
-      await p.evaluate(k => document.querySelectorAll('#dThumbs button')[k].click(), k); await sleep(400);
-      if (!opts.hasTouch) { await p.keyboard.press('ArrowRight'); await sleep(500);
-        check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k + 1] && await p.textContent('#dCode') === many.title, `${name}: → steps to the next photo of the same project`); }
+      // every photo in a stack, no thumbnails; on a phone at full width, on desktop each fitting the screen
+      const st = await p.evaluate(() => ({ src: document.getElementById('dImg').getAttribute('src'), thumbs: getComputedStyle(document.getElementById('dThumbs')).display,
+        stack: [...document.querySelectorAll('#dStack img')].map(i => i.getBoundingClientRect()).map(r => [Math.round(r.width), Math.round(r.height)]), big: Math.round(document.getElementById('dImg').getBoundingClientRect().width), vw: innerWidth, vh: innerHeight }));
+      const fits = opts.hasTouch ? st.stack.every(([w]) => w > st.vw * 0.85) && st.big > st.vw * 0.85 : st.stack.every(([w, h]) => w > 0 && h <= st.vh);
+      check(st.src === many.images[0] && st.thumbs === 'none' && st.stack.length === many.images.length - 1 && fits, `${name}: "${many.title}" shows all ${many.images.length} photos one under the other`, { ...st, stack: st.stack.length });
+      if (opts.hasTouch) { // first photo, then the text, then the rest
+        const order = await p.evaluate(() => [document.getElementById('dImg'), document.getElementById('dText'), document.querySelector('#dStack img')].map(e => Math.round(e.getBoundingClientRect().top)));
+        check(order[0] < order[1] && order[1] < order[2], `${name}: phone order is first photo, text, then the other photos`, order);
+      } else { // the text stays beside the photos while they scroll
+        const before = await p.evaluate(() => Math.round(document.getElementById('dText').getBoundingClientRect().top));
+        await p.evaluate(() => document.getElementById('dMedia').scrollBy(0, 1500)); await sleep(300);
+        const after = await p.evaluate(() => ({ text: Math.round(document.getElementById('dText').getBoundingClientRect().top), scrolled: document.getElementById('dMedia').scrollTop }));
+        check(after.scrolled > 0 && after.text === before, `${name}: photos scroll, the text stays put`, { before, ...after });
+        await p.keyboard.press('ArrowRight'); await sleep(500);
+        const nx = await p.evaluate(() => ({ title: document.getElementById('dCode').textContent, top: document.getElementById('dMedia').scrollTop }));
+        check(nx.title !== many.title && nx.top === 0, `${name}: → goes to the next project, back at its first photo`, nx);
       }
       await p.keyboard.press('Escape'); await sleep(900); await p.keyboard.press('Escape'); await sleep(1600);
     }

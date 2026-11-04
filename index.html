@@ -109,14 +109,16 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 .d-link { align-self: flex-start; }
 .d-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .d-thumbs[hidden] { display: none; }
-.d-stack { display: none; }
+.d-stack { display: grid; gap: 16px; width: 100%; justify-items: center; }
+.d-stack:empty { display: none; }
+.d-thumbs { display: none !important; }
 .d-xb { display: none; }
 @media (max-width: 760px) {
   .d-xb { display: grid; place-items: center; position: fixed; left: 50%; top: calc(100% - 64px); width: 40px; height: 40px; margin-left: -20px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: var(--ink); cursor: pointer; z-index: 2; }
   #dClose { display: none; }
   #detail { padding-bottom: 88px; } /* the last photo scrolls clear of the button */
 }
-.d-stack img { width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); }
+.d-stack img { max-width: 100%; max-height: calc(100vh - 48px); width: auto; height: auto; display: block; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); }
 .d-thumbs button { padding: 0; border: 0; background: #111; aspect-ratio: 1; overflow: hidden; border-radius: 4px; cursor: pointer; opacity: .55; transition: opacity .2s; }
 .d-thumbs button[aria-current="true"] { opacity: 1; box-shadow: 0 0 0 1px var(--ink); }
 .d-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -180,7 +182,8 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   .ftitle { font-size: 32px; }
   #detail { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 24px; overflow-y: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .d-media { min-height: auto; overflow: visible; } /* keep the row as tall as the photo; min-height: 0 let it shrink so the photo spilled over the caption */
-  .d-media { height: auto; }
+  .d-media { display: contents; } /* phones: first photo, then the text, then the rest */
+  #dImg { order: 1; } .d-info { order: 2; } .d-stack { order: 3; }
   .d-media img { width: 100%; height: auto; max-height: none; } /* phones: photos at full width, the story scrolls */
   .d-thumbs { display: none !important; }
   .d-stack { display: grid; gap: 16px; }
@@ -222,7 +225,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 <div id="tip"></div>
 
 <div id="detail" hidden role="dialog" aria-modal="true" aria-labelledby="dCode">
-  <div class="d-media" id="dMedia"><img id="dImg" alt=""></div>
+  <div class="d-media" id="dMedia"><img id="dImg" alt=""><div class="d-stack" id="dStack"></div></div>
   <aside class="d-info">
     <div class="d-top">
       <div><div class="d-code" id="dCode"></div><div class="d-kind" id="dKind"></div></div>
@@ -231,7 +234,6 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     <p class="d-text" id="dText"></p>
     <a class="d-link" id="dLink" target="_blank" rel="noopener" hidden></a>
     <div class="d-thumbs" id="dThumbs" hidden></div>
-    <div class="d-stack" id="dStack"></div>
   </aside>
   <button type="button" class="d-xb" id="dCloseB" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5"/></svg></button>
 </div>
@@ -693,13 +695,12 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     swapAnim(d);
   }
   function step(d) {
-    if (detFrame && detFrame.images.length > 1) return showImage(detImg + d);
     const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); }
   }
   function renderDetail() {
     const f = detFrame; detImg = 0;
     dImg.src = f.images[0]; dImg.alt = f.alt || f.title;
-    det.scrollTop = 0; info.scrollTop = 0;
+    det.scrollTop = 0; info.scrollTop = 0; document.getElementById('dMedia').scrollTop = 0;
     // one big image; the rest as thumbnails under the text (tap one to show it big)
     const thumbs = document.getElementById('dThumbs'); thumbs.hidden = f.images.length < 2;
     thumbs.replaceChildren(...(f.images.length < 2 ? [] : f.images.map((src, k) => {

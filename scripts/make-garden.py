@@ -500,6 +500,17 @@ for a, b in [
 ]:
     rep(a, b)
 
+# desktop stacks too: every photo of a project one under the other in the left column (each fits the screen), text on the right.
+# Phones keep their order (first photo, text, the rest) by flattening the photo column into the page.
+rep("""    <div class="d-thumbs" id="dThumbs" hidden></div>\n    <div class="d-stack" id="dStack"></div>\n  </aside>""", """    <div class="d-thumbs" id="dThumbs" hidden></div>\n  </aside>""")
+rep("""<div class="d-media" id="dMedia"><img id="dImg" alt=""></div>""", """<div class="d-media" id="dMedia"><img id="dImg" alt=""><div class="d-stack" id="dStack"></div></div>""")
+rep(".d-stack { display: none; }", ".d-stack { display: grid; gap: 16px; width: 100%; justify-items: center; }\n.d-stack:empty { display: none; }\n.d-thumbs { display: none !important; }")
+rep(".d-stack img { width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); }",
+    ".d-stack img { max-width: 100%; max-height: calc(100vh - 48px); width: auto; height: auto; display: block; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); }")
+rep("  .d-media { height: auto; }", "  .d-media { display: contents; } /* phones: first photo, then the text, then the rest */\n  #dImg { order: 1; } .d-info { order: 2; } .d-stack { order: 3; }")
+rep("    if (detFrame && detFrame.images.length > 1) return showImage(detImg + d);\n", "")
+rep("    det.scrollTop = 0; info.scrollTop = 0;", "    det.scrollTop = 0; info.scrollTop = 0; document.getElementById('dMedia').scrollTop = 0;")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)
