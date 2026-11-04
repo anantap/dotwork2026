@@ -589,10 +589,13 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
     const box = side ? { L: 24 + 440 + 64, R: innerWidth - 48, T: 24, B: innerHeight - 112 }
                      : { L: pad, R: innerWidth - pad, T: lead.getBoundingClientRect().top + fh.offsetHeight + 32, B: innerHeight - 104 };
     const GAP = 16, N = Math.max(1, focusList.length), maxT = side ? 320 : Infinity;
-    const fit = TH => { // the biggest tile for any column count; TH = room under each row
-      let best = { t: 0, cols: 1, rows: 1 };
-      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), t = Math.min((box.R - box.L - (cols - 1) * GAP) / cols, (box.B - box.T - rows * TH) / rows, maxT); if (t >= best.t) best = { t, cols, rows }; }
-      return best;
+    const fit = TH => { // TH = room under each row. Prefer full rows: the fewest empty spots, among layouts whose tiles are at least 60% of the biggest possible
+      const all = [];
+      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols); all.push({ t: Math.min((box.R - box.L - (cols - 1) * GAP) / cols, (box.B - box.T - rows * TH) / rows, maxT), cols, rows, empty: cols * rows - N }); }
+      const top = Math.max(...all.map(o => o.t));
+      const titled = TH > GAP ? all.filter(o => o.t + GAP >= 84) : []; // keeping titles readable beats full rows
+      const pool = titled.length ? titled : all, top2 = Math.max(...pool.map(o => o.t));
+      return pool.filter(o => o.t >= Math.min(top, top2) * 0.6 && o.t >= top2 * 0.6).sort((a, b) => a.empty - b.empty || b.t - a.t)[0];
     };
     let TH = side ? 64 : 48, best = fit(TH); // 8px, the title line, then room before the next row
     titlesOn = best.t + GAP >= 84; // columns too narrow for a title (lots of projects on a phone): tiles only, bigger
