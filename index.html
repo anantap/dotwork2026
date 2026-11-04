@@ -107,6 +107,33 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
   padding-block: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px)); }
 #detail[hidden], #dLink[hidden] { display: none; }
 #detail:focus { outline: none; }
+#sheet { position: fixed; inset: 0; z-index: 10; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; opacity: 0; transition: opacity .35s ease;
+  display: grid; grid-template-columns: 440px minmax(0, 1fr); column-gap: 64px; align-items: start;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(48px, env(safe-area-inset-right, 0px)) 48px max(24px, env(safe-area-inset-left, 0px)); }
+#sheet::-webkit-scrollbar { display: none; }
+#sheet[hidden] { display: none; }
+#sheet.on { opacity: 1; }
+#sheet .focus-head { position: sticky; top: 0; width: auto; opacity: 1; transform: none; pointer-events: auto; transition: none; }
+#sheet .ftitle { margin-bottom: 0; font-weight: 400; overflow-wrap: anywhere; }
+.s-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 16px; }
+.s-tile { appearance: none; border: 0; padding: 0; background: none; color: var(--ink); cursor: pointer; display: grid; gap: 8px; text-align: center; min-width: 0; font: inherit; }
+.s-tile img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #111; transition: opacity .2s; }
+.s-tile span { font: 400 14px/20px var(--pixel); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+.s-tile:focus-visible { outline: 1px solid var(--ink); outline-offset: 4px; }
+@media (hover: hover) { .s-tile:hover img { opacity: .8; } }
+@media (prefers-reduced-motion: no-preference) {
+  #sheet.on .s-tile { animation: sIn .5s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--d) * 1ms); }
+}
+@keyframes sIn { from { opacity: 0; transform: translateY(12px); } }
+@media (max-width: 1023px) {
+  #sheet { display: block; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) 120px max(24px, env(safe-area-inset-left, 0px)); }
+  #sheet .focus-head { position: static; margin-bottom: 32px; }
+  .s-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+  #back { position: fixed; z-index: 2; left: 50%; top: calc(100% - 60px); transform: translateX(-50%); background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+}
+@media (max-width: 760px) {
+  #sheet { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+}
 @media (min-width: 761px) {
   #detail { overflow-y: auto; scrollbar-width: none; align-items: start; }
   #detail::-webkit-scrollbar { display: none; }
@@ -209,12 +236,6 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
         <h1 id="name">Ananta Mulyono</h1>
         <div class="status" id="status">UX designer</div>
       </header>
-      <div class="focus-head" id="focusHead">
-        <button type="button" class="back" id="back">← Return</button>
-        <div class="ftitle" id="fTitle"></div>
-        <div class="fsub" id="fSub"></div>
-        <div class="fwith" id="fWith"></div>
-      </div>
     </div>
   </div>
   <div class="bottom">
@@ -232,6 +253,16 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
   </div>
 </div>
 <div id="tip"></div>
+
+<section id="sheet" hidden aria-labelledby="fTitle">
+  <div class="focus-head" id="focusHead">
+    <button type="button" class="back" id="back">← Return</button>
+    <h2 class="ftitle" id="fTitle"></h2>
+    <div class="fsub" id="fSub"></div>
+    <div class="fwith" id="fWith"></div>
+  </div>
+  <div class="s-grid" id="sGrid"></div>
+</section>
 
 <div id="detail" hidden role="dialog" aria-modal="true" aria-labelledby="dCode" tabindex="-1">
   <div class="d-media" id="dMedia"><img id="dImg" alt=""><div class="d-stack" id="dStack"></div></div>
@@ -574,39 +605,25 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
     focusList = frames.filter(f => matches(f, focus));
     const n = focusDir(), dist = RAD + 26, G = 18;
     focusGoal = n.clone().multiplyScalar(dist);
-    const fwd = n.clone().negate(), right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(right, fwd);
-    const center = focusGoal.clone().addScaledVector(fwd, G);
-    const vh = 2 * G * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), vw = vh * camera.aspect;
-    const mobile = innerWidth < 760;
     // header
     document.getElementById('fTitle').textContent = keyName(focus);
     document.getElementById('fSub').textContent = `${focusList.length} project${focusList.length === 1 ? '' : 's'}`;
     const withEl = document.getElementById('fWith');
     const near = tagPairs.filter(q => q.keep && counts[q.i] >= MIN_SHARED && counts[q.j] >= MIN_SHARED && (q.i === focus.tag || q.j === focus.tag)).sort((a, b) => b.w - a.w).slice(0, 4).map(q => tagList[q.i === focus.tag ? q.j : q.i].name);
     withEl.innerHTML = near.length ? '<span>Also</span>' + near.map(t => `<button type="button" class="chip" data-tag="${esc(t)}">${esc(t)}</button>`).join('') : '';
-    const pxU = innerHeight / vh, side = innerWidth >= 1024;
-    const pad = mobile ? 16 : 24, lead = document.querySelector('.lead'), fh = document.querySelector('.focus-head'); // header filled in above, so it can be measured
-    const box = side ? { L: 24 + 440 + 64, R: innerWidth - 48, T: 24, B: innerHeight - 112 }
-                     : { L: pad, R: innerWidth - pad, T: lead.getBoundingClientRect().top + fh.offsetHeight + 32, B: innerHeight - 104 };
-    const GAP = 16, N = Math.max(1, focusList.length), maxT = side ? 320 : Infinity;
-    const fit = TH => { // TH = room under each row. Prefer full rows: the fewest empty spots, among layouts whose tiles are at least 60% of the biggest possible
-      const all = [];
-      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols); all.push({ t: Math.min((box.R - box.L - (cols - 1) * GAP) / cols, (box.B - box.T - rows * TH) / rows, maxT), cols, rows, empty: cols * rows - N }); }
-      const top = Math.max(...all.map(o => o.t));
-      const titled = TH > GAP ? all.filter(o => o.t + GAP >= 84) : []; // keeping titles readable beats full rows
-      const pool = titled.length ? titled : all, top2 = Math.max(...pool.map(o => o.t));
-      return pool.filter(o => o.t >= Math.min(top, top2) * 0.6 && o.t >= top2 * 0.6).sort((a, b) => a.empty - b.empty || b.t - a.t)[0];
-    };
-    let TH = side ? 64 : 48, best = fit(TH); // 8px, the title line, then room before the next row
-    titlesOn = best.t + GAP >= 84; // columns too narrow for a title (lots of projects on a phone): tiles only, bigger
-    if (!titlesOn) { TH = GAP; best = fit(TH); }
-    const { t, cols } = best; cellPx = t + GAP;
-    focusList.forEach((f, i) => {
-      const c = i % cols, r = Math.floor(i / cols), px = box.L + c * (t + GAP) + t / 2, py = box.T + r * (t + TH) + t / 2;
-      f.gpos = center.clone().addScaledVector(right, (px - innerWidth / 2) / pxU).addScaledVector(up, (innerHeight / 2 - py) / pxU);
-      f.gscale = t / pxU / 0.62;
-      f.inF = true; f.order = i;
-    });
+    // the grid: one button per project (square crop of its first photo, title under it); rebuilt only when the topic changes
+    const grid = document.getElementById('sGrid'), key = keyName(focus);
+    if (grid.dataset.key !== key) {
+      grid.dataset.key = key;
+      grid.replaceChildren(...focusList.map((f, i) => {
+        f.order = i;
+        const b = document.createElement('button'); b.type = 'button'; b.className = 's-tile'; b.style.setProperty('--d', 160 + Math.min(i, 11) * 45);
+        const im = new Image(); im.src = f.image; im.alt = ''; im.decoding = 'async'; if (i > 8) im.loading = 'lazy';
+        const t = document.createElement('span'); t.textContent = f.title;
+        b.append(im, t); b.addEventListener('click', () => openDetail(f, im)); f.domTile = im;
+        return b;
+      }));
+    }
   }
   function openTopic(name) {
     const only = frames.filter(f => f.tags.includes(name));
@@ -618,6 +635,9 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
     document.body.dataset.view = 'focus';
     tip.style.opacity = 0;
     layoutFocus();
+    { const sh = document.getElementById('sheet'), back = document.getElementById('back'), mb = document.getElementById('mBar').getBoundingClientRect();
+      sh.hidden = false; sh.scrollTop = 0; requestAnimationFrame(() => sh.classList.add('on'));
+      if (mb.height) back.style.top = `${mb.top + mb.height / 2 - 16}px`; } // phones: Return where the About button sits
     flyTo(focusGoal, 1300);
     retarget(f => f.inF ? 180 + Math.min(f.order * 14, 700) : Math.random() * 120);
     paint();
@@ -627,6 +647,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
     if (view !== 'focus') return;
     const was = new Set(focusList);
     view = 'globe'; focus = null; frames.forEach(f => f.inF = false);
+    { const sh = document.getElementById('sheet'); sh.classList.remove('on'); setTimeout(() => { if (view !== 'focus') sh.hidden = true; }, 350); }
     document.body.dataset.view = 'globe';
     flyTo(camera.position.clone().setLength(viewDist()), 1200);
     retarget(f => was.has(f) ? Math.min((focusList.length - f.order) * 6, 360) : 250 + Math.random() * 300);
@@ -659,10 +680,11 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
     dImg.animate([{ opacity: 0, transform: `translateX(${dir * 28}px)` }, { opacity: 1, transform: 'none' }], { duration: 340, easing: EASE });
   }
   function frameCode(f) { return f.title; }
-  function openDetail(f) {
+  const domRect = el => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight && r.width ? { l: r.left, t: r.top, w: r.width, h: r.height } : null; };
+  function openDetail(f, srcEl) {
     detList = view === 'focus' ? focusList : frames;
     if (!detList.includes(f)) detList = [f];
-    const from = tileRect(f);
+    const from = (srcEl && domRect(srcEl)) || tileRect(f), fromDom = !!(srcEl && domRect(srcEl));
     detFrame = f;
     renderDetail();
     det.getAnimations({ subtree: true }).forEach(a => a.cancel());
@@ -678,7 +700,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
     info.animate([{ opacity: 0, transform: 'translateX(28px)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 160, easing: EASE, fill: 'backwards' });
     const go = () => {
       if (detFrame !== f) return;
-      if (f.obj.material.opacity > 0.3) return flip(el, from, false); // grow out of the tile you clicked
+      if (fromDom || f.obj.material.opacity > 0.3) return flip(el, from, false); // grow out of the tile you clicked
       el.style.opacity = ''; // no visible tile to grow from (e.g. opened from a label): fade in
       el.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: EASE });
     };
@@ -694,7 +716,8 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
     if (reduced) { det.hidden = true; detFrame = null; restoreFocus(); return; }
     closing = true;
     const el = dImg;
-    const p1 = f.obj.visible && f.opT > 0.1 ? flip(el, tileRect(f), true) : el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' }).finished;
+    const back = view === 'focus' && f.domTile && f.domTile.isConnected && domRect(f.domTile);
+    const p1 = back ? flip(el, back, true) : f.obj.visible && f.opT > 0.1 ? flip(el, tileRect(f), true) : el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' }).finished;
     info.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(28px)' }], { duration: 260, easing: 'ease', fill: 'forwards' });
     const p2 = det.animate([{ backgroundColor: 'rgba(0,0,0,0.95)' }, { backgroundColor: 'rgba(0,0,0,0)' }], { duration: 400, easing: 'ease', fill: 'forwards' }).finished;
     Promise.all([p1, p2]).then(() => { det.hidden = true; detFrame = null; closing = false; restoreFocus(); det.getAnimations({ subtree: true }).forEach(a => a.cancel()); dImg.style.opacity = ''; });

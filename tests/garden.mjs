@@ -46,23 +46,27 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   const expect = content.projects.filter(x => x.tags.includes('website')).length;
   check(await p.textContent('#fTitle') === 'website' && (await p.textContent('#fSub')) === `${expect} projects`, `${name}: "website" topic view`, await p.textContent('#fSub'));
   await sleep(400); check(await p.evaluate(() => getComputedStyle(document.getElementById('menu')).visibility) === 'hidden', `${name}: no About button in a topic`);
-  const t1 = (await tiles()).filter(t => t.inF);
-  check(t1.length === expect && t1.every(t => t.img), `${name}: topic view shows the projects' images`, t1.map(t => t.img));
-  const titles = await p.evaluate(() => [...document.querySelectorAll('.p-title')].filter(e => +getComputedStyle(e).opacity > 0.9).map(e => e.textContent));
-  check(titles.length === expect, `${name}: titles under the tiles`, titles);
-  const overlaps = await p.evaluate(() => {
-    const pxu = innerHeight / (2 * Math.tan(window.__camera.fov * Math.PI / 360)), out = [];
-    const tiles = window.__scene.children.filter(o => o.userData.f && o.userData.f.inF).map(o => { const v = o.position.clone(), d = v.distanceTo(window.__camera.position); v.project(window.__camera); o.geometry.computeBoundingBox(); const bb = o.geometry.boundingBox, k = o.scale.x * pxu / d, x = (v.x + 1) / 2 * innerWidth, y = (1 - v.y) / 2 * innerHeight; return { t: o.userData.f.title, r: [x + bb.min.x * k, y - bb.max.y * k, x + bb.max.x * k, y - bb.min.y * k] }; });
-    for (const e of document.querySelectorAll('.p-title')) { if (+getComputedStyle(e).opacity < 0.5) continue; const b = e.getBoundingClientRect(); for (const t of tiles) if (t.t !== e.textContent && b.left < t.r[2] && b.right > t.r[0] && b.top < t.r[3] && b.bottom > t.r[1]) out.push(`${e.textContent} on ${t.t}`); }
-    return out; });
-  check(!overlaps.length, `${name}: no title sits on another tile`, overlaps);
+  await sleep(800);
+  // the topic is a page of its own over the globe: a grid of square photos with titles, 3 columns on wide screens, 2 on phones
+  const g = await p.evaluate(() => {
+    const ts = [...document.querySelectorAll('#sGrid .s-tile')].map(b => ({ t: b.querySelector('span').textContent, img: b.querySelector('img').getBoundingClientRect().toJSON(), ttl: b.querySelector('span').getBoundingClientRect().toJSON(), loaded: b.querySelector('img').naturalWidth > 0 }));
+    const lefts = [...new Set(ts.map(x => Math.round(x.img.left)))], head = document.getElementById('fTitle').getBoundingClientRect();
+    const over = []; ts.forEach(a => ts.forEach(b => { if (a !== b && a.ttl.left < b.img.right && a.ttl.right > b.img.left && a.ttl.top < b.img.bottom && a.ttl.bottom > b.img.top) over.push(`${a.t} on ${b.t}`); }));
+    return { n: ts.length, loaded: ts.every(x => x.loaded), titles: ts.map(x => x.t), cols: lefts.length, square: ts.every(x => Math.abs(x.img.width - x.img.height) < 1),
+      left: Math.round(Math.min(...ts.map(x => x.img.left))), right: Math.round(innerWidth - Math.max(...ts.map(x => x.img.right))), textLeft: Math.round(head.left), over, sheet: getComputedStyle(document.getElementById('sheet')).opacity }; });
+  check(g.n === expect && g.loaded && g.square, `${name}: topic page shows each project's photo, square`, { n: g.n, loaded: g.loaded });
+  check(g.titles.length === expect, `${name}: titles under the tiles`, g.titles);
+  check(g.cols === Math.min(expect, opts.hasTouch ? 2 : 3), `${name}: ${opts.hasTouch ? 2 : 3} columns`, g.cols);
+  if (opts.hasTouch) check(g.left === g.textLeft && Math.abs(g.left - g.right) <= 1, `${name}: grid lines up with the text, same margin left and right`, { left: g.left, right: g.right, text: g.textLeft });
+  check(!g.over.length, `${name}: no title sits on another tile`, g.over);
+  if (opts.hasTouch) { const bk = await p.evaluate(() => { const a = document.getElementById('back').getBoundingClientRect(), m = document.getElementById('mBar').getBoundingClientRect(); return [Math.round(a.top + a.height / 2), Math.round(m.top + m.height / 2), getComputedStyle(document.getElementById('back')).position]; });
+    check(bk[2] === 'fixed' && Math.abs(bk[0] - bk[1]) <= 2, `${name}: Return pinned at the bottom, where About sits`, bk); }
   const also = await p.evaluate(() => [...document.querySelectorAll('#fWith .chip')].map(c => c.textContent));
   const shared = t => content.projects.filter(x => x.tags.includes(t)).length >= 2;
   check(also.every(shared), `${name}: "Also" lists shared topics only`, also);
   await p.screenshot({ path: `${OUT}/${name}-3-topic-website.png` });
 
-  const t = await p.evaluate(() => window.__tileXY().filter(t => t.inF).sort((a, b) => a.order - b.order)[0]);
-  if (opts.hasTouch) await p.touchscreen.tap(t.x, t.y); else await p.mouse.click(t.x, t.y);
+  await tap(p.locator('#sGrid .s-tile').first());
   await sleep(1100);
   const d = await p.evaluate(() => ({ open: !document.getElementById('detail').hidden, title: document.getElementById('dCode').textContent, text: document.getElementById('dText').textContent.length, img: document.getElementById('dImg').naturalWidth,
     extra: [...document.querySelectorAll('#detail section, #detail dl, #detail .d-nav')].length }));
@@ -75,7 +79,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   await p.keyboard.press('Escape'); await sleep(700); await p.keyboard.press('Escape'); await sleep(1800);
   const t2 = await tiles();
   const t3 = await p.evaluate(() => window.__tileXY().map(t => t.op));
-  check(await p.evaluate(() => document.body.dataset.view) === 'globe' && t3.every(o => o < 0.05), `${name}: back on the globe, projects hidden again`, t3.map(o => +o.toFixed(2)));
+  check(await p.evaluate(() => document.body.dataset.view === 'globe' && document.getElementById('sheet').hidden) && t3.every(o => o < 0.05), `${name}: back on the globe, topic page gone`, t3.map(o => +o.toFixed(2)));
 
   if (!opts.hasTouch) { // keyboard only: a topic label → a project title → Enter opens it → Esc returns focus to the title
     const focusOn = async (sel, max = 60) => { for (let k = 0; k < max; k++) { if (await p.evaluate(q => document.activeElement?.matches(q), sel)) return true; await p.keyboard.press('Tab'); } return false; };
@@ -84,13 +88,13 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     check(await focusOn('.tag-label:not(.solo)'), `${name}: Tab reaches a shared topic label`);
     const topic = await p.evaluate(() => document.activeElement.firstChild.textContent);
     await p.keyboard.press('Enter'); await sleep(2400);
-    check(await focusOn('.p-title'), `${name}: Tab reaches a project title in the "${topic}" view`);
-    const ttl = await p.evaluate(() => document.activeElement.textContent);
+    check(await focusOn('.s-tile'), `${name}: Tab reaches a project in the "${topic}" page`);
+    const ttl = await p.evaluate(() => document.activeElement.querySelector('span').textContent);
     await p.keyboard.press('Enter'); await sleep(1100);
     check(await p.evaluate(t => !document.getElementById('detail').hidden && document.getElementById('dCode').textContent === t, ttl), `${name}: Enter opens "${ttl}"`);
     check(await p.evaluate(() => document.activeElement.id) === 'dClose', `${name}: opened from the keyboard, focus is on the close button`);
     await p.keyboard.press('Escape'); await sleep(900);
-    check(await p.evaluate(t => document.activeElement?.classList.contains('p-title') && document.activeElement.textContent === t, ttl), `${name}: Esc closes it and focus returns to the title`);
+    check(await p.evaluate(t => document.activeElement?.classList.contains('s-tile') && document.activeElement.querySelector('span').textContent === t, ttl), `${name}: Esc closes it and focus returns to the project`);
     await p.keyboard.press('Escape'); await sleep(1500);
   }
   { // a project with many photos: all of them stacked, no thumbnails
@@ -98,7 +102,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     if (many) {
       const shared = many.tags.find(t => content.projects.filter(x => x.tags.includes(t)).length > 1);
       await p.evaluate(t => [...document.querySelectorAll('.tag-label')].find(e => e.firstChild.textContent === t).click(), shared); await sleep(2600);
-      await p.evaluate(t => [...document.querySelectorAll('.p-title')].find(e => e.textContent === t).click(), many.title); await sleep(1300);
+      await p.evaluate(t => [...document.querySelectorAll('#sGrid .s-tile')].find(e => e.querySelector('span').textContent === t).click(), many.title); await sleep(1300);
       await p.screenshot({ path: `${OUT}/${name}-4b-many-images.png` });
       // every photo in a stack, no thumbnails; on a phone at full width, on desktop each fitting the screen
       const st = await p.evaluate(() => ({ src: document.getElementById('dImg').getAttribute('src'), thumbs: getComputedStyle(document.getElementById('dThumbs')).display,

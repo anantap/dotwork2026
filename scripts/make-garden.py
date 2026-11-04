@@ -600,6 +600,88 @@ rep("""          tmp.copy(f.obj.position); const dist = tmp.distanceTo(camera.po
           const half""", """          tmp.copy(f.obj.position); const dist = tmp.clone().sub(camera.position).dot(viewDir); tmp.project(camera);
           const half""")
 
+# ---- Topic view as a page of its own: plain HTML over the globe (which still turns to the topic, faintly, behind it).
+# It scrolls like a page; 3 columns on wide screens with the header pinned left, 2 below that with the header on top
+# and Return pinned at the bottom where the About button sits.
+rep("""      <div class="focus-head" id="focusHead">
+        <button type="button" class="back" id="back">← Return</button>
+        <div class="ftitle" id="fTitle"></div>
+        <div class="fsub" id="fSub"></div>
+        <div class="fwith" id="fWith"></div>
+      </div>
+""", "")
+rep('<div id="detail" hidden role="dialog"', """<section id="sheet" hidden aria-labelledby="fTitle">
+  <div class="focus-head" id="focusHead">
+    <button type="button" class="back" id="back">← Return</button>
+    <h2 class="ftitle" id="fTitle"></h2>
+    <div class="fsub" id="fSub"></div>
+    <div class="fwith" id="fWith"></div>
+  </div>
+  <div class="s-grid" id="sGrid"></div>
+</section>
+
+<div id="detail" hidden role="dialog\"""")
+rep("#detail:focus { outline: none; }", """#detail:focus { outline: none; }
+#sheet { position: fixed; inset: 0; z-index: 10; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; opacity: 0; transition: opacity .35s ease;
+  display: grid; grid-template-columns: 440px minmax(0, 1fr); column-gap: 64px; align-items: start;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(48px, env(safe-area-inset-right, 0px)) 48px max(24px, env(safe-area-inset-left, 0px)); }
+#sheet::-webkit-scrollbar { display: none; }
+#sheet[hidden] { display: none; }
+#sheet.on { opacity: 1; }
+#sheet .focus-head { position: sticky; top: 0; width: auto; opacity: 1; transform: none; pointer-events: auto; transition: none; }
+#sheet .ftitle { margin-bottom: 0; font-weight: 400; overflow-wrap: anywhere; }
+.s-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 16px; }
+.s-tile { appearance: none; border: 0; padding: 0; background: none; color: var(--ink); cursor: pointer; display: grid; gap: 8px; text-align: center; min-width: 0; font: inherit; }
+.s-tile img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #111; transition: opacity .2s; }
+.s-tile span { font: 400 14px/20px var(--pixel); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+.s-tile:focus-visible { outline: 1px solid var(--ink); outline-offset: 4px; }
+@media (hover: hover) { .s-tile:hover img { opacity: .8; } }
+@media (prefers-reduced-motion: no-preference) {
+  #sheet.on .s-tile { animation: sIn .5s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--d) * 1ms); }
+}
+@keyframes sIn { from { opacity: 0; transform: translateY(12px); } }
+@media (max-width: 1023px) {
+  #sheet { display: block; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) 120px max(24px, env(safe-area-inset-left, 0px)); }
+  #sheet .focus-head { position: static; margin-bottom: 32px; }
+  .s-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+  #back { position: fixed; z-index: 2; left: 50%; top: calc(100% - 60px); transform: translateX(-50%); background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+}
+@media (max-width: 760px) {
+  #sheet { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+}""")
+_i = s.index("    const fwd = n.clone().negate(), right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(right, fwd);\n    const center = focusGoal")
+_j = s.index("    // header\n    document.getElementById('fTitle')", _i)
+s = s[:_i] + s[_j:]
+_i = s.index("    const pxU = innerHeight / vh, side = innerWidth >= 1024;")
+_k = s.index("  }\n  function openTopic", _i)
+s = s[:_i] + """    // the grid: one button per project (square crop of its first photo, title under it); rebuilt only when the topic changes
+    const grid = document.getElementById('sGrid'), key = keyName(focus);
+    if (grid.dataset.key !== key) {
+      grid.dataset.key = key;
+      grid.replaceChildren(...focusList.map((f, i) => {
+        f.order = i;
+        const b = document.createElement('button'); b.type = 'button'; b.className = 's-tile'; b.style.setProperty('--d', 160 + Math.min(i, 11) * 45);
+        const im = new Image(); im.src = f.image; im.alt = ''; im.decoding = 'async'; if (i > 8) im.loading = 'lazy';
+        const t = document.createElement('span'); t.textContent = f.title;
+        b.append(im, t); b.addEventListener('click', () => openDetail(f, im)); f.domTile = im;
+        return b;
+      }));
+    }
+""" + s[_k:]
+rep("""    layoutFocus();
+    flyTo(focusGoal, 1300);""", """    layoutFocus();
+    { const sh = document.getElementById('sheet'), back = document.getElementById('back'), mb = document.getElementById('mBar').getBoundingClientRect();
+      sh.hidden = false; sh.scrollTop = 0; requestAnimationFrame(() => sh.classList.add('on'));
+      if (mb.height) back.style.top = `${mb.top + mb.height / 2 - 16}px`; } // phones: Return where the About button sits
+    flyTo(focusGoal, 1300);""")
+rep("""    view = 'globe'; focus = null; frames.forEach(f => f.inF = false);""", """    view = 'globe'; focus = null; frames.forEach(f => f.inF = false);
+    { const sh = document.getElementById('sheet'); sh.classList.remove('on'); setTimeout(() => { if (view !== 'focus') sh.hidden = true; }, 350); }""")
+# the project view grows out of (and shrinks back into) the grid tile that opened it
+rep("  function openDetail(f) {", "  const domRect = el => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight && r.width ? { l: r.left, t: r.top, w: r.width, h: r.height } : null; };\n  function openDetail(f, srcEl) {")
+rep("    const from = tileRect(f);\n    detFrame = f;", "    const from = (srcEl && domRect(srcEl)) || tileRect(f), fromDom = !!(srcEl && domRect(srcEl));\n    detFrame = f;")
+rep("      if (f.obj.material.opacity > 0.3) return flip(el, from, false); // grow out of the tile you clicked", "      if (fromDom || f.obj.material.opacity > 0.3) return flip(el, from, false); // grow out of the tile you clicked")
+rep("    const p1 = f.obj.visible && f.opT > 0.1 ? flip(el, tileRect(f), true) :", "    const back = view === 'focus' && f.domTile && f.domTile.isConnected && domRect(f.domTile);\n    const p1 = back ? flip(el, back, true) : f.obj.visible && f.opT > 0.1 ? flip(el, tileRect(f), true) :")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)
