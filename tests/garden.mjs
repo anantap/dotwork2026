@@ -68,6 +68,8 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   check(d.open && d.text > 20 && d.img > 0 && d.extra === 0, `${name}: project view is images and text only`, d);
   const L = await p.evaluate(() => { const i = document.getElementById('dImg').getBoundingClientRect(), c = document.querySelector('.d-info').getBoundingClientRect(); return { imgTop: i.top, imgBottom: i.bottom, imgRight: i.right, infoTop: c.top, infoLeft: c.left }; });
   check(L.imgTop >= 0 && !(L.infoTop < L.imgBottom - 1 && L.infoLeft < L.imgRight - 1), `${name}: image doesn't overlap the text`, L);
+  const fx = await p.evaluate(() => document.activeElement.id);
+  check(fx === 'detail', `${name}: opened by click or tap, no focus ring on the close button`, fx);
   await p.screenshot({ path: `${OUT}/${name}-4-project.png` });
   await p.keyboard.press('Escape'); await sleep(700); await p.keyboard.press('Escape'); await sleep(1800);
   const t2 = await tiles();
@@ -85,6 +87,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     const ttl = await p.evaluate(() => document.activeElement.textContent);
     await p.keyboard.press('Enter'); await sleep(1100);
     check(await p.evaluate(t => !document.getElementById('detail').hidden && document.getElementById('dCode').textContent === t, ttl), `${name}: Enter opens "${ttl}"`);
+    check(await p.evaluate(() => document.activeElement.id) === 'dClose', `${name}: opened from the keyboard, focus is on the close button`);
     await p.keyboard.press('Escape'); await sleep(900);
     check(await p.evaluate(t => document.activeElement?.classList.contains('p-title') && document.activeElement.textContent === t, ttl), `${name}: Esc closes it and focus returns to the title`);
     await p.keyboard.press('Escape'); await sleep(1500);

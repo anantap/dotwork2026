@@ -511,6 +511,13 @@ rep("  .d-media { height: auto; }", "  .d-media { display: contents; } /* phones
 rep("    if (detFrame && detFrame.images.length > 1) return showImage(detImg + d);\n", "")
 rep("    det.scrollTop = 0; info.scrollTop = 0;", "    det.scrollTop = 0; info.scrollTop = 0; document.getElementById('dMedia').scrollTop = 0;")
 
+# focus the close button only when the project was opened from the keyboard; after a click or tap the dialog itself takes focus, so no ring appears
+rep('<div id="detail" hidden role="dialog" aria-modal="true" aria-labelledby="dCode">', '<div id="detail" hidden role="dialog" aria-modal="true" aria-labelledby="dCode" tabindex="-1">')
+rep("#detail[hidden], #dLink[hidden] { display: none; }", "#detail[hidden], #dLink[hidden] { display: none; }\n#detail:focus { outline: none; }")
+rep("      (innerWidth < 760 ? xb : document.getElementById('dClose')).focus({ preventScroll: true }); }",
+    "      (byKey ? (innerWidth < 760 ? xb : document.getElementById('dClose')) : det).focus({ preventScroll: true }); }")
+rep("  let returnFocus = null;", "  let returnFocus = null, byKey = false; // was the last input a key (then show focus) or a pointer\n  addEventListener('keydown', () => { byKey = true; }, true);\n  addEventListener('pointerdown', () => { byKey = false; }, true);")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)

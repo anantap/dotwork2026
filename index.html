@@ -104,6 +104,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
   padding-block: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px)); }
 #detail[hidden], #dLink[hidden] { display: none; }
+#detail:focus { outline: none; }
 .d-text { margin: 0; font-size: 16px; line-height: 24px; text-wrap: pretty; white-space: pre-line; }
 .d-link, .contact a { display: inline-flex; align-items: center; gap: 4px; font: 400 12px var(--sans); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; text-decoration: none; }
 .d-link { align-self: flex-start; }
@@ -224,7 +225,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 </div>
 <div id="tip"></div>
 
-<div id="detail" hidden role="dialog" aria-modal="true" aria-labelledby="dCode">
+<div id="detail" hidden role="dialog" aria-modal="true" aria-labelledby="dCode" tabindex="-1">
   <div class="d-media" id="dMedia"><img id="dImg" alt=""><div class="d-stack" id="dStack"></div></div>
   <aside class="d-info">
     <div class="d-top">
@@ -658,7 +659,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     det.hidden = false; tip.style.opacity = 0; closing = false;
     { const mb = document.getElementById('mBar').getBoundingClientRect(), xb = document.getElementById('dCloseB'); // same spot as the About button
       if (mb.height) xb.style.top = `${mb.top + mb.height / 2 - 20}px`;
-      (innerWidth < 760 ? xb : document.getElementById('dClose')).focus({ preventScroll: true }); }
+      (byKey ? (innerWidth < 760 ? xb : document.getElementById('dClose')) : det).focus({ preventScroll: true }); }
     if (reduced) return;
     const el = dImg;
     el.style.opacity = '0';
@@ -672,7 +673,9 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     };
     dImg.decode().then(go, go);
   }
-  let returnFocus = null;
+  let returnFocus = null, byKey = false; // was the last input a key (then show focus) or a pointer
+  addEventListener('keydown', () => { byKey = true; }, true);
+  addEventListener('pointerdown', () => { byKey = false; }, true);
   const restoreFocus = () => { const el = returnFocus; returnFocus = null; if (el && el.isConnected && el !== document.body) el.focus({ preventScroll: true }); };
   function closeDetail() {
     if (det.hidden || closing) return;
