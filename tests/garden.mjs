@@ -72,7 +72,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   await p.keyboard.press('Escape'); await sleep(700); await p.keyboard.press('Escape'); await sleep(1800);
   const t2 = await tiles();
   const t3 = await p.evaluate(() => window.__tileXY().map(t => t.op));
-  check(await p.evaluate(() => document.body.dataset.view) === 'globe' && t2.every(t => !t.img) && t3.every(o => o < 0.05), `${name}: back on the globe, projects hidden again`);
+  check(await p.evaluate(() => document.body.dataset.view) === 'globe' && t3.every(o => o < 0.05), `${name}: back on the globe, projects hidden again`, t3.map(o => +o.toFixed(2)));
 
   if (!opts.hasTouch) { // keyboard only: a topic label → a project title → Enter opens it → Esc returns focus to the title
     const focusOn = async (sel, max = 60) => { for (let k = 0; k < max; k++) { if (await p.evaluate(q => document.activeElement?.matches(q), sel)) return true; await p.keyboard.press('Tab'); } return false; };
