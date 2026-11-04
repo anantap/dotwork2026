@@ -55,8 +55,29 @@ A project looks like this:
 - `years` and `link` are optional.
 - `name`, `role`, `intro`, `photo`, `links` and `cv` at the top fill the title, About and CV.
 
-`index.html` itself is generated from the photo globe's `photos/index.html` (`npm run build:garden`), so engine fixes
-carry over; you never need to edit it for content.
+`index.html` itself is generated from the photo globe's `photos/index.html`, so engine fixes carry over; you never need
+to edit it for content.
+
+## Build
+
+```bash
+npm install && npm run build
+```
+
+`npm run build` makes everything the site serves, in order:
+
+1. `scripts/make-garden.py` writes a readable `index.html` from the engine.
+2. `scripts/build-three.mjs` bundles only the parts of three.js the page uses into `js/three-<hash>.js` (no CDN).
+3. `scripts/optimize-images.py` makes light WebP versions of every photo in `content.json` (`img/opt/`: square grid
+   crops, 800 and 1600px versions) and a 1200x630 link-preview image per project (`img/og/`).
+4. `scripts/build-pages.mjs` minifies the page, lists the light photos in it, and writes a page per project and shared
+   topic (`/kinfill/`, `/photography/` ...) with its own title and preview.
+
+Fonts are self-hosted and cut down to Latin (`fonts/`, made by `npm run build:fonts` from `scripts/fonts-src/`, needs
+`pip install fonttools brotli`); run that only when the fonts or the characters they need change.
+
+Projects added through `/admin/` show up right away using the original photos; run `npm run build` (and commit) to give
+them light versions, their own address and a link preview. `npm run perf` measures page weight and load times.
 
 ## Run locally
 

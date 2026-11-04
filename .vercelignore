@@ -7,3 +7,7 @@ scripts/
 serve.json
 incoming/
 photos/
+fonts/fonts.json
+js/three.json
+js/pages.json
+img/opt/manifest.json

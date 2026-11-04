@@ -108,7 +108,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
       const st = await p.evaluate(() => ({ src: document.getElementById('dImg').getAttribute('src'), thumbs: getComputedStyle(document.getElementById('dThumbs')).display,
         stack: [...document.querySelectorAll('#dStack img')].map(i => i.getBoundingClientRect()).map(r => [Math.round(r.width), Math.round(r.height)]), big: Math.round(document.getElementById('dImg').getBoundingClientRect().width), vw: innerWidth, vh: innerHeight }));
       const fits = opts.hasTouch ? st.stack.every(([w]) => w > st.vw * 0.85) && st.big > st.vw * 0.85 : st.stack.every(([w, h]) => w > 0 && h <= st.vh);
-      check(st.src === many.images[0] && st.thumbs === 'none' && st.stack.length === many.images.length - 1 && fits, `${name}: "${many.title}" shows all ${many.images.length} photos one under the other`, { ...st, stack: st.stack.length });
+      check((st.src === many.images[0] || st.src.includes(`/${many.images[0].slice(4).replace(/\.[a-z]+$/i, '')}-`)) && st.thumbs === 'none' && st.stack.length === many.images.length - 1 && fits, `${name}: "${many.title}" shows all ${many.images.length} photos one under the other`, { ...st, stack: st.stack.length });
       if (opts.hasTouch) { // first photo, then the text, then the rest
         const order = await p.evaluate(() => [document.getElementById('dImg'), document.getElementById('dText'), document.querySelector('#dStack img')].map(e => Math.round(e.getBoundingClientRect().top)));
         check(order[0] < order[1] && order[1] < order[2], `${name}: phone order is first photo, text, then the other photos`, order);

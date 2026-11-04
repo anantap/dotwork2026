@@ -682,6 +682,97 @@ rep("    const from = tileRect(f);\n    detFrame = f;", "    const from = (srcEl
 rep("      if (f.obj.material.opacity > 0.3) return flip(el, from, false); // grow out of the tile you clicked", "      if (fromDom || f.obj.material.opacity > 0.3) return flip(el, from, false); // grow out of the tile you clicked")
 rep("    const p1 = f.obj.visible && f.opT > 0.1 ? flip(el, tileRect(f), true) :", "    const back = view === 'focus' && f.domTile && f.domTile.isConnected && domRect(f.domTile);\n    const p1 = back ? flip(el, back, true) : f.obj.visible && f.opT > 0.1 ? flip(el, tileRect(f), true) :")
 
+# ---- Lighter page. Fonts from the site itself (scripts/build-fonts.py): Geist at 400 only and Geist Pixel, both cut to Latin.
+import json as _json, re as _re, os
+_fonts = _json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fonts', 'fonts.json')))
+rep("""<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">""",
+f"""<link rel="preload" href="{_fonts['pixel']}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="{_fonts['sans']}" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="content.json" as="fetch" crossorigin>""")
+rep('<meta charset="utf-8">\n', '<meta charset="utf-8">\n<base href="/">\n')  # every page, also /kinfill/ and the like, finds its files from the site root
+s, _n = _re.subn(r'@font-face \{ font-family: "Geist Pixel"; src: url\(data:font/woff2;base64,[A-Za-z0-9+/=]+\) format\("woff2"\); font-display: swap; \}',
+                 f'@font-face {{ font-family: "Geist Pixel"; src: url({_fonts["pixel"]}) format("woff2"); font-display: swap; }}\n'
+                 f'@font-face {{ font-family: "Geist"; src: url({_fonts["sans"]}) format("woff2"); font-weight: 400; font-display: swap; }}', s)
+assert _n == 1, 'pixel font-face'
+# the globe's own tiles never show photos any more (a topic is a page of its own), so none are loaded for them
+rep("  const loader = new THREE.TextureLoader();\n", "")
+rep("""    f.tex = loader.load(f.image, t => {
+      const a = t.image.width / t.image.height; // square tiles: crop the photo's centre, so a grid of mixed shapes lines up
+      if (a >= 1) { t.repeat.set(1 / a, 1); t.offset.set((1 - 1 / a) / 2, 0); } else { t.repeat.set(1, a); t.offset.set(0, (1 - a) / 2); }
+    });""", "    f.tex = null;")
+# photos: the light versions from scripts/optimize-images.py when there are any, so each screen loads the size it needs
+rep("  const MIN_SHARED = 2;", """  const IMG = {}; // filled in by scripts/build-pages.mjs: {"img/name.jpg": "<hash>"} for photos that have light versions
+  const opt = (src, kind) => `img/opt/${src.slice(4).replace(/\\.[a-z0-9]+$/i, '')}-${IMG[src]}-${kind}.webp`;
+  const GRID = '(min-width: 1024px) calc((100vw - 616px) / 3), (min-width: 761px) calc((100vw - 64px) / 2), calc((100vw - 48px) / 2)', WIDE = '(min-width: 761px) calc(100vw - 400px), 100vw';
+  function setPhoto(im, src, kinds, sizes) { // falls back to the original when a light version is missing (a photo added since the last build)
+    im.onerror = () => { im.onerror = null; im.removeAttribute('srcset'); im.src = src; };
+    if (IMG[src]) { im.sizes = sizes; im.srcset = kinds.map(k => `${opt(src, k)} ${k.replace(/\\D/g, '')}w`).join(', '); im.src = opt(src, kinds[kinds.length - 1]); }
+    else { im.removeAttribute('srcset'); im.src = src; }
+  }
+  const MIN_SHARED = 2;""")
+rep("        const im = new Image(); im.src = f.image; im.alt = ''; im.decoding = 'async'; if (i > 8) im.loading = 'lazy';",
+    "        const im = new Image(); im.alt = ''; im.decoding = 'async'; if (i > 8) im.loading = 'lazy'; setPhoto(im, f.image, ['sq400', 'sq800'], GRID);")
+rep("    dImg.src = f.images[k];", "    setPhoto(dImg, f.images[k], ['w800', 'w1600'], WIDE);")
+rep("    dImg.src = f.images[0]; dImg.alt = f.alt || f.title;", "    setPhoto(dImg, f.images[0], ['w800', 'w1600'], WIDE); dImg.alt = f.alt || f.title;")
+rep("""    document.getElementById('dStack').replaceChildren(...f.images.slice(1).map(src => { const im = new Image(); im.src = src; im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; return im; }));""",
+    """    document.getElementById('dStack').replaceChildren(...f.images.slice(1).map(src => { const im = new Image(); im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; setPhoto(im, src, ['w800', 'w1600'], WIDE); return im; }));""")
+rep("    if (CONTENT.photo) photo.src = CONTENT.photo; else photo.remove();", "    if (CONTENT.photo) { photo.loading = 'lazy'; setPhoto(photo, CONTENT.photo, ['a240'], '120px'); } else photo.remove(); // loads when About opens")
+
+# ---- Addresses: / is the globe, /<topic>/ a topic page, /<project>/ a project. Every step is a history entry, so Back works;
+# scripts/build-pages.mjs writes a page per address with its own title and link preview.
+rep("  const keyName = k => tagList[k.tag].name;", """  const keyName = k => tagList[k.tag].name;
+  const slugOf = s => s.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); // same rule as the build scripts
+  const ROOT = new URL('./', document.baseURI).pathname, SITE_TITLE = document.title;
+  let routing = false;
+  const here = () => (location.pathname.startsWith(ROOT) ? decodeURIComponent(location.pathname.slice(ROOT.length)) : '').replace(/\\/+$/, '');
+  const pageTitle = slug => { const f = slug && frames.find(f => slugOf(f.title) === slug), t = slug && tagList.find(t => slugOf(t.name) === slug); return f ? `${f.title} · ${SITE_TITLE}` : t ? `${t.name} · ${SITE_TITLE}` : SITE_TITLE; };
+  function goTo(slug, replace) { // the address follows what is on screen
+    if (routing || here() === slug) return;
+    history[replace ? 'replaceState' : 'pushState']({}, '', ROOT + (slug ? slug + '/' : '')); document.title = pageTitle(slug);
+  }""")
+rep("    if (!reduced) ['fTitle', 'fSub', 'fWith'].forEach((id, i) => document.getElementById(id).animate(",
+    "    goTo(slugOf(keyName(focus)));\n    if (!reduced) ['fTitle', 'fSub', 'fWith'].forEach((id, i) => document.getElementById(id).animate(")
+rep("""    retarget(f => was.has(f) ? Math.min((focusList.length - f.order) * 6, 360) : 250 + Math.random() * 300);
+    paint();
+  }""", """    retarget(f => was.has(f) ? Math.min((focusList.length - f.order) * 6, 360) : 250 + Math.random() * 300);
+    paint();
+    goTo('');
+  }""")
+rep("""    detFrame = f;
+    renderDetail();
+    det.getAnimations({ subtree: true }).forEach(a => a.cancel());""", """    detFrame = f;
+    renderDetail();
+    goTo(slugOf(f.title));
+    det.getAnimations({ subtree: true }).forEach(a => a.cancel());""")
+rep("""    const f = detFrame;
+    if (reduced) { det.hidden = true; detFrame = null; restoreFocus(); return; }""", """    const f = detFrame;
+    goTo(view === 'focus' && focus ? slugOf(keyName(focus)) : '');
+    if (reduced) { det.hidden = true; detFrame = null; restoreFocus(); return; }""")
+rep("    const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); }",
+    "    const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); goTo(slugOf(detFrame.title), true); }")
+rep("""  resize(); recount(); measureUI(); tick();
+});""", """  resize(); recount(); measureUI(); tick();
+  // open what the address points at (a shared link), and follow Back and Forward
+  function apply(slug) {
+    routing = true;
+    try {
+      const f = slug && frames.find(f => slugOf(f.title) === slug);
+      const ti = f || !slug ? -1 : tagList.findIndex((t, i) => slugOf(t.name) === slug && counts[i] >= MIN_SHARED);
+      if (f) { if (det.hidden || closing) openDetail(f); else if (detFrame !== f) { detFrame = f; renderDetail(); } }
+      else {
+        if (!det.hidden && !closing) closeDetail();
+        if (ti >= 0) { if (view !== 'focus' || focus.tag !== ti) enterFocus(tagList[ti].name); }
+        else if (view === 'focus') exitFocus();
+        if (slug && ti < 0) history.replaceState({}, '', ROOT); // an address that leads nowhere: the globe
+      }
+      document.title = pageTitle(f || ti >= 0 ? slug : '');
+    } finally { routing = false; }
+  }
+  if (here()) apply(here());
+  addEventListener('popstate', () => apply(here()));
+});""")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)
