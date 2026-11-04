@@ -304,7 +304,7 @@ rep("  const tip = document.getElementById('tip');", """  const tip = document.g
 rep("    updateTip();\n    renderer.render", """    { // project titles under the tiles while a topic is open
       const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
       frames.forEach(f => {
-        const on = view === 'focus' && f.inF && f.showImg;
+        const on = view === 'focus' && f.inF && f.showImg && !f.pending;
         if (on) {
           tmp.copy(f.obj.position); const dist = tmp.distanceTo(camera.position); tmp.project(camera);
           const half = 0.31 * f.obj.scale.x * pxPerUnit / dist * f.ah; // half the tile's height
@@ -380,14 +380,23 @@ rep("    menu.querySelectorAll('.m-bar button').forEach(b => b.setAttribute('ari
     "    menu.querySelectorAll('.m-bar button').forEach(b => { b.setAttribute('aria-expanded', String(b.dataset.sec === sec)); b.setAttribute('aria-label', b.dataset.sec === sec ? 'Close' : 'About'); });")
 
 # ---------- tiles fade instead of flying (they no longer have a visible spot on the globe to fly from) ----------
-# enter: an invisible tile jumps to its place in the grid and fades in once the camera has arrived;
-# exit: tiles stay where they are and fade out; a tile already showing (topic to topic) still glides to its new place
+# A visible tile first fades out where it is; it moves to its new place only while invisible. New tiles fade in
+# once the camera has arrived. Same for entering a topic, going back, and topic to topic via "Also".
 rep("      const to = focused ? f.gpos : f.home, sTo = focused ? f.gscale : f.base;",
     "      const to = focused ? f.gpos : f.pTo, sTo = focused ? f.gscale : f.sTo;")
+rep("      if (f.pTo.equals(to) && f.sTo === sTo) return;",
+    "      if (f.pTo.equals(to) && f.sTo === sTo) { f.pending = null; return; }")
+rep("      f.pFrom = f.obj.position.clone(); f.pTo = to.clone(); f.sFrom = f.sz; f.sTo = sTo; f.facing = focused;",
+    "      if (!reduced && f.obj.material.opacity > 0.05) { f.pending = { to: to.clone(), sTo, focused }; return; } // fade out first, then move\n"
+    "      f.pending = null; f.pFrom = to.clone(); f.pTo = to.clone(); f.sFrom = sTo; f.sz = sTo; f.sTo = sTo; f.facing = focused;")
 rep("      f.t0 = now + (reduced ? 0 : stagger(f)); f.dur = reduced ? 0 : 1100;",
-    "      const shown = f.obj.material.opacity > 0.3;\n      f.t0 = now + (reduced || !shown ? 0 : stagger(f)); f.dur = reduced || !shown ? 0 : 1100;")
+    "      f.t0 = now; f.dur = 0;")
+rep("      f.obj.position.lerpVectors(f.pFrom, f.pTo, e);",
+    "      if (f.pending && f.obj.material.opacity < 0.05) { const q = f.pending; f.pending = null; f.pFrom = q.to.clone(); f.pTo = q.to; f.sFrom = f.sz = f.sTo = q.sTo; f.facing = q.focused; f.t0 = now; f.dur = 0; }\n"
+    "      f.obj.position.lerpVectors(f.pFrom, f.pTo, e);")
 rep("      f.obj.material.opacity += (f.opT - f.obj.material.opacity) * (reduced ? 1 : 0.1);",
-    "      const want = view === 'focus' && camTw && f.obj.material.opacity < 0.3 ? 0 : f.opT; // hold new tiles until the camera arrives\n      f.obj.material.opacity += (want - f.obj.material.opacity) * (reduced ? 1 : want < f.obj.material.opacity ? 0.2 : 0.09);")
+    "      const want = f.pending || (view === 'focus' && camTw && f.obj.material.opacity < 0.3) ? 0 : f.opT; // fade out before moving; hold new tiles until the camera arrives\n"
+    "      f.obj.material.opacity += (want - f.obj.material.opacity) * (reduced ? 1 : want < f.obj.material.opacity ? 0.2 : 0.09);")
 
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)

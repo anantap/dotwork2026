@@ -414,10 +414,10 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     frames.forEach(f => {
       const focused = view === 'focus' && f.inF;
       const to = focused ? f.gpos : f.pTo, sTo = focused ? f.gscale : f.sTo;
-      if (f.pTo.equals(to) && f.sTo === sTo) return;
-      f.pFrom = f.obj.position.clone(); f.pTo = to.clone(); f.sFrom = f.sz; f.sTo = sTo; f.facing = focused;
-      const shown = f.obj.material.opacity > 0.3;
-      f.t0 = now + (reduced || !shown ? 0 : stagger(f)); f.dur = reduced || !shown ? 0 : 1100;
+      if (f.pTo.equals(to) && f.sTo === sTo) { f.pending = null; return; }
+      if (!reduced && f.obj.material.opacity > 0.05) { f.pending = { to: to.clone(), sTo, focused }; return; } // fade out first, then move
+      f.pending = null; f.pFrom = to.clone(); f.pTo = to.clone(); f.sFrom = sTo; f.sz = sTo; f.sTo = sTo; f.facing = focused;
+      f.t0 = now; f.dur = 0;
     });
   }
   let camTw = null;
@@ -842,6 +842,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     frames.forEach(f => {
       f.grow += ((shown(f) ? 1 : 0) - f.grow) * (reduced ? 1 : 0.12);
       const e = f.dur ? ease(Math.min(1, Math.max(0, (now - f.t0) / f.dur))) : 1;
+      if (f.pending && f.obj.material.opacity < 0.05) { const q = f.pending; f.pending = null; f.pFrom = q.to.clone(); f.pTo = q.to; f.sFrom = f.sz = f.sTo = q.sTo; f.facing = q.focused; f.t0 = now; f.dur = 0; }
       f.obj.position.lerpVectors(f.pFrom, f.pTo, e);
       f.sz = f.sFrom + (f.sTo - f.sFrom) * e;
       f.obj.visible = f.grow > 0.01;
@@ -849,7 +850,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
       if (true) dummy.quaternion.copy(camera.quaternion); // squares always face the viewer
       else { dummy.position.copy(f.obj.position); dummy.lookAt(look.copy(f.obj.position).multiplyScalar(2)); }
       f.obj.quaternion.slerp(dummy.quaternion, reduced ? 1 : 0.14);
-      const want = view === 'focus' && camTw && f.obj.material.opacity < 0.3 ? 0 : f.opT; // hold new tiles until the camera arrives
+      const want = f.pending || (view === 'focus' && camTw && f.obj.material.opacity < 0.3) ? 0 : f.opT; // fade out before moving; hold new tiles until the camera arrives
       f.obj.material.opacity += (want - f.obj.material.opacity) * (reduced ? 1 : want < f.obj.material.opacity ? 0.2 : 0.09);
     });
     if (lineAnim > 0) {
@@ -886,7 +887,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     { // project titles under the tiles while a topic is open
       const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
       frames.forEach(f => {
-        const on = view === 'focus' && f.inF && f.showImg;
+        const on = view === 'focus' && f.inF && f.showImg && !f.pending;
         if (on) {
           tmp.copy(f.obj.position); const dist = tmp.distanceTo(camera.position); tmp.project(camera);
           const half = 0.31 * f.obj.scale.x * pxPerUnit / dist * f.ah; // half the tile's height
