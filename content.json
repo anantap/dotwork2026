@@ -35,7 +35,7 @@
   "projects": [
     {
       "title": "Nationale Veteranendag",
-      "text": "Every year a new campaign builds up to Veterans Day, which honours everyone who serves or has served in the armed forces. One year the new campaign came with a new website.\n\nUsing wireframes I restructured the homepage so it makes room for each year’s campaign message as well as veterans’ own stories, which carry the importance of remembering their service and the trauma that can come with it.\n\nFor the visual design I reused the margins, colours and typeface of the campaign materials.",
+      "text": "For Nationale Veteranendag I applied a new campaign identity to the website, restructuring the information hierarchy to balance campaign messaging with veterans’ personal stories.",
       "images": [
         "img/nvd.jpg"
       ],
@@ -44,17 +44,13 @@
         "content architecture",
         "campaign identity",
         "public sector"
-      ],
-      "link": "https://www.veteranendag.nl"
+      ]
     },
     {
       "title": "Kinfill",
-      "text": "Let’s be honest: cleaning products are boring. Kinfill, a Rotterdam-based company, set out to change that with reusable glass bottles you refill with cleaning concentrate. At Connect Holland I redesigned their website, while our technical team took care of performance and made Kinfill’s logistics future-proof.\n\nNew fonts, colours and form language turned the site into more of an editorial experience, built around beautiful imagery of the products and tuned for shopping on desktop and mobile alike.\n\nTo give the site a personality we created Kay: Kinfill in person, a bar that stays on screen, talks to you, nudges you towards the next step and listens. Kay has three states: listening, talking and asking you to act.",
+      "text": "For Kinfill, a Rotterdam-based sustainable cleaning brand, I redesigned the website while a technical team improved performance and future-proofed their logistical processes.",
       "images": [
-        "img/kinfill.jpg",
-        "img/kinfill-2.jpg",
-        "img/kinfill-3.jpg",
-        "img/kinfill-4.jpg"
+        "img/kinfill.jpg"
       ],
       "tags": [
         "website",
@@ -62,22 +58,7 @@
         "e-commerce",
         "sustainability",
         "retail"
-      ],
-      "link": "https://www.kinfill.com"
-    },
-    {
-      "title": "Linkit",
-      "text": "Linkit has been connecting the ever-growing supply and demand for IT knowledge for over twenty years. Innovation is key in IT, so Linkit got a new website.\n\nLinkit has a lot of knowledge to share. To keep that manageable for Linkit and its visitors, the site is built around one interaction: searching, or rather finding. Starting a search puts the focus on the search bar, mixed suggestions help visitors along, and colour-coded tags tell the content types apart.\n\nI did the visual and interaction design for desktop and mobile; Linkit and Connect Holland then built it together in an Agile collaboration.",
-      "images": [
-        "img/linkit.jpg"
-      ],
-      "tags": [
-        "website",
-        "search",
-        "recruitment",
-        "IT"
-      ],
-      "link": "https://www.linkit.nl"
+      ]
     },
     {
       "title": "Eneco",
