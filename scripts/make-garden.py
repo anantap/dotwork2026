@@ -432,6 +432,20 @@ rep(".d-thumbs[hidden] { display: none; }", ".d-thumbs[hidden] { display: none; 
 rep("    document.getElementById('dCode').textContent = f.title;",
     "    document.getElementById('dStack').replaceChildren(...f.images.slice(1).map(src => { const im = new Image(); im.src = src; im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; return im; }));\n    document.getElementById('dCode').textContent = f.title;")
 
+# phones: the close button sits at the bottom, where the About button is, and stays there while the story scrolls
+rep("""    <div class="d-stack" id="dStack"></div>\n  </aside>""", """    <div class="d-stack" id="dStack"></div>\n  </aside>\n  <button type="button" class="d-xb" id="dCloseB" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5"/></svg></button>""")
+rep(".d-stack { display: none; }", """.d-stack { display: none; }
+.d-xb { display: none; }
+@media (max-width: 760px) {
+  .d-xb { display: grid; place-items: center; position: fixed; left: 50%; top: calc(100% - 64px); width: 40px; height: 40px; margin-left: -20px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: var(--ink); cursor: pointer; z-index: 2; }
+  #dClose { display: none; }
+  #detail { padding-bottom: 88px; } /* the last photo scrolls clear of the button */
+}""")
+rep("    document.getElementById('dClose').focus({ preventScroll: true });",
+    "    { const mb = document.getElementById('mBar').getBoundingClientRect(), xb = document.getElementById('dCloseB'); // same spot as the About button\n      if (mb.height) xb.style.top = `${mb.top + mb.height / 2 - 20}px`;\n      (innerWidth < 760 ? xb : document.getElementById('dClose')).focus({ preventScroll: true }); }")
+rep("  document.getElementById('dClose').addEventListener('click', closeDetail);",
+    "  document.getElementById('dClose').addEventListener('click', closeDetail);\n  document.getElementById('dCloseB').addEventListener('click', closeDetail);")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)

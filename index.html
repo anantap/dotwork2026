@@ -110,6 +110,12 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 .d-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .d-thumbs[hidden] { display: none; }
 .d-stack { display: none; }
+.d-xb { display: none; }
+@media (max-width: 760px) {
+  .d-xb { display: grid; place-items: center; position: fixed; left: 50%; top: calc(100% - 64px); width: 40px; height: 40px; margin-left: -20px; padding: 0; border-radius: 50%; border: 1px solid var(--line); background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: var(--ink); cursor: pointer; z-index: 2; }
+  #dClose { display: none; }
+  #detail { padding-bottom: 88px; } /* the last photo scrolls clear of the button */
+}
 .d-stack img { width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); }
 .d-thumbs button { padding: 0; border: 0; background: #111; aspect-ratio: 1; overflow: hidden; border-radius: 3px; cursor: pointer; opacity: .55; transition: opacity .2s; }
 .d-thumbs button[aria-current="true"] { opacity: 1; box-shadow: 0 0 0 1px var(--ink); }
@@ -228,6 +234,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     <div class="d-thumbs" id="dThumbs" hidden></div>
     <div class="d-stack" id="dStack"></div>
   </aside>
+  <button type="button" class="d-xb" id="dCloseB" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5"/></svg></button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
@@ -649,7 +656,9 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     det.getAnimations({ subtree: true }).forEach(a => a.cancel());
     if (det.hidden) returnFocus = document.activeElement; // keyboard users land back where they were on close
     det.hidden = false; tip.style.opacity = 0; closing = false;
-    document.getElementById('dClose').focus({ preventScroll: true });
+    { const mb = document.getElementById('mBar').getBoundingClientRect(), xb = document.getElementById('dCloseB'); // same spot as the About button
+      if (mb.height) xb.style.top = `${mb.top + mb.height / 2 - 20}px`;
+      (innerWidth < 760 ? xb : document.getElementById('dClose')).focus({ preventScroll: true }); }
     if (reduced) return;
     const el = dImg;
     el.style.opacity = '0';
@@ -709,6 +718,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     if (f.link) { link.href = f.link; link.textContent = `${f.linkLabel || f.link.replace(/^https?:\/\//, '').replace(/\/$/, '')} ↗`; }
   }
   document.getElementById('dClose').addEventListener('click', closeDetail);
+  document.getElementById('dCloseB').addEventListener('click', closeDetail);
   det.querySelector('.d-media').addEventListener('click', e => { if (e.target === e.currentTarget) closeDetail(); });
 
   addEventListener('keydown', e => {
