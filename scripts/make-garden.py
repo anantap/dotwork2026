@@ -561,6 +561,33 @@ rep("""      f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2)
 
 rep("    const ox = mobile ? 0 : vw * 0.06, oy = mobile ? -vh * 0.06 : -vh * 0.04;", "    const ox = 0, oy = -vh * 0.06; // used below 1024px wide: centred under the header")
 
+# the contact sheet in screen pixels, on the 8-point grid: phones and tablets line it up with the header's left edge under the header;
+# wide screens give it a column right of the header. Tiles 16px apart; under each row room for the title.
+_i = s.index("    const pxU = innerHeight / vh;\n    // desktop: the sheet")
+_j = s.index("    // header\n    document.getElementById('fTitle')", _i)
+_k = s.index("  }\n  function openTopic", _j)
+s = s[:_i] + s[_j:_k] + """    const pxU = innerHeight / vh, side = innerWidth >= 1024;
+    const pad = mobile ? 16 : 24, lead = document.querySelector('.lead'), fh = document.querySelector('.focus-head'); // header filled in above, so it can be measured
+    const box = side ? { L: 24 + 440 + 64, R: innerWidth - 48, T: 24, B: innerHeight - 112 }
+                     : { L: pad, R: innerWidth - pad, T: lead.getBoundingClientRect().top + fh.offsetHeight + 32, B: innerHeight - 104 };
+    const GAP = 16, N = Math.max(1, focusList.length), maxT = side ? 320 : Infinity;
+    const fit = TH => { // the biggest tile for any column count; TH = room under each row
+      let best = { t: 0, cols: 1, rows: 1 };
+      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), t = Math.min((box.R - box.L - (cols - 1) * GAP) / cols, (box.B - box.T - rows * TH) / rows, maxT); if (t >= best.t) best = { t, cols, rows }; }
+      return best;
+    };
+    let TH = side ? 64 : 48, best = fit(TH); // 8px, the title line, then room before the next row
+    titlesOn = best.t + GAP >= 84; // columns too narrow for a title (lots of projects on a phone): tiles only, bigger
+    if (!titlesOn) { TH = GAP; best = fit(TH); }
+    const { t, cols } = best; cellPx = t + GAP;
+    focusList.forEach((f, i) => {
+      const c = i % cols, r = Math.floor(i / cols), px = box.L + c * (t + GAP) + t / 2, py = box.T + r * (t + TH) + t / 2;
+      f.gpos = center.clone().addScaledVector(right, (px - innerWidth / 2) / pxU).addScaledVector(up, (innerHeight / 2 - py) / pxU);
+      f.gscale = t / pxU / 0.62;
+      f.inF = true; f.order = i;
+    });
+""" + s[_k:]
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)

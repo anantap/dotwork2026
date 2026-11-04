@@ -578,39 +578,32 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const center = focusGoal.clone().addScaledVector(fwd, G);
     const vh = 2 * G * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), vw = vh * camera.aspect;
     const mobile = innerWidth < 760;
-    const pxU = innerHeight / vh;
-    // desktop: the sheet fills a box right of the header, from near the top to just above the About button (all in px)
-    const side = innerWidth >= 1024; // wide screens: header left, grid right. Narrower: grid under the header, as on phones
-    const box = { L: 24 + 440 + 64, R: innerWidth - 48, T: 24, B: innerHeight - 112 };
-    const W = side ? (box.R - box.L) / pxU : vw * 0.92, H = side ? (box.B - box.T) / pxU : vh * 0.54;
-    const N = Math.max(1, focusList.length), maxT = side ? 320 / pxU : Infinity; // side-by-side tiles at most 320px
-    const fit = TH => { // tile size for the best column count, leaving TH under each row for a title
-      let best = { t: 0, cols: 1, rows: 1 };
-      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), t = Math.min(W / cols / 1.15, H / rows - TH * 1.15, maxT); if (t >= best.t) best = { t, cols, rows }; }
-      return best;
-    };
-    let TH = (side ? 48 : 30) / pxU, best = fit(TH); // desktop: extra room between a title and the next row
-    titlesOn = best.t * 1.15 * pxU >= 84; // columns too narrow for a title (lots of projects on a phone): tiles only, bigger
-    if (!titlesOn) { TH = 0; best = fit(0); }
-    const { t, cols, rows } = best, sx = t * 1.15, sy = t + TH * 1.15; // tile, plus a gap across and a title line down
-    cellPx = sx * pxU;
-    const ox = 0, oy = -vh * 0.06; // used below 1024px wide: centred under the header
-    focusList.forEach((f, i) => {
-      const c = i % cols, r = Math.floor(i / cols);
-      if (!side) f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2) * sx + ox).addScaledVector(up, ((rows - 1) / 2 - r) * sy + oy + TH / 2);
-      else { // centred across the box, starting at its top
-        const x = ((box.L + box.R) / 2 - innerWidth / 2) / pxU + (c - (cols - 1) / 2) * sx, y = (innerHeight / 2 - box.T) / pxU - t / 2 - r * sy;
-        f.gpos = center.clone().addScaledVector(right, x).addScaledVector(up, y);
-      }
-      f.gscale = Math.min(t / 0.62, side ? 99 : 14);
-      f.inF = true; f.order = i;
-    });
     // header
     document.getElementById('fTitle').textContent = keyName(focus);
     document.getElementById('fSub').textContent = `${focusList.length} project${focusList.length === 1 ? '' : 's'}`;
     const withEl = document.getElementById('fWith');
     const near = tagPairs.filter(q => q.keep && counts[q.i] >= MIN_SHARED && counts[q.j] >= MIN_SHARED && (q.i === focus.tag || q.j === focus.tag)).sort((a, b) => b.w - a.w).slice(0, 4).map(q => tagList[q.i === focus.tag ? q.j : q.i].name);
     withEl.innerHTML = near.length ? '<span>Also</span>' + near.map(t => `<button type="button" class="chip" data-tag="${esc(t)}">${esc(t)}</button>`).join('') : '';
+    const pxU = innerHeight / vh, side = innerWidth >= 1024;
+    const pad = mobile ? 16 : 24, lead = document.querySelector('.lead'), fh = document.querySelector('.focus-head'); // header filled in above, so it can be measured
+    const box = side ? { L: 24 + 440 + 64, R: innerWidth - 48, T: 24, B: innerHeight - 112 }
+                     : { L: pad, R: innerWidth - pad, T: lead.getBoundingClientRect().top + fh.offsetHeight + 32, B: innerHeight - 104 };
+    const GAP = 16, N = Math.max(1, focusList.length), maxT = side ? 320 : Infinity;
+    const fit = TH => { // the biggest tile for any column count; TH = room under each row
+      let best = { t: 0, cols: 1, rows: 1 };
+      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), t = Math.min((box.R - box.L - (cols - 1) * GAP) / cols, (box.B - box.T - rows * TH) / rows, maxT); if (t >= best.t) best = { t, cols, rows }; }
+      return best;
+    };
+    let TH = side ? 64 : 48, best = fit(TH); // 8px, the title line, then room before the next row
+    titlesOn = best.t + GAP >= 84; // columns too narrow for a title (lots of projects on a phone): tiles only, bigger
+    if (!titlesOn) { TH = GAP; best = fit(TH); }
+    const { t, cols } = best; cellPx = t + GAP;
+    focusList.forEach((f, i) => {
+      const c = i % cols, r = Math.floor(i / cols), px = box.L + c * (t + GAP) + t / 2, py = box.T + r * (t + TH) + t / 2;
+      f.gpos = center.clone().addScaledVector(right, (px - innerWidth / 2) / pxU).addScaledVector(up, (innerHeight / 2 - py) / pxU);
+      f.gscale = t / pxU / 0.62;
+      f.inF = true; f.order = i;
+    });
   }
   function openTopic(name) {
     const only = frames.filter(f => f.tags.includes(name));
