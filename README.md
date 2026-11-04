@@ -1,8 +1,8 @@
 # Roll a Month
 
 Single-page photo globe (three.js r147 core from jsDelivr, own free-orbit controls, Geist from Google Fonts, Geist Pixel inline).
-Static, no build step. `/` is the project map (`index.html`, `content.json`, `img/`, `admin/`, `api/`); the photo globe
-lives at `/photos/` (`photos/index.html`, `photos/thumbs/`, `photos/full/`).
+Static, no build step. `/` is the project map (`index.html`, `content.json`, `img/`, `admin/`, `api/`). The photo globe in
+`photos/` is no longer published (see `.vercelignore`); it stays in the repo because `index.html` is generated from it.
 
 ## Project map (the home page)
 
