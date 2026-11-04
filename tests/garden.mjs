@@ -1,5 +1,5 @@
 // Project map (the home page): content from content.json, only topics on the globe, a topic shows images with titles,
-// a project opens as images and text, the menu is Filter / About / CV.
+// a project opens as images and text, the menu is one About panel (intro, contact, projects, experience).
 //   node tests/garden.mjs [--base http://localhost:3000/] [--three-dir /path/to/three/package]
 import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
@@ -21,11 +21,11 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   await p.goto(BASE); await p.waitForFunction(() => window.__frames > 30); await sleep(3000);
   await p.screenshot({ path: `${OUT}/${name}-1-globe.png` });
 
-  check((await p.textContent('#status')) === `${content.role} · ${content.projects.length} projects`, `${name}: status line from content.json`, await p.textContent('#status'));
+  check((await p.textContent('#status')) === content.status && await p.evaluate(() => getComputedStyle(document.getElementById('status'), '::before').backgroundColor !== 'rgba(0, 0, 0, 0)'), `${name}: status line from content.json, with its green dot`, await p.textContent('#status'));
   const t0 = await p.evaluate(() => window.__tileXY().map(t => +t.op.toFixed(3)));
   check(t0.length === content.projects.length && t0.every(o => o < 0.02), `${name}: no project tiles on the globe, just topics`, t0);
   const buttons = await p.evaluate(() => [...document.querySelectorAll('.m-bar button')].filter(b => !b.hidden).map(b => b.textContent));
-  check(JSON.stringify(buttons) === '["Filter","About","CV"]', `${name}: menu is Filter, About, CV`, buttons);
+  check(JSON.stringify(buttons) === '["About"]', `${name}: menu is one About button`, buttons);
   // one-off topics: quiet background labels (no count, can't be tapped); only shared topics are chips and open a view
   await sleep(500);
   const lab = await p.evaluate(() => ({
@@ -33,7 +33,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     soloWithCount: [...document.querySelectorAll('.tag-label.solo small')].length,
     shared: [...document.querySelectorAll('.tag-label:not(.solo)')].filter(e => +getComputedStyle(e).opacity > 0.3).map(e => e.firstChild.textContent),
     chips: [...document.querySelectorAll('.m-panel .chip')].filter(e => !e.hidden && e.querySelector('span')?.textContent === '1').map(e => e.firstChild.textContent) }));
-  check(lab.solo.length > 0 && !lab.soloWithCount && !lab.chips.length, `${name}: one-off topics show as quiet labels, not in Filter`, { solo: lab.solo.map(x => x.t), chips: lab.chips });
+  check(lab.solo.length > 0 && !lab.soloWithCount && !lab.chips.length, `${name}: one-off topics show as labels without a count`, { solo: lab.solo.map(x => x.t), chips: lab.chips });
   const so = lab.solo[0].r;
   if (opts.hasTouch) await p.touchscreen.tap(so.x + so.width / 2, so.y + so.height / 2); else await p.mouse.click(so.x + so.width / 2, so.y + so.height / 2);
   await sleep(900);
@@ -41,8 +41,8 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   const owner = content.projects.find(x => x.tags.includes(lab.solo[0].t)).title;
   check(solo.view === 'globe' && solo.detail && solo.title === owner, `${name}: tapping a one-off label ("${lab.solo[0].t}") opens its project directly`, solo);
   await p.keyboard.press('Escape'); await sleep(900);
-  await tap(p.locator('.m-bar [data-sec=topics]')); await sleep(600); await p.screenshot({ path: `${OUT}/${name}-2-filter.png` });
-  await tap(p.locator('.chip', { hasText: /^website/ }).first()); await sleep(2400);
+  // open the "website" topic the way a visitor does: its label on the globe (labels are buttons; they let drags through, so trigger it directly)
+  await p.evaluate(() => [...document.querySelectorAll('.tag-label')].find(e => e.firstChild.textContent === 'website').click()); await sleep(2400);
   const expect = content.projects.filter(x => x.tags.includes('website')).length;
   check(await p.textContent('#fTitle') === 'website' && (await p.textContent('#fSub')) === `${expect} projects`, `${name}: "website" topic view`, await p.textContent('#fSub'));
   const t1 = (await tiles()).filter(t => t.inF);
@@ -74,12 +74,11 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   const t3 = await p.evaluate(() => window.__tileXY().map(t => t.op));
   check(await p.evaluate(() => document.body.dataset.view) === 'globe' && t2.every(t => !t.img) && t3.every(o => o < 0.05), `${name}: back on the globe, projects hidden again`);
 
-  if (!opts.hasTouch) { // keyboard only: Filter → a topic → a project title → Enter opens it → Esc returns focus to the title
+  if (!opts.hasTouch) { // keyboard only: a topic label → a project title → Enter opens it → Esc returns focus to the title
     const focusOn = async (sel, max = 60) => { for (let k = 0; k < max; k++) { if (await p.evaluate(q => document.activeElement?.matches(q), sel)) return true; await p.keyboard.press('Tab'); } return false; };
     await p.mouse.move(5, 5); await p.evaluate(() => document.activeElement?.blur());
-    check(await focusOn('.m-bar [data-sec=topics]'), `${name}: Tab reaches Filter`);
-    await p.keyboard.press('Enter'); await sleep(500);
-    check(await focusOn('.chip:not([hidden])'), `${name}: Tab reaches a topic chip`);
+    await p.keyboard.press('Escape'); await sleep(1500); // back to the globe
+    check(await focusOn('.tag-label:not(.solo)'), `${name}: Tab reaches a shared topic label`);
     const topic = await p.evaluate(() => document.activeElement.firstChild.textContent);
     await p.keyboard.press('Enter'); await sleep(2400);
     check(await focusOn('.p-title'), `${name}: Tab reaches a project title in the "${topic}" view`);
@@ -91,12 +90,14 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     await p.keyboard.press('Escape'); await sleep(1500);
   }
   await tap(p.locator('.m-bar [data-sec=about]')); await sleep(600);
-  const ab = await p.evaluate(() => ({ intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: document.getElementById('aPhoto')?.naturalWidth }));
-  check(ab.intro > 50 && ab.links.length === content.links.length && ab.photo > 0, `${name}: About panel`, ab);
+  const ab = await p.evaluate(() => ({ intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: document.getElementById('aPhoto')?.naturalWidth,
+    projects: [...document.querySelectorAll('#aProjects button')].map(b => b.firstChild.textContent), cv: document.querySelectorAll('#cvList li').length, roles: document.querySelectorAll('#cvList .role').length }));
+  check(ab.intro > 50 && ab.links.length === content.links.length && ab.photo > 0 && ab.projects.length === content.projects.length && ab.cv === content.cv.length && !ab.roles, `${name}: About panel has intro, contact, all projects and experience`, ab);
   await p.screenshot({ path: `${OUT}/${name}-5-about.png` });
-  await tap(p.locator('.m-bar [data-sec=cv]')); await sleep(600);
-  check(await p.locator('#cvList li').count() === content.cv.length, `${name}: CV panel`);
-  await p.screenshot({ path: `${OUT}/${name}-6-cv.png` });
+  const last = ab.projects.at(-1);
+  await tap(p.locator('#aProjects button', { hasText: last })); await sleep(1200);
+  check(await p.evaluate(t => !document.getElementById('detail').hidden && document.getElementById('dCode').textContent === t && !document.getElementById('menu').classList.contains('open'), last), `${name}: a project in About opens it`, last);
+  await p.keyboard.press('Escape'); await sleep(900);
   check(!errs.length, `${name}: no errors`, errs);
   await ctx.close();
 }

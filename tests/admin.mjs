@@ -76,7 +76,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1280, height: 900 }
 
   // someone edits content.json elsewhere → the next save is refused, nothing overwritten
   const edited = content(); edited.intro = 'Edited on GitHub'; repo.externalEdit('content.json', Buffer.from(JSON.stringify(edited, null, 2)));
-  await p.fill('#role', 'Designer'); await p.click('#save');
+  await p.fill('#statusLine', 'Online'); await p.click('#save');
   await p.waitForFunction(() => /changed|Saved/.test(document.getElementById('status').textContent), null, { timeout: 10000 });
   check(/changed somewhere else/.test(await p.textContent('#status')) && content().intro === 'Edited on GitHub', `${name}: a conflicting save is refused, the other edit survives`, await p.textContent('#status'));
   await p.reload(); await sleep(800);

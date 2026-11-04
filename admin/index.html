@@ -114,7 +114,7 @@ details.project > summary::-webkit-details-marker { display: none; }
     <section>
       <h2>About</h2>
       <div class="card">
-        <div class="row"><label>Name<input type="text" id="name"></label><label>Role<input type="text" id="role"></label></div>
+        <div class="row"><label>Name<input type="text" id="name"></label><label>Line under your name<input type="text" id="statusLine" placeholder="Chronically Online"></label></div>
         <label>Intro<textarea id="intro"></textarea></label>
         <div class="photo"><img id="photoPrev" alt=""><div class="list"><span class="note">Photo in the About panel</span><div><button class="btn small" type="button" id="photoBtn">Change photo</button></div></div></div>
         <div><span class="note">Links</span><div class="list" id="links" style="margin-top:8px"></div><p><button class="btn small" type="button" id="addLink">+ Add link</button></p></div>
@@ -216,7 +216,7 @@ details.project > summary::-webkit-details-marker { display: none; }
     let dl = $('alltags'); if (!dl) { dl = el('datalist', { id: 'alltags' }); document.body.append(dl); }
     dl.replaceChildren(...all.map(t => el('option', { value: t })));
     // about
-    $('name').value = data.name || ''; $('role').value = data.role || ''; $('intro').value = data.intro || '';
+    $('name').value = data.name || ''; $('statusLine').value = data.status || ''; $('intro').value = data.intro || '';
     $('photoPrev').src = data.photo ? src(data.photo) : '';
     $('links').replaceChildren(...(data.links || []).map((l, k) => el('div', { class: 'pair' },
       el('input', { type: 'text', placeholder: 'Label', value: l.label, 'aria-label': 'Link label', oninput: e => { l.label = e.target.value; touch(); } }),
@@ -228,7 +228,7 @@ details.project > summary::-webkit-details-marker { display: none; }
       el('input', { type: 'text', placeholder: 'Role (optional)', value: r.role || '', 'aria-label': 'Role', oninput: e => { if (e.target.value.trim()) r.role = e.target.value; else delete r.role; touch(); } }),
       el('button', { class: 'btn small danger', type: 'button', text: 'Remove', onclick: () => { data.cv.splice(k, 1); touch(); render(); } }))));
   }
-  for (const k of ['name', 'role', 'intro']) $(k).addEventListener('input', e => { data[k] = e.target.value; touch(); });
+  for (const [id, k] of [['name', 'name'], ['statusLine', 'status'], ['intro', 'intro']]) $(id).addEventListener('input', e => { data[k] = e.target.value; touch(); });
   $('photoBtn').addEventListener('click', () => pick('photo'));
   $('addLink').addEventListener('click', () => { (data.links ||= []).push({ label: '', href: '' }); touch(); render(); });
   $('addCv').addEventListener('click', () => { (data.cv ||= []).unshift({ years: '', place: '' }); touch(); render(); });

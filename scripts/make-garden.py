@@ -61,15 +61,30 @@ rep('#detail[hidden], .d-ph[hidden], .d-media img[hidden], #dRelS[hidden] { disp
 .d-link, .contact a { display: inline-flex; align-items: center; gap: 6px; font: 400 13px var(--sans); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; text-decoration: none; }
 .d-link { align-self: flex-start; }
 .p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .3s; letter-spacing: .02em; }
-.about { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: start; }
-.about img { width: 96px; height: 96px; object-fit: cover; border-radius: 4px; }
+/* About: one panel with intro, contact, every project and experience */
+.menu { width: min(640px, 100%); }
+.m-panel { max-height: min(72vh, 720px); padding: 20px; }
+.m-panel section[data-sec="about"] { display: grid; gap: 22px; }
+.about { display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: start; }
+.about img { width: 120px; height: 120px; object-fit: cover; border-radius: 4px; }
+.a-text { min-width: 0; }
+.about .lede { font-size: 15px; }
+.a-block h3 { margin: 0 0 10px; font: 400 12px var(--pixel); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.plist button { width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); font: 400 15px var(--sans); text-align: left; cursor: pointer; }
+.plist .yrs { font: 400 13px var(--pixel); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+@media (hover: hover) { .plist button:hover { color: var(--link); } }
+@media (max-width: 560px) { .about { grid-template-columns: 1fr; } .about img { width: 96px; height: 96px; } .m-panel { padding: 16px; } }
 .about .lede { margin: 0; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
 .contact { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
 .contact .addr { flex-basis: 100%; font-size: 12px; color: var(--muted); user-select: all; }
 .cv { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .cv li { display: grid; grid-template-columns: 104px 1fr; gap: 10px; align-items: baseline; font-size: 14px; }
 .cv .yrs { font: 400 13px var(--pixel); color: var(--muted); font-variant-numeric: tabular-nums; }
-.cv .role { display: block; font-size: 12px; color: var(--muted); }''')
+.cv .role { display: block; font-size: 12px; color: var(--muted); }
+/* the line under the name, with an "online" dot */
+.status.online { display: flex; align-items: center; gap: 9px; }
+.status.online::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 8px var(--live); }''')
 # light box: a column of images on the left (scrolls when there are several), title and text on the right
 rep('.d-media { min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }',
     '.d-media { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 16px; overflow-y: auto; scrollbar-width: none; }\n.d-media::-webkit-scrollbar { display: none; }')
@@ -90,19 +105,17 @@ cut('<section data-sec="time"', '</section>')
 cut('<section data-sec="about"', '</section>')
 rep('''      <div class="m-panel" id="mPanel">''', '''      <div class="m-panel" id="mPanel">
         <section data-sec="about" aria-label="About" hidden>
-          <div class="about"><img id="aPhoto" alt=""><p class="lede" id="aIntro"></p></div>
-          <div class="contact" id="aContact"></div>
-        </section>
-        <section data-sec="cv" aria-label="CV" hidden><ul class="cv" id="cvList"></ul></section>''')
+          <div class="about"><img id="aPhoto" alt=""><div class="a-text"><p class="lede" id="aIntro"></p><div class="contact" id="aContact"></div></div></div>
+          <div class="a-block"><h3>Projects</h3><ul class="plist" id="aProjects"></ul></div>
+          <div class="a-block"><h3>Experience</h3><ul class="cv" id="cvList"></ul></div>
+        </section>''')
 rep('''        <button type="button" data-sec="subject" aria-expanded="false" aria-controls="mPanel">Subject</button>
         <button type="button" data-sec="light" aria-expanded="false" aria-controls="mPanel">Light</button>
         <button type="button" data-sec="distance" aria-expanded="false" aria-controls="mPanel">Distance</button>
         <button type="button" data-sec="mood" aria-expanded="false" aria-controls="mPanel">Mood</button>
         <button type="button" data-sec="time" aria-expanded="false" aria-controls="mPanel">Time</button>
         <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel">About</button>''',
-'''        <button type="button" data-sec="topics" aria-expanded="false" aria-controls="mPanel">Filter</button>
-        <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel">About</button>
-        <button type="button" data-sec="cv" aria-expanded="false" aria-controls="mPanel">CV</button>''')
+'''        <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel">About</button>''')
 rep('<nav class="menu" id="menu" aria-label="Browse">', '<nav class="menu" id="menu" aria-label="Browse projects">')
 rep('<div class="d-media"><img id="dImg" alt=""><div class="d-ph" id="dPh" hidden>Sample frame<br>no scan yet</div></div>', '<div class="d-media" id="dMedia"><img id="dImg" alt=""></div>')
 rep('''    <div class="d-nav"><button type="button" id="dPrev" aria-label="Previous frame">←</button><span id="dPos"></span><button type="button" id="dNext" aria-label="Next frame">→</button></div>
@@ -196,7 +209,7 @@ s = s[:i] + """    frames.forEach(f => {
     });
 """ + s[j:]
 rep("    document.getElementById('status').textContent = `${vis} frames · ${scans} scans · ${counts.filter(c => c > 0).length} tags · ${priv} private`;",
-    "    document.getElementById('status').textContent = [CONTENT.role, `${frames.length} projects`].filter(Boolean).join(' · ');")
+    "    { const st = document.getElementById('status'); st.textContent = CONTENT.status || ''; st.classList.toggle('online', !!CONTENT.status); st.hidden = !CONTENT.status; }")
 rep("    document.querySelectorAll('#months span').forEach((el, i) => el.classList.toggle('on', i < month));\n", "")
 rep("      chipEls[t.name].innerHTML = `${t.name}<span>${counts[i]}</span>`;",
     "      chipEls[t.name].innerHTML = `${esc(t.name)}<span>${counts[i]}</span>`; chipEls[t.name].hidden = counts[i] < MIN_SHARED;")
@@ -212,7 +225,7 @@ rep("      f.gscale = Math.min(s * 0.9 / 0.62, 6);", "      f.gscale = Math.min(
 rep("near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${t}\">${t}</button>`)", "near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${esc(t)}\">${esc(t)}</button>`)")
 rep("'<span>Often with</span>'", "'<span>Also</span>'")
 
-# ---------------- menu: Filter, About, CV ----------------
+# ---------------- menu: one About button: intro, contact, projects, experience (topics live on the globe) ----------------
 rep("    mPanel.insertBefore(sec, mPanel.querySelector('[data-sec=\"time\"]'));", "    mPanel.prepend(sec);")
 cut("  const tg = document.createElement('label'); tg.className = 'toggle';", "mPanel.querySelector('[data-sec=\"about\"]').appendChild(tg);")
 rep("  AXES.forEach(a => addSection(a, TAGS[a]));", """  AXES.forEach(a => addSection(a, TAGS[a]));
@@ -223,6 +236,12 @@ rep("  AXES.forEach(a => addSection(a, TAGS[a]));", """  AXES.forEach(a => addSe
     const links = CONTENT.links || [], mail = links.find(l => /^mailto:/.test(l.href));
     document.getElementById('aContact').innerHTML = links.map(l => `<a href="${esc(l.href)}"${/^mailto:/.test(l.href) ? '' : ' target="_blank" rel="noopener"'}>${esc(l.label)}</a>`).join('')
       + (mail ? `<span class="addr">${esc(mail.href.slice(7))}</span>` : '');
+    document.getElementById('aProjects').replaceChildren(...frames.map(f => {
+      const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
+      const t = document.createElement('span'); t.textContent = f.title; b.append(t);
+      if (f.years) { const y = document.createElement('span'); y.className = 'yrs'; y.textContent = f.years; b.append(y); }
+      b.addEventListener('click', () => { closeMenu(); openDetail(f); }); li.append(b); return li;
+    }));
     document.getElementById('cvList').innerHTML = (CONTENT.cv || []).map(e => `<li><span class="yrs">${esc(e.years)}</span><span>${esc(e.place)}${e.role ? `<span class="role">${esc(e.role)}</span>` : ''}</span></li>`).join('');
   }""")
 cut("  document.getElementById('months').innerHTML", "playT = setInterval(")

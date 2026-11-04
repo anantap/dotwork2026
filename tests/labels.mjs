@@ -11,7 +11,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   const p = await ctx.newPage(); await p.goto(BASE); await p.waitForTimeout(3500);
   const bad = new Set();
   for (let k = 0; k < 12; k++) { // sample while the globe turns; the second half with the Subject panel open
-    if (k === 6) { await p.locator('.m-bar button[data-sec]').nth(1).click(); await p.waitForTimeout(600); }
+    if (k === 6) { await p.locator('.m-bar button[data-sec]').last().click(); await p.waitForTimeout(600); }
     (await p.evaluate(() => {
       const ui = ['.head', '.m-bar', ...(document.getElementById('menu').classList.contains('open') ? ['.m-panel'] : [])].map(s => document.querySelector(s).getBoundingClientRect());
       const ls = [...document.querySelectorAll('.tag-label')].filter(e => +getComputedStyle(e).opacity > 0.5).map(e => ({ n: e.firstChild.textContent, r: e.getBoundingClientRect() }));

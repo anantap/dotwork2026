@@ -1,5 +1,6 @@
 {
   "name": "Ananta Mulyono",
+  "status": "Chronically Online",
   "role": "UX designer",
   "intro": "My work is about making complexity legible. I observe, ask questions, challenge assumptions, and bring structure across stakeholders, processes, and the design itself. I’m drawn to problems where the answer isn’t just on the screen, but in the people and context around it.",
   "photo": "img/about.jpg",
@@ -16,8 +17,7 @@
   "cv": [
     {
       "years": "2023 — Now",
-      "place": "Gemeente Den Haag",
-      "role": "UX designer"
+      "place": "Gemeente Den Haag"
     },
     {
       "years": "2021 — 2023",
