@@ -10,6 +10,11 @@ The site's home page is a map on the same engine as the photo globe: a globe of 
 topics that two or more projects share; picking one pulls those projects forward as images with their titles, and a
 project opens as its images and text. **About** and **CV** open as panels from the same bar.
 
+Link previews (`og:image` and friends) need the site's full address: it is `SITE_URL` at the top of
+`scripts/make-garden.py`. Change it when the custom domain goes live, run `npm run build:garden`, and remake `og.jpg`
+(a 1200×630 render of the home page) if the map has changed a lot. `favicon.svg`, `apple-touch-icon.png` and
+`404.html` live at the root.
+
 ### Adding or changing content
 
 **The admin: `/admin/`** (password-protected, works on a phone). Add, edit, reorder and delete projects; drop in

@@ -659,6 +659,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     detFrame = f;
     renderDetail();
     det.getAnimations({ subtree: true }).forEach(a => a.cancel());
+    if (det.hidden) returnFocus = document.activeElement; // keyboard users land back where they were on close
     det.hidden = false; tip.style.opacity = 0; closing = false;
     document.getElementById('dClose').focus({ preventScroll: true });
     if (reduced) return;
@@ -669,16 +670,18 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const go = () => { if (detFrame === f) flip(el, from, false); };
     if (f.real) dImg.decode().then(go, go); else go();
   }
+  let returnFocus = null;
+  const restoreFocus = () => { const el = returnFocus; returnFocus = null; if (el && el.isConnected && el !== document.body) el.focus({ preventScroll: true }); };
   function closeDetail() {
     if (det.hidden || closing) return;
     const f = detFrame;
-    if (reduced) { det.hidden = true; detFrame = null; return; }
+    if (reduced) { det.hidden = true; detFrame = null; restoreFocus(); return; }
     closing = true;
     const el = f.real ? dImg : dPh;
     const p1 = f.obj.visible && f.opT > 0.1 ? flip(el, tileRect(f), true) : el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' }).finished;
     info.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(28px)' }], { duration: 260, easing: 'ease', fill: 'forwards' });
     const p2 = det.animate([{ backgroundColor: 'rgba(0,0,0,0.95)' }, { backgroundColor: 'rgba(0,0,0,0)' }], { duration: 400, easing: 'ease', fill: 'forwards' }).finished;
-    Promise.all([p1, p2]).then(() => { det.hidden = true; detFrame = null; closing = false; det.getAnimations({ subtree: true }).forEach(a => a.cancel()); dImg.style.opacity = ''; });
+    Promise.all([p1, p2]).then(() => { det.hidden = true; detFrame = null; closing = false; restoreFocus(); det.getAnimations({ subtree: true }).forEach(a => a.cancel()); dImg.style.opacity = ''; });
   }
   function step(d) { const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); } }
   function renderDetail() {

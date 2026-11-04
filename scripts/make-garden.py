@@ -33,7 +33,22 @@ def drop_css(*prefixes):
 
 
 # ---------------- head ----------------
-rep('<title>Roll a Month Map</title>', '<title>Ananta Mulyono</title>\n<meta name="description" content="Ananta Mulyono, UX designer: projects on a map, connected by the work they share.">')
+# The site's own address, for link previews (they need absolute URLs). Change it at launch when the domain is set.
+SITE_URL = 'https://rollamonth.vercel.app'
+DESC = 'Ananta Mulyono, UX designer: projects on a map, connected by the work they share.'
+rep('<title>Roll a Month Map</title>', f'''<title>Ananta Mulyono</title>
+<meta name="description" content="{DESC}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ananta Mulyono">
+<meta property="og:description" content="{DESC}">
+<meta property="og:url" content="{SITE_URL}/">
+<meta property="og:image" content="{SITE_URL}/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">''')
 rep('/* Layout: one black screen, a globe drawn only by the connections between frames, Geist in the corners with Geist Pixel for the HUD. Tag view pulls a contact sheet in front of the globe; detail view is a full-screen light box. Deliberately dark-only. */',
     '/* Layout: one black screen, a globe of projects held together by the work they share, Geist with Geist Pixel for the HUD. A topic pulls its projects in front of the globe; a project opens as images and text. Deliberately dark-only. */')
 
@@ -245,7 +260,8 @@ rep("drop any that would sit on the header, chips or scrubber, run off", "drop a
 
 # ---------------- titles under the tiles in a topic view ----------------
 rep("  const tip = document.getElementById('tip');", """  const tip = document.getElementById('tip');
-  frames.forEach(f => { f.titleEl = document.createElement('div'); f.titleEl.className = 'p-title'; f.titleEl.textContent = f.title; f.titleEl.setAttribute('aria-hidden', 'true'); labelsEl.appendChild(f.titleEl); });""")
+  // titles under the tiles are buttons: click, tap, or Tab + Enter opens the project (the tiles themselves live in WebGL)
+  frames.forEach(f => { const b = f.titleEl = document.createElement('button'); b.type = 'button'; b.className = 'p-title'; b.textContent = f.title; b.tabIndex = -1; b.addEventListener('click', () => openDetail(f)); labelsEl.appendChild(b); });""")
 rep("    updateTip();\n    renderer.render", """    { // project titles under the tiles while a topic is open
       const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
       frames.forEach(f => {
@@ -257,13 +273,13 @@ rep("    updateTip();\n    renderer.render", """    { // project titles under th
           f.titleEl.style.maxWidth = `${Math.max(80, half / f.ah * 2.4)}px`; // about the cell's width
         }
         const op = on && performance.now() > f.t0 + f.dur * 0.6 ? '1' : '0'; // fade in as the tile settles
-        if (f.titleEl.style.opacity !== op) f.titleEl.style.opacity = op;
+        if (f.titleEl.style.opacity !== op) { f.titleEl.style.opacity = op; f.titleEl.tabIndex = op === '1' ? 0 : -1; f.titleEl.style.pointerEvents = op === '1' ? 'auto' : 'none'; }
       });
     }
     updateTip();
     renderer.render""")
 rep(".p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); white-space: nowrap;",
-    ".p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;")
+    ".p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); background: none; border: 0; padding: 2px 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;")
 
 # ---------------- labels keep clear of the squares ----------------
 rep("    const placed = [], isFront = i => D[i].dot(camDir) >= -0.05;", '''    const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));

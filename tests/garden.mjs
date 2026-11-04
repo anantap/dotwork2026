@@ -74,6 +74,22 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   const t3 = await p.evaluate(() => window.__tileXY().map(t => t.op));
   check(await p.evaluate(() => document.body.dataset.view) === 'globe' && t2.every(t => !t.img) && t3.every(o => o < 0.05), `${name}: back on the globe, projects hidden again`);
 
+  if (!opts.hasTouch) { // keyboard only: Filter → a topic → a project title → Enter opens it → Esc returns focus to the title
+    const focusOn = async (sel, max = 60) => { for (let k = 0; k < max; k++) { if (await p.evaluate(q => document.activeElement?.matches(q), sel)) return true; await p.keyboard.press('Tab'); } return false; };
+    await p.mouse.move(5, 5); await p.evaluate(() => document.activeElement?.blur());
+    check(await focusOn('.m-bar [data-sec=topics]'), `${name}: Tab reaches Filter`);
+    await p.keyboard.press('Enter'); await sleep(500);
+    check(await focusOn('.chip:not([hidden])'), `${name}: Tab reaches a topic chip`);
+    const topic = await p.evaluate(() => document.activeElement.firstChild.textContent);
+    await p.keyboard.press('Enter'); await sleep(2400);
+    check(await focusOn('.p-title'), `${name}: Tab reaches a project title in the "${topic}" view`);
+    const ttl = await p.evaluate(() => document.activeElement.textContent);
+    await p.keyboard.press('Enter'); await sleep(1100);
+    check(await p.evaluate(t => !document.getElementById('detail').hidden && document.getElementById('dCode').textContent === t, ttl), `${name}: Enter opens "${ttl}"`);
+    await p.keyboard.press('Escape'); await sleep(900);
+    check(await p.evaluate(t => document.activeElement?.classList.contains('p-title') && document.activeElement.textContent === t, ttl), `${name}: Esc closes it and focus returns to the title`);
+    await p.keyboard.press('Escape'); await sleep(1500);
+  }
   await tap(p.locator('.m-bar [data-sec=about]')); await sleep(600);
   const ab = await p.evaluate(() => ({ intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: document.getElementById('aPhoto')?.naturalWidth }));
   check(ab.intro > 50 && ab.links.length === content.links.length && ab.photo > 0, `${name}: About panel`, ab);

@@ -4,6 +4,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ananta Mulyono</title>
 <meta name="description" content="Ananta Mulyono, UX designer: projects on a map, connected by the work they share.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ananta Mulyono">
+<meta property="og:description" content="Ananta Mulyono, UX designer: projects on a map, connected by the work they share.">
+<meta property="og:url" content="https://rollamonth.vercel.app/">
+<meta property="og:image" content="https://rollamonth.vercel.app/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&display=swap">
@@ -96,7 +107,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 .d-text { margin: 0; font-size: 15px; line-height: 1.55; text-wrap: pretty; white-space: pre-line; }
 .d-link, .contact a { display: inline-flex; align-items: center; gap: 6px; font: 400 13px var(--sans); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; text-decoration: none; }
 .d-link { align-self: flex-start; }
-.p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; opacity: 0; transition: opacity .3s; letter-spacing: .02em; }
+.p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); background: none; border: 0; padding: 2px 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; opacity: 0; transition: opacity .3s; letter-spacing: .02em; }
 .about { display: grid; grid-template-columns: 96px 1fr; gap: 14px; align-items: start; }
 .about img { width: 96px; height: 96px; object-fit: cover; border-radius: 4px; }
 .about .lede { margin: 0; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
@@ -599,6 +610,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     detFrame = f;
     renderDetail();
     det.getAnimations({ subtree: true }).forEach(a => a.cancel());
+    if (det.hidden) returnFocus = document.activeElement; // keyboard users land back where they were on close
     det.hidden = false; tip.style.opacity = 0; closing = false;
     document.getElementById('dClose').focus({ preventScroll: true });
     if (reduced) return;
@@ -609,16 +621,18 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const go = () => { if (detFrame === f) flip(el, from, false); };
     dImg.decode().then(go, go);
   }
+  let returnFocus = null;
+  const restoreFocus = () => { const el = returnFocus; returnFocus = null; if (el && el.isConnected && el !== document.body) el.focus({ preventScroll: true }); };
   function closeDetail() {
     if (det.hidden || closing) return;
     const f = detFrame;
-    if (reduced) { det.hidden = true; detFrame = null; return; }
+    if (reduced) { det.hidden = true; detFrame = null; restoreFocus(); return; }
     closing = true;
     const el = dImg;
     const p1 = f.obj.visible && f.opT > 0.1 ? flip(el, tileRect(f), true) : el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' }).finished;
     info.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(28px)' }], { duration: 260, easing: 'ease', fill: 'forwards' });
     const p2 = det.animate([{ backgroundColor: 'rgba(0,0,0,0.95)' }, { backgroundColor: 'rgba(0,0,0,0)' }], { duration: 400, easing: 'ease', fill: 'forwards' }).finished;
-    Promise.all([p1, p2]).then(() => { det.hidden = true; detFrame = null; closing = false; det.getAnimations({ subtree: true }).forEach(a => a.cancel()); dImg.style.opacity = ''; });
+    Promise.all([p1, p2]).then(() => { det.hidden = true; detFrame = null; closing = false; restoreFocus(); det.getAnimations({ subtree: true }).forEach(a => a.cancel()); dImg.style.opacity = ''; });
   }
   function step(d) { const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); } }
   function renderDetail() {
@@ -650,7 +664,8 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 
   // Hover + click on frames
   const tip = document.getElementById('tip');
-  frames.forEach(f => { f.titleEl = document.createElement('div'); f.titleEl.className = 'p-title'; f.titleEl.textContent = f.title; f.titleEl.setAttribute('aria-hidden', 'true'); labelsEl.appendChild(f.titleEl); });
+  // titles under the tiles are buttons: click, tap, or Tab + Enter opens the project (the tiles themselves live in WebGL)
+  frames.forEach(f => { const b = f.titleEl = document.createElement('button'); b.type = 'button'; b.className = 'p-title'; b.textContent = f.title; b.tabIndex = -1; b.addEventListener('click', () => openDetail(f)); labelsEl.appendChild(b); });
   const ray = new THREE.Raycaster();
   const mouse = new THREE.Vector2(); let hoverXY = null, downXY = null;
   // Touch has no hover: holding a finger still on a frame for a moment shows the same card the mouse gets
@@ -833,7 +848,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
           f.titleEl.style.maxWidth = `${Math.max(80, half / f.ah * 2.4)}px`; // about the cell's width
         }
         const op = on && performance.now() > f.t0 + f.dur * 0.6 ? '1' : '0'; // fade in as the tile settles
-        if (f.titleEl.style.opacity !== op) f.titleEl.style.opacity = op;
+        if (f.titleEl.style.opacity !== op) { f.titleEl.style.opacity = op; f.titleEl.tabIndex = op === '1' ? 0 : -1; f.titleEl.style.pointerEvents = op === '1' ? 'auto' : 'none'; }
       });
     }
     updateTip();
