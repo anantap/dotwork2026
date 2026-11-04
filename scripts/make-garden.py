@@ -190,11 +190,11 @@ rep("  const loader = new THREE.TextureLoader();", '''  const loader = new THREE
   }));''')
 rep("    const r = RAD + (f.real ? 0.6 : 0.15 + rnd() * 0.3);", "    const r = RAD + 0.6;")
 i = s.index("    let obj;\n    if (f.real) {"); j = s.index("    f.base = f.real ? 1.8 : 1;")
-s = s[:i] + """    // a tile takes its image's proportions, fitted inside the same square cell (wide photos get wide tiles)
+s = s[:i] + """    // tiles are square: the photo is cropped to its centre
     f.ah = 1;
     f.tex = loader.load(f.image, t => {
-      const a = t.image.width / t.image.height, w = a >= 1 ? 1 : a, h = a >= 1 ? 1 / a : 1;
-      f.ah = h; f.obj.geometry = twoFaced(new THREE.PlaneGeometry(0.62 * w, 0.62 * h));
+      const a = t.image.width / t.image.height; // square tiles: crop the photo's centre, so a grid of mixed shapes lines up
+      if (a >= 1) { t.repeat.set(1 / a, 1); t.offset.set((1 - 1 / a) / 2, 0); } else { t.repeat.set(1, a); t.offset.set(0, (1 - a) / 2); }
     });
     const obj = new THREE.Mesh(geoS, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false }));
     obj.material.color.copy(C.sample); f.showImg = false;
@@ -409,6 +409,21 @@ rep("      f.obj.material.opacity += (f.opT - f.obj.material.opacity) * (reduced
     "      f.obj.material.opacity += (want - f.obj.material.opacity) * (reduced ? 1 : want < f.obj.material.opacity ? 0.2 : 0.09);")
 
 rep('id="back">← Globe</button>', 'id="back">← Return</button>')
+
+# no hover tooltip on tiles: the title already sits under each tile, and touch never showed it
+rep("""    if (!f) { tip.style.opacity = 0; return; }
+    if (f !== tipFrame) { // rebuild only when the frame changes, not every animation frame
+      tipFrame = f;
+      tip.innerHTML = `<div class="code">${esc(f.title)}</div>`;
+    }
+    const tipH = 40;
+    if (pressing) { // above the finger, so it isn't hidden under it
+      const x = Math.max(8, Math.min(hoverXY[0] - 100, innerWidth - 208)), y = Math.max(8, hoverXY[1] - tip.offsetHeight - 28);
+      tip.style.transform = `translate(${x}px, ${y}px)`;
+    } else tip.style.transform = `translate(${Math.min(hoverXY[0] + 14, innerWidth - 216)}px, ${Math.min(hoverXY[1] + 14, innerHeight - tipH)}px)`;
+    tip.style.opacity = 1;
+  }""", """    tip.style.opacity = 0;
+  }""")
 
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)

@@ -360,11 +360,11 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const dir = f.dir;
     const r = RAD + 0.6;
     f.home = dir.clone().multiplyScalar(r);
-    // a tile takes its image's proportions, fitted inside the same square cell (wide photos get wide tiles)
+    // tiles are square: the photo is cropped to its centre
     f.ah = 1;
     f.tex = loader.load(f.image, t => {
-      const a = t.image.width / t.image.height, w = a >= 1 ? 1 : a, h = a >= 1 ? 1 / a : 1;
-      f.ah = h; f.obj.geometry = twoFaced(new THREE.PlaneGeometry(0.62 * w, 0.62 * h));
+      const a = t.image.width / t.image.height; // square tiles: crop the photo's centre, so a grid of mixed shapes lines up
+      if (a >= 1) { t.repeat.set(1 / a, 1); t.offset.set((1 - 1 / a) / 2, 0); } else { t.repeat.set(1, a); t.offset.set(0, (1 - a) / 2); }
     });
     const obj = new THREE.Mesh(geoS, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false }));
     obj.material.color.copy(C.sample); f.showImg = false;
@@ -799,17 +799,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     if (li >= 0) { renderer.domElement.style.cursor = 'pointer'; tip.style.opacity = 0; return; }
     const f = hitAt(hoverXY[0], hoverXY[1], pressing ? SLOP : 0);
     renderer.domElement.style.cursor = f ? 'pointer' : ''; controls.hold = !!f; // a frame under the pointer stays put
-    if (!f) { tip.style.opacity = 0; return; }
-    if (f !== tipFrame) { // rebuild only when the frame changes, not every animation frame
-      tipFrame = f;
-      tip.innerHTML = `<div class="code">${esc(f.title)}</div>`;
-    }
-    const tipH = 40;
-    if (pressing) { // above the finger, so it isn't hidden under it
-      const x = Math.max(8, Math.min(hoverXY[0] - 100, innerWidth - 208)), y = Math.max(8, hoverXY[1] - tip.offsetHeight - 28);
-      tip.style.transform = `translate(${x}px, ${y}px)`;
-    } else tip.style.transform = `translate(${Math.min(hoverXY[0] + 14, innerWidth - 216)}px, ${Math.min(hoverXY[1] + 14, innerHeight - tipH)}px)`;
-    tip.style.opacity = 1;
+    tip.style.opacity = 0;
   }
 
   let labelSize = labelEls.map(() => [0, 0]), uiRects = [];
