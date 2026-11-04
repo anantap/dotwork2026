@@ -139,7 +139,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 .cv .role { display: block; font-size: 12px; color: var(--muted); }
 /* the line under the name, with an "online" dot */
 .status.online { display: flex; align-items: center; gap: 9px; }
-.status.online::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 8px var(--live); opacity: var(--led, 1); }
+.status.online::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 8px var(--live); }
 .d-media img { transition: filter .3s; }
 .d-media { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 16px; overflow-y: auto; scrollbar-width: none; }
 .d-media::-webkit-scrollbar { display: none; }
@@ -903,15 +903,6 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     requestAnimationFrame(tick);
   }
   document.body.dataset.view = 'globe';
-  if (!reduced) {
-    const led = document.getElementById('status'), rand = (a, b) => a + Math.random() * (b - a);
-    const burst = n => {
-      if (n <= 0) return setTimeout(() => burst(Math.random() < 0.25 ? 1 : Math.ceil(rand(1, 6))), rand(400, 3200)); // idle, then traffic again
-      led.style.setProperty('--led', rand(0.08, 0.35).toFixed(2));
-      setTimeout(() => { led.style.setProperty('--led', '1'); setTimeout(() => burst(n - 1), rand(40, 160)); }, rand(35, 110));
-    };
-    setTimeout(() => burst(3), 900);
-  }
   resize(); recount(); measureUI(); tick();
 });
 </script>

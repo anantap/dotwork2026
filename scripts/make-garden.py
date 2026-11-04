@@ -92,7 +92,7 @@ rep('#detail[hidden], .d-ph[hidden], .d-media img[hidden], #dRelS[hidden] { disp
 .cv .role { display: block; font-size: 12px; color: var(--muted); }
 /* the line under the name, with an "online" dot */
 .status.online { display: flex; align-items: center; gap: 9px; }
-.status.online::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 8px var(--live); opacity: var(--led, 1); }''')
+.status.online::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 8px var(--live); }''')
 # light box: a column of images on the left (scrolls when there are several), title and text on the right
 rep('.d-media { min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }',
     '.d-media { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 16px; overflow-y: auto; scrollbar-width: none; }\n.d-media::-webkit-scrollbar { display: none; }')
@@ -218,18 +218,6 @@ s = s[:i] + """    frames.forEach(f => {
 """ + s[j:]
 rep("    document.getElementById('status').textContent = `${vis} frames · ${scans} scans · ${counts.filter(c => c > 0).length} tags · ${priv} private`;",
     "    { const st = document.getElementById('status'); st.textContent = CONTENT.status || ''; st.classList.toggle('online', !!CONTENT.status); st.hidden = !CONTENT.status; }")
-# the dot flickers like a modem's activity lamp: bursts of quick blinks at random, then a random pause (none with reduced motion)
-rep("  resize(); recount(); measureUI(); tick();\n});", '''  if (!reduced) {
-    const led = document.getElementById('status'), rand = (a, b) => a + Math.random() * (b - a);
-    const burst = n => {
-      if (n <= 0) return setTimeout(() => burst(Math.random() < 0.25 ? 1 : Math.ceil(rand(1, 6))), rand(400, 3200)); // idle, then traffic again
-      led.style.setProperty('--led', rand(0.08, 0.35).toFixed(2));
-      setTimeout(() => { led.style.setProperty('--led', '1'); setTimeout(() => burst(n - 1), rand(40, 160)); }, rand(35, 110));
-    };
-    setTimeout(() => burst(3), 900);
-  }
-  resize(); recount(); measureUI(); tick();
-});''')
 rep("    document.querySelectorAll('#months span').forEach((el, i) => el.classList.toggle('on', i < month));\n", "")
 rep("      chipEls[t.name].innerHTML = `${t.name}<span>${counts[i]}</span>`;",
     "      chipEls[t.name].innerHTML = `${esc(t.name)}<span>${counts[i]}</span>`; chipEls[t.name].hidden = counts[i] < MIN_SHARED;")
