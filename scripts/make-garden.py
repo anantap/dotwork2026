@@ -398,6 +398,8 @@ rep("      f.obj.material.opacity += (f.opT - f.obj.material.opacity) * (reduced
     "      const want = f.pending || (view === 'focus' && camTw && f.obj.material.opacity < 0.3) ? 0 : f.opT; // fade out before moving; hold new tiles until the camera arrives\n"
     "      f.obj.material.opacity += (want - f.obj.material.opacity) * (reduced ? 1 : want < f.obj.material.opacity ? 0.2 : 0.09);")
 
+rep('id="back">← Globe</button>', 'id="back">← Return</button>')
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)
