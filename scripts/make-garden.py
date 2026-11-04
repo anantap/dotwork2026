@@ -69,18 +69,19 @@ rep('#detail[hidden], .d-ph[hidden], .d-media img[hidden], #dRelS[hidden] { disp
 @media (max-width: 760px) { .d-thumbs { grid-template-columns: repeat(4, 1fr); } }
 .p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .3s; letter-spacing: .02em; }
 /* About: one panel with intro, contact, every project and experience */
-.menu { width: min(640px, 100%); }
-.m-panel { max-height: min(72vh, 720px); padding: 20px; }
+.m-panel { position: fixed; left: 50%; top: 50%; right: auto; bottom: auto; width: min(560px, calc(100vw - 32px)); max-height: min(78vh, 720px); padding: 22px;
+  transform: translate(-50%, calc(-50% + 10px)); z-index: 8; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.menu.open .m-panel { transform: translate(-50%, -50%); }
+.m-bar button .x { display: none; }
+.m-bar button[aria-expanded="true"] { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; }
+.m-bar button[aria-expanded="true"] .lbl { display: none; }
+.m-bar button[aria-expanded="true"] .x { display: block; }
 .m-panel section[data-sec="about"] { display: grid; gap: 22px; }
 .about { display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: start; }
 .about img { width: 120px; height: 120px; object-fit: cover; border-radius: 4px; }
 .a-text { min-width: 0; }
 .about .lede { font-size: 15px; }
 .a-block h3 { margin: 0 0 10px; font: 400 12px var(--pixel); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.plist button { width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); font: 400 15px var(--sans); text-align: left; cursor: pointer; }
-.plist .yrs { font: 400 13px var(--pixel); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-@media (hover: hover) { .plist button:hover { color: var(--link); } }
 @media (max-width: 560px) { .about { grid-template-columns: 1fr; } .about img { width: 96px; height: 96px; } .m-panel { padding: 16px; } }
 .about .lede { margin: 0; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
 .contact { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
@@ -113,7 +114,6 @@ cut('<section data-sec="about"', '</section>')
 rep('''      <div class="m-panel" id="mPanel">''', '''      <div class="m-panel" id="mPanel">
         <section data-sec="about" aria-label="About" hidden>
           <div class="about"><img id="aPhoto" alt=""><div class="a-text"><p class="lede" id="aIntro"></p><div class="contact" id="aContact"></div></div></div>
-          <div class="a-block"><h3>Projects</h3><ul class="plist" id="aProjects"></ul></div>
           <div class="a-block"><h3>Experience</h3><ul class="cv" id="cvList"></ul></div>
         </section>''')
 rep('''        <button type="button" data-sec="subject" aria-expanded="false" aria-controls="mPanel">Subject</button>
@@ -122,7 +122,7 @@ rep('''        <button type="button" data-sec="subject" aria-expanded="false" ar
         <button type="button" data-sec="mood" aria-expanded="false" aria-controls="mPanel">Mood</button>
         <button type="button" data-sec="time" aria-expanded="false" aria-controls="mPanel">Time</button>
         <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel">About</button>''',
-'''        <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel">About</button>''')
+'''        <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel" aria-label="About"><span class="lbl">About</span><svg class="x" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5"/></svg></button>''')
 rep('<nav class="menu" id="menu" aria-label="Browse">', '<nav class="menu" id="menu" aria-label="Browse projects">')
 rep('<div class="d-media"><img id="dImg" alt=""><div class="d-ph" id="dPh" hidden>Sample frame<br>no scan yet</div></div>', '<div class="d-media" id="dMedia"><img id="dImg" alt=""></div>')
 rep('''    <div class="d-nav"><button type="button" id="dPrev" aria-label="Previous frame">←</button><span id="dPos"></span><button type="button" id="dNext" aria-label="Next frame">→</button></div>
@@ -256,12 +256,6 @@ rep("  AXES.forEach(a => addSection(a, TAGS[a]));", """  AXES.forEach(a => addSe
     const links = CONTENT.links || [], mail = links.find(l => /^mailto:/.test(l.href));
     document.getElementById('aContact').innerHTML = links.map(l => `<a href="${esc(l.href)}"${/^mailto:/.test(l.href) ? '' : ' target="_blank" rel="noopener"'}>${esc(l.label)}</a>`).join('')
       + (mail ? `<span class="addr">${esc(mail.href.slice(7))}</span>` : '');
-    document.getElementById('aProjects').replaceChildren(...frames.map(f => {
-      const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
-      const t = document.createElement('span'); t.textContent = f.title; b.append(t);
-      if (f.years) { const y = document.createElement('span'); y.className = 'yrs'; y.textContent = f.years; b.append(y); }
-      b.addEventListener('click', () => { closeMenu(); openDetail(f); }); li.append(b); return li;
-    }));
     document.getElementById('cvList').innerHTML = (CONTENT.cv || []).map(e => `<li><span class="yrs">${esc(e.years)}</span><span>${esc(e.place)}${e.role ? `<span class="role">${esc(e.role)}</span>` : ''}</span></li>`).join('');
   }""")
 cut("  document.getElementById('months').innerHTML", "playT = setInterval(")
@@ -380,6 +374,10 @@ rep("  function step(d) { const i = detList.indexOf(detFrame) + d; if (i >= 0 &&
     if (detFrame && detFrame.images.length > 1) return showImage(detImg + d);
     const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); }
   }''')
+
+# the About button reads "Close" to screen readers while the panel is open
+rep("    menu.querySelectorAll('.m-bar button').forEach(b => b.setAttribute('aria-expanded', String(b.dataset.sec === sec)));",
+    "    menu.querySelectorAll('.m-bar button').forEach(b => { b.setAttribute('aria-expanded', String(b.dataset.sec === sec)); b.setAttribute('aria-label', b.dataset.sec === sec ? 'Close' : 'About'); });")
 
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)

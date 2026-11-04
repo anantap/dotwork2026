@@ -89,20 +89,12 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     check(await p.evaluate(t => document.activeElement?.classList.contains('p-title') && document.activeElement.textContent === t, ttl), `${name}: Esc closes it and focus returns to the title`);
     await p.keyboard.press('Escape'); await sleep(1500);
   }
-  await tap(p.locator('.m-bar [data-sec=about]')); await sleep(600);
-  const ab = await p.evaluate(() => ({ intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: document.getElementById('aPhoto')?.naturalWidth,
-    projects: [...document.querySelectorAll('#aProjects button')].map(b => b.firstChild.textContent), cv: document.querySelectorAll('#cvList li').length, roles: document.querySelectorAll('#cvList .role').length }));
-  check(ab.intro > 50 && ab.links.length === content.links.length && ab.photo > 0 && ab.projects.length === content.projects.length && ab.cv === content.cv.length && !ab.roles, `${name}: About panel has intro, contact, all projects and experience`, ab);
-  await p.screenshot({ path: `${OUT}/${name}-5-about.png` });
-  const last = ab.projects.at(-1);
-  await tap(p.locator('#aProjects button', { hasText: last })); await sleep(1200);
-  check(await p.evaluate(t => !document.getElementById('detail').hidden && document.getElementById('dCode').textContent === t && !document.getElementById('menu').classList.contains('open'), last), `${name}: a project in About opens it`, last);
   { // a project with many photos: one big image, the rest as thumbnails; a thumbnail or an arrow key swaps the big one
     const many = content.projects.filter(x => x.images.length > 1).sort((a, b) => b.images.length - a.images.length)[0];
     if (many) {
-      await p.keyboard.press('Escape'); await sleep(900);
-      await tap(p.locator('.m-bar [data-sec=about]')); await sleep(500);
-      await tap(p.locator('#aProjects button', { hasText: many.title })); await sleep(1300);
+      const shared = many.tags.find(t => content.projects.filter(x => x.tags.includes(t)).length > 1);
+      await p.evaluate(t => [...document.querySelectorAll('.tag-label')].find(e => e.firstChild.textContent === t).click(), shared); await sleep(2600);
+      await p.evaluate(t => [...document.querySelectorAll('.p-title')].find(e => e.textContent === t).click(), many.title); await sleep(1300);
       const v = await p.evaluate(() => ({ big: document.querySelectorAll('#dMedia img').length, thumbs: document.querySelectorAll('#dThumbs button').length, src: document.getElementById('dImg').getAttribute('src') }));
       check(v.big === 1 && v.thumbs === many.images.length && v.src === many.images[0], `${name}: "${many.title}" opens with one image and ${many.images.length} thumbnails`, v);
       await p.screenshot({ path: `${OUT}/${name}-4b-many-images.png` });
@@ -111,9 +103,20 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
       check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k], `${name}: a thumbnail shows that image big`);
       if (!opts.hasTouch) { await p.keyboard.press('ArrowRight'); await sleep(500);
         check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k + 1] && await p.textContent('#dCode') === many.title, `${name}: → steps to the next photo of the same project`); }
+      await p.keyboard.press('Escape'); await sleep(900); await p.keyboard.press('Escape'); await sleep(1600);
     }
   }
-  await p.keyboard.press('Escape'); await sleep(900);
+  await tap(p.locator('.m-bar [data-sec=about]')); await sleep(700);
+  const ab = await p.evaluate(() => { const r = document.querySelector('.m-panel').getBoundingClientRect(), b = document.querySelector('.m-bar [data-sec=about]');
+    return { intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: document.getElementById('aPhoto')?.naturalWidth,
+      cv: document.querySelectorAll('#cvList li').length, projectList: !!document.getElementById('aProjects'),
+      offCentre: [Math.round(r.left + r.width / 2 - innerWidth / 2), Math.round(r.top + r.height / 2 - innerHeight / 2)], button: b.getAttribute('aria-label'), xShown: getComputedStyle(b.querySelector('.x')).display !== 'none' }; });
+  check(ab.intro > 50 && ab.links.length === content.links.length && ab.photo > 0 && ab.cv === content.cv.length && !ab.projectList, `${name}: About has intro, contact and experience`, ab);
+  check(Math.abs(ab.offCentre[0]) <= 2 && Math.abs(ab.offCentre[1]) <= 2, `${name}: About panel is centred on the page`, ab.offCentre);
+  check(ab.button === 'Close' && ab.xShown, `${name}: the About button turns into a close ✕`, ab.button);
+  await p.screenshot({ path: `${OUT}/${name}-5-about.png` });
+  await tap(p.locator('.m-bar [data-sec=about]')); await sleep(700);
+  check(await p.evaluate(() => !document.getElementById('menu').classList.contains('open') && document.querySelector('.m-bar [data-sec=about]').getAttribute('aria-label') === 'About'), `${name}: ✕ closes it and the button reads About again`);
   check(!errs.length, `${name}: no errors`, errs);
   await ctx.close();
 }

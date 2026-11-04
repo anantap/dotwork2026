@@ -116,18 +116,19 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 @media (max-width: 760px) { .d-thumbs { grid-template-columns: repeat(4, 1fr); } }
 .p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); background: none; border: 0; padding: 2px 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; opacity: 0; transition: opacity .3s; letter-spacing: .02em; }
 /* About: one panel with intro, contact, every project and experience */
-.menu { width: min(640px, 100%); }
-.m-panel { max-height: min(72vh, 720px); padding: 20px; }
+.m-panel { position: fixed; left: 50%; top: 50%; right: auto; bottom: auto; width: min(560px, calc(100vw - 32px)); max-height: min(78vh, 720px); padding: 22px;
+  transform: translate(-50%, calc(-50% + 10px)); z-index: 8; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.menu.open .m-panel { transform: translate(-50%, -50%); }
+.m-bar button .x { display: none; }
+.m-bar button[aria-expanded="true"] { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; }
+.m-bar button[aria-expanded="true"] .lbl { display: none; }
+.m-bar button[aria-expanded="true"] .x { display: block; }
 .m-panel section[data-sec="about"] { display: grid; gap: 22px; }
 .about { display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: start; }
 .about img { width: 120px; height: 120px; object-fit: cover; border-radius: 4px; }
 .a-text { min-width: 0; }
 .about .lede { font-size: 15px; }
 .a-block h3 { margin: 0 0 10px; font: 400 12px var(--pixel); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-.plist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.plist button { width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 7px 0; background: none; border: 0; border-bottom: 1px solid var(--line); color: var(--ink); font: 400 15px var(--sans); text-align: left; cursor: pointer; }
-.plist .yrs { font: 400 13px var(--pixel); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-@media (hover: hover) { .plist button:hover { color: var(--link); } }
 @media (max-width: 560px) { .about { grid-template-columns: 1fr; } .about img { width: 96px; height: 96px; } .m-panel { padding: 16px; } }
 .about .lede { margin: 0; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
 .contact { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
@@ -199,12 +200,11 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
       <div class="m-panel" id="mPanel">
         <section data-sec="about" aria-label="About" hidden>
           <div class="about"><img id="aPhoto" alt=""><div class="a-text"><p class="lede" id="aIntro"></p><div class="contact" id="aContact"></div></div></div>
-          <div class="a-block"><h3>Projects</h3><ul class="plist" id="aProjects"></ul></div>
           <div class="a-block"><h3>Experience</h3><ul class="cv" id="cvList"></ul></div>
         </section>
       </div>
       <div class="m-bar" id="mBar">
-        <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel">About</button>
+        <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel" aria-label="About"><span class="lbl">About</span><svg class="x" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5"/></svg></button>
       </div>
     </nav>
   </div>
@@ -454,12 +454,6 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const links = CONTENT.links || [], mail = links.find(l => /^mailto:/.test(l.href));
     document.getElementById('aContact').innerHTML = links.map(l => `<a href="${esc(l.href)}"${/^mailto:/.test(l.href) ? '' : ' target="_blank" rel="noopener"'}>${esc(l.label)}</a>`).join('')
       + (mail ? `<span class="addr">${esc(mail.href.slice(7))}</span>` : '');
-    document.getElementById('aProjects').replaceChildren(...frames.map(f => {
-      const li = document.createElement('li'), b = document.createElement('button'); b.type = 'button';
-      const t = document.createElement('span'); t.textContent = f.title; b.append(t);
-      if (f.years) { const y = document.createElement('span'); y.className = 'yrs'; y.textContent = f.years; b.append(y); }
-      b.addEventListener('click', () => { closeMenu(); openDetail(f); }); li.append(b); return li;
-    }));
     document.getElementById('cvList').innerHTML = (CONTENT.cv || []).map(e => `<li><span class="yrs">${esc(e.years)}</span><span>${esc(e.place)}${e.role ? `<span class="role">${esc(e.role)}</span>` : ''}</span></li>`).join('');
   }
 
@@ -468,7 +462,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   function setMenu(sec) {
     const was = menuSec; menuSec = sec;
     menu.classList.toggle('open', !!sec);
-    menu.querySelectorAll('.m-bar button').forEach(b => b.setAttribute('aria-expanded', String(b.dataset.sec === sec)));
+    menu.querySelectorAll('.m-bar button').forEach(b => { b.setAttribute('aria-expanded', String(b.dataset.sec === sec)); b.setAttribute('aria-label', b.dataset.sec === sec ? 'Close' : 'About'); });
     if (sec) {
       mPanel.querySelectorAll('section').forEach(el => { el.hidden = el.dataset.sec !== sec; });
       if (was && was !== sec && !reduced) mPanel.querySelector(`[data-sec="${sec}"]`).animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: EASE });
