@@ -45,6 +45,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   await p.evaluate(() => [...document.querySelectorAll('.tag-label')].find(e => e.firstChild.textContent === 'website').click()); await sleep(2400);
   const expect = content.projects.filter(x => x.tags.includes('website')).length;
   check(await p.textContent('#fTitle') === 'website' && (await p.textContent('#fSub')) === `${expect} projects`, `${name}: "website" topic view`, await p.textContent('#fSub'));
+  await sleep(400); check(await p.evaluate(() => getComputedStyle(document.getElementById('menu')).visibility) === 'hidden', `${name}: no About button in a topic`);
   const t1 = (await tiles()).filter(t => t.inF);
   check(t1.length === expect && t1.every(t => t.img), `${name}: topic view shows the projects' images`, t1.map(t => t.img));
   const titles = await p.evaluate(() => [...document.querySelectorAll('.p-title')].filter(e => +getComputedStyle(e).opacity > 0.9).map(e => e.textContent));
@@ -124,6 +125,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
     return { intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: document.getElementById('aPhoto')?.naturalWidth,
       cv: document.querySelectorAll('#cvList li').length, projectList: !!document.getElementById('aProjects'),
       offCentre: [Math.round(r.left + r.width / 2 - innerWidth / 2), Math.round(r.top + r.height / 2 - innerHeight / 2)], button: b.getAttribute('aria-label'), xShown: getComputedStyle(b.querySelector('.x')).display !== 'none' }; });
+  check(await p.evaluate(() => !/@/.test(document.getElementById('aContact').textContent)), `${name}: About shows contact buttons, no bare email address`);
   check(ab.intro > 50 && ab.links.length === content.links.length && ab.photo > 0 && ab.cv === content.cv.length && !ab.projectList, `${name}: About has intro, contact and experience`, ab);
   check(Math.abs(ab.offCentre[0]) <= 2 && Math.abs(ab.offCentre[1]) <= 2, `${name}: About panel is centred on the page`, ab.offCentre);
   check(ab.button === 'Close' && ab.xShown, `${name}: the About button turns into a close ✕`, ab.button);

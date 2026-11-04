@@ -85,14 +85,13 @@ rep('#detail[hidden], .d-ph[hidden], .d-media img[hidden], #dRelS[hidden] { disp
 @media (max-width: 560px) { .about { grid-template-columns: 1fr; } .about img { width: 96px; height: 96px; } .m-panel { padding: 16px; } }
 .about .lede { margin: 0; font-size: 14px; line-height: 1.5; text-wrap: pretty; }
 .contact { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
-.contact .addr { flex-basis: 100%; font-size: 12px; color: var(--muted); user-select: all; }
 .cv { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .cv li { display: grid; grid-template-columns: 104px 1fr; gap: 10px; align-items: baseline; font-size: 14px; }
 .cv .yrs { font: 400 13px var(--pixel); color: var(--muted); font-variant-numeric: tabular-nums; }
 .cv .role { display: block; font-size: 12px; color: var(--muted); }
 /* the line under the name, with an "online" dot */
 .status.online { display: flex; align-items: center; gap: 9px; }
-.status.online::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 8px var(--live); }''')
+.status.online::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); }''')
 # light box: a column of images on the left (scrolls when there are several), title and text on the right
 rep('.d-media { min-width: 0; min-height: 0; display: flex; align-items: center; justify-content: center; }',
     '.d-media { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: safe center; gap: 16px; overflow-y: auto; scrollbar-width: none; }\n.d-media::-webkit-scrollbar { display: none; }')
@@ -264,9 +263,8 @@ rep("  AXES.forEach(a => addSection(a, TAGS[a]));", """  AXES.forEach(a => addSe
     const photo = document.getElementById('aPhoto');
     if (CONTENT.photo) photo.src = CONTENT.photo; else photo.remove();
     document.getElementById('aIntro').textContent = CONTENT.intro || '';
-    const links = CONTENT.links || [], mail = links.find(l => /^mailto:/.test(l.href));
-    document.getElementById('aContact').innerHTML = links.map(l => `<a href="${esc(l.href)}"${/^mailto:/.test(l.href) ? '' : ' target="_blank" rel="noopener"'}>${esc(l.label)}</a>`).join('')
-      + (mail ? `<span class="addr">${esc(mail.href.slice(7))}</span>` : '');
+    const links = CONTENT.links || [];
+    document.getElementById('aContact').innerHTML = links.map(l => `<a href="${esc(l.href)}"${/^mailto:/.test(l.href) ? '' : ' target="_blank" rel="noopener"'}>${esc(l.label)}</a>`).join('');
     document.getElementById('cvList').innerHTML = (CONTENT.cv || []).map(e => `<li><span class="yrs">${esc(e.years)}</span><span>${esc(e.place)}${e.role ? `<span class="role">${esc(e.role)}</span>` : ''}</span></li>`).join('');
   }""")
 cut("  document.getElementById('months').innerHTML", "playT = setInterval(")
@@ -587,6 +585,9 @@ s = s[:_i] + s[_j:_k] + """    const pxU = innerHeight / vh, side = innerWidth >
       f.inF = true; f.order = i;
     });
 """ + s[_k:]
+
+# the About button belongs to the home page: it fades away in a topic (kept in the layout, so things that line up with it still can)
+rep('body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }', 'body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }\n.menu { transition: opacity .3s, visibility .3s; }\nbody[data-view="focus"] .menu { opacity: 0; visibility: hidden; }')
 
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
