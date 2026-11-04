@@ -101,6 +101,10 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
       const k = Math.min(4, many.images.length - 1);
       await tap(p.locator('#dThumbs button').nth(k)); await sleep(700);
       check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k], `${name}: a thumbnail shows that image big`);
+      // the caption stays put while photos of different shapes swap in
+      const tops = []; for (let j = 0; j < Math.min(6, many.images.length); j++) { await p.evaluate(j => document.querySelectorAll('#dThumbs button')[j].click(), j); await sleep(400); tops.push(Math.round(await p.evaluate(() => document.getElementById('dText').getBoundingClientRect().top))); }
+      check(new Set(tops).size === 1, `${name}: stepping through photos doesn't move the text`, tops);
+      await p.evaluate(k => document.querySelectorAll('#dThumbs button')[k].click(), k); await sleep(400);
       if (!opts.hasTouch) { await p.keyboard.press('ArrowRight'); await sleep(500);
         check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k + 1] && await p.textContent('#dCode') === many.title, `${name}: → steps to the next photo of the same project`); }
       await p.keyboard.press('Escape'); await sleep(900); await p.keyboard.press('Escape'); await sleep(1600);

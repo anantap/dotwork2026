@@ -167,6 +167,7 @@ s = s[:i] + r"""  // Everything shown comes from content.json: projects (title, 
 
   const prng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const rnd = prng(20260601);
+  let titlesOn = true, cellPx = 120; // set by the contact-sheet layout
   const frames = PROJECTS.map((p, n) => ({ ...p, n, tags: p.tags || [], real: true, aspect: 1, image: p.images[0] }));
   document.getElementById('name').textContent = CONTENT.name || '';
   document.title = CONTENT.name || document.title;
@@ -230,6 +231,27 @@ rep("focusList = frames.filter(f => shown(f) && matches(f, focus)).sort((a, b) =
 rep("    const scans = focusList.filter(f => f.real).length;\n", "")
 rep("${focusList.length} frames · ${scans} scan${scans === 1 ? '' : 's'} · ${tagList[focus.tag].axis}", "${focusList.length} project${focusList.length === 1 ? '' : 's'}")
 rep("      f.gscale = Math.min(s * 0.9 / 0.62, 6);", "      f.gscale = Math.min(s * 0.72 / 0.62, 14); // room between tiles for the titles underneath")
+# the contact sheet reserves a title line under every row, so titles never sit on the next row's tiles (many projects on a phone)
+rep("""    let best = { s: 0, cols: 1, rows: 1 };
+    for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), s = Math.min(W / cols, H / rows); if (s > best.s) best = { s, cols, rows }; }
+    const { s, cols, rows } = best;""",
+"""    const pxU = innerHeight / vh, fit = TH => { // tile size for the best column count, leaving TH under each row for a title
+      let best = { t: 0, cols: 1, rows: 1 };
+      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), t = Math.min(W / cols / 1.15, H / rows - TH * 1.15); if (t > best.t) best = { t, cols, rows }; }
+      return best;
+    };
+    let TH = 30 / pxU, best = fit(TH);
+    titlesOn = best.t * 1.15 * pxU >= 84; // columns too narrow for a title (lots of projects on a phone): tiles only, bigger
+    if (!titlesOn) { TH = 0; best = fit(0); }
+    const { t, cols, rows } = best, sx = t * 1.15, sy = t + TH * 1.15; // tile, plus a gap across and a title line down
+    cellPx = sx * pxU;""")
+rep("""      f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2) * s + ox).addScaledVector(up, ((rows - 1) / 2 - r) * s + oy);
+      f.gscale = Math.min(s * 0.72 / 0.62, 14); // room between tiles for the titles underneath""",
+"""      f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2) * sx + ox).addScaledVector(up, ((rows - 1) / 2 - r) * sy + oy + TH / 2);
+      f.gscale = Math.min(t / 0.62, 14);""")
+rep("    const W = vw * (mobile ? 0.9 : 0.6), H = vh * (mobile ? 0.48 : 0.62);", "    const W = vw * (mobile ? 0.92 : 0.6), H = vh * (mobile ? 0.54 : 0.64);")
+# light box: on phones the photo sits in a fixed-height frame, so stepping between tall and wide photos doesn't move the text below
+rep("  .d-media img { max-height: 58vh; }", "  .d-media { height: 58vh; justify-content: center; } /* fixed frame: wide and tall photos don't shift the caption */\n  .d-media img { max-height: 100%; }")
 rep("near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${t}\">${t}</button>`)", "near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${esc(t)}\">${esc(t)}</button>`)")
 rep("'<span>Often with</span>'", "'<span>Also</span>'")
 
@@ -292,12 +314,12 @@ rep("  const tip = document.getElementById('tip');", """  const tip = document.g
 rep("    updateTip();\n    renderer.render", """    { // project titles under the tiles while a topic is open
       const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
       frames.forEach(f => {
-        const on = view === 'focus' && f.inF && f.showImg && !f.pending;
+        const on = view === 'focus' && f.inF && f.showImg && !f.pending && titlesOn;
         if (on) {
           tmp.copy(f.obj.position); const dist = tmp.distanceTo(camera.position); tmp.project(camera);
           const half = 0.31 * f.obj.scale.x * pxPerUnit / dist * f.ah; // half the tile's height
           f.titleEl.style.transform = `translate(${(tmp.x + 1) / 2 * innerWidth}px, ${(1 - tmp.y) / 2 * innerHeight + half + 8}px) translate(-50%, 0)`;
-          f.titleEl.style.maxWidth = `${Math.max(80, half / f.ah * 2.4)}px`; // about the cell's width
+          f.titleEl.style.maxWidth = `${Math.max(60, cellPx - 6)}px`; // no wider than its column
         }
         const op = on && f.obj.material.opacity > 0.6 ? '1' : '0'; // titles appear once their tile has faded in
         if (f.titleEl.style.opacity !== op) { f.titleEl.style.opacity = op; f.titleEl.tabIndex = op === '1' ? 0 : -1; f.titleEl.style.pointerEvents = op === '1' ? 'auto' : 'none'; }
