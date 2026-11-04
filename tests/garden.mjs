@@ -97,6 +97,22 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   const last = ab.projects.at(-1);
   await tap(p.locator('#aProjects button', { hasText: last })); await sleep(1200);
   check(await p.evaluate(t => !document.getElementById('detail').hidden && document.getElementById('dCode').textContent === t && !document.getElementById('menu').classList.contains('open'), last), `${name}: a project in About opens it`, last);
+  { // a project with many photos: one big image, the rest as thumbnails; a thumbnail or an arrow key swaps the big one
+    const many = content.projects.filter(x => x.images.length > 1).sort((a, b) => b.images.length - a.images.length)[0];
+    if (many) {
+      await p.keyboard.press('Escape'); await sleep(900);
+      await tap(p.locator('.m-bar [data-sec=about]')); await sleep(500);
+      await tap(p.locator('#aProjects button', { hasText: many.title })); await sleep(1300);
+      const v = await p.evaluate(() => ({ big: document.querySelectorAll('#dMedia img').length, thumbs: document.querySelectorAll('#dThumbs button').length, src: document.getElementById('dImg').getAttribute('src') }));
+      check(v.big === 1 && v.thumbs === many.images.length && v.src === many.images[0], `${name}: "${many.title}" opens with one image and ${many.images.length} thumbnails`, v);
+      await p.screenshot({ path: `${OUT}/${name}-4b-many-images.png` });
+      const k = Math.min(4, many.images.length - 1);
+      await tap(p.locator('#dThumbs button').nth(k)); await sleep(700);
+      check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k], `${name}: a thumbnail shows that image big`);
+      if (!opts.hasTouch) { await p.keyboard.press('ArrowRight'); await sleep(500);
+        check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k + 1] && await p.textContent('#dCode') === many.title, `${name}: → steps to the next photo of the same project`); }
+    }
+  }
   await p.keyboard.press('Escape'); await sleep(900);
   check(!errs.length, `${name}: no errors`, errs);
   await ctx.close();

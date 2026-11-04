@@ -60,6 +60,13 @@ rep('#detail[hidden], .d-ph[hidden], .d-media img[hidden], #dRelS[hidden] { disp
 .d-text { margin: 0; font-size: 15px; line-height: 1.55; text-wrap: pretty; white-space: pre-line; }
 .d-link, .contact a { display: inline-flex; align-items: center; gap: 6px; font: 400 13px var(--sans); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; text-decoration: none; }
 .d-link { align-self: flex-start; }
+.d-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.d-thumbs[hidden] { display: none; }
+.d-thumbs button { padding: 0; border: 0; background: #111; aspect-ratio: 1; overflow: hidden; border-radius: 3px; cursor: pointer; opacity: .55; transition: opacity .2s; }
+.d-thumbs button[aria-current="true"] { opacity: 1; box-shadow: 0 0 0 1px var(--ink); }
+.d-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (hover: hover) { .d-thumbs button:hover { opacity: 1; } }
+@media (max-width: 760px) { .d-thumbs { grid-template-columns: repeat(4, 1fr); } }
 .p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .3s; letter-spacing: .02em; }
 /* About: one panel with intro, contact, every project and experience */
 .menu { width: min(640px, 100%); }
@@ -123,7 +130,8 @@ rep('''    <div class="d-nav"><button type="button" id="dPrev" aria-label="Previ
     <section><h3>On the site</h3><dl class="kv" id="dVis"></dl></section>
     <section id="dRelS"><h3>Shares the most tags</h3><div class="d-rel" id="dRel"></div></section>''',
 '''    <p class="d-text" id="dText"></p>
-    <a class="d-link" id="dLink" target="_blank" rel="noopener" hidden></a>''')
+    <a class="d-link" id="dLink" target="_blank" rel="noopener" hidden></a>
+    <div class="d-thumbs" id="dThumbs" hidden></div>''')
 
 # ---------------- load content.json first ----------------
 rep("<script>\n(() => {\n", """<script>
@@ -269,11 +277,17 @@ rep("    const el = f.real ? dImg : dPh;\n    el.style.opacity = '0';", "    con
 rep("    if (f.real) dImg.decode().then(go, go); else go();", "    dImg.decode().then(go, go);")
 rep("    const el = f.real ? dImg : dPh;\n    const p1", "    const el = dImg;\n    const p1")
 i = s.index("    const f = detFrame, i = detList.indexOf(f);"); j = s.index("  document.getElementById('dClose').addEventListener('click', closeDetail);")
-s = s[:i] + """    const f = detFrame;
+s = s[:i] + """    const f = detFrame; detImg = 0;
     dImg.src = f.images[0]; dImg.alt = f.alt || f.title;
-    const media = document.getElementById('dMedia'); media.scrollTop = 0;
-    media.querySelectorAll('img:not(#dImg)').forEach(el => el.remove());
-    f.images.slice(1).forEach(src => { const im = new Image(); im.src = src; im.alt = ''; im.loading = 'lazy'; media.appendChild(im); });
+    det.scrollTop = 0; info.scrollTop = 0;
+    // one big image; the rest as thumbnails under the text (tap one to show it big)
+    const thumbs = document.getElementById('dThumbs'); thumbs.hidden = f.images.length < 2;
+    thumbs.replaceChildren(...(f.images.length < 2 ? [] : f.images.map((src, k) => {
+      const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', `Image ${k + 1} of ${f.images.length}`);
+      if (k === 0) b.setAttribute('aria-current', 'true');
+      const im = new Image(); im.src = src; im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; b.append(im);
+      b.addEventListener('click', () => showImage(k, true)); return b;
+    })));
     document.getElementById('dCode').textContent = f.title;
     document.getElementById('dKind').textContent = f.years || '';
     document.getElementById('dText').textContent = f.text || '';
@@ -350,6 +364,22 @@ rep("const near = tagPairs.filter(q => q.keep && (q.i === focus.tag || q.j === f
 # related topics still lean a little closer together
 rep("      d.normalize().multiplyScalar((co[i][j] / maxCo) * 0.6 * (L - 11) - 600 / (L * L));",
     "      d.normalize().multiplyScalar((co[i][j] / maxCo) * 0.3 * (L - 13) - 900 / (L * L));")
+
+# arrows step through a project's images; with one image they step to the next project, as before
+rep("  function step(d) { const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); } }",
+'''  let detImg = 0;
+  function showImage(k, fromThumb) {
+    const f = detFrame; if (!f || k < 0 || k >= f.images.length || k === detImg) return;
+    const d = k > detImg ? 1 : -1; detImg = k;
+    dImg.src = f.images[k];
+    document.querySelectorAll('#dThumbs button').forEach((b, i) => b.setAttribute('aria-current', String(i === k)));
+    if (fromThumb && innerWidth < 760) det.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); // phones: the big image is above the grid
+    swapAnim(d);
+  }
+  function step(d) {
+    if (detFrame && detFrame.images.length > 1) return showImage(detImg + d);
+    const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); }
+  }''')
 
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)

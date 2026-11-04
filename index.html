@@ -107,6 +107,13 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 .d-text { margin: 0; font-size: 15px; line-height: 1.55; text-wrap: pretty; white-space: pre-line; }
 .d-link, .contact a { display: inline-flex; align-items: center; gap: 6px; font: 400 13px var(--sans); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; text-decoration: none; }
 .d-link { align-self: flex-start; }
+.d-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.d-thumbs[hidden] { display: none; }
+.d-thumbs button { padding: 0; border: 0; background: #111; aspect-ratio: 1; overflow: hidden; border-radius: 3px; cursor: pointer; opacity: .55; transition: opacity .2s; }
+.d-thumbs button[aria-current="true"] { opacity: 1; box-shadow: 0 0 0 1px var(--ink); }
+.d-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@media (hover: hover) { .d-thumbs button:hover { opacity: 1; } }
+@media (max-width: 760px) { .d-thumbs { grid-template-columns: repeat(4, 1fr); } }
 .p-title { position: absolute; left: 0; top: 0; font: 400 14px var(--pixel); color: var(--ink); background: none; border: 0; padding: 2px 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; opacity: 0; transition: opacity .3s; letter-spacing: .02em; }
 /* About: one panel with intro, contact, every project and experience */
 .menu { width: min(640px, 100%); }
@@ -213,6 +220,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     </div>
     <p class="d-text" id="dText"></p>
     <a class="d-link" id="dLink" target="_blank" rel="noopener" hidden></a>
+    <div class="d-thumbs" id="dThumbs" hidden></div>
   </aside>
 </div>
 
@@ -653,13 +661,31 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const p2 = det.animate([{ backgroundColor: 'rgba(0,0,0,0.95)' }, { backgroundColor: 'rgba(0,0,0,0)' }], { duration: 400, easing: 'ease', fill: 'forwards' }).finished;
     Promise.all([p1, p2]).then(() => { det.hidden = true; detFrame = null; closing = false; restoreFocus(); det.getAnimations({ subtree: true }).forEach(a => a.cancel()); dImg.style.opacity = ''; });
   }
-  function step(d) { const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); } }
+  let detImg = 0;
+  function showImage(k, fromThumb) {
+    const f = detFrame; if (!f || k < 0 || k >= f.images.length || k === detImg) return;
+    const d = k > detImg ? 1 : -1; detImg = k;
+    dImg.src = f.images[k];
+    document.querySelectorAll('#dThumbs button').forEach((b, i) => b.setAttribute('aria-current', String(i === k)));
+    if (fromThumb && innerWidth < 760) det.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' }); // phones: the big image is above the grid
+    swapAnim(d);
+  }
+  function step(d) {
+    if (detFrame && detFrame.images.length > 1) return showImage(detImg + d);
+    const i = detList.indexOf(detFrame) + d; if (i >= 0 && i < detList.length) { detFrame = detList[i]; renderDetail(); swapAnim(d); }
+  }
   function renderDetail() {
-    const f = detFrame;
+    const f = detFrame; detImg = 0;
     dImg.src = f.images[0]; dImg.alt = f.alt || f.title;
-    const media = document.getElementById('dMedia'); media.scrollTop = 0;
-    media.querySelectorAll('img:not(#dImg)').forEach(el => el.remove());
-    f.images.slice(1).forEach(src => { const im = new Image(); im.src = src; im.alt = ''; im.loading = 'lazy'; media.appendChild(im); });
+    det.scrollTop = 0; info.scrollTop = 0;
+    // one big image; the rest as thumbnails under the text (tap one to show it big)
+    const thumbs = document.getElementById('dThumbs'); thumbs.hidden = f.images.length < 2;
+    thumbs.replaceChildren(...(f.images.length < 2 ? [] : f.images.map((src, k) => {
+      const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', `Image ${k + 1} of ${f.images.length}`);
+      if (k === 0) b.setAttribute('aria-current', 'true');
+      const im = new Image(); im.src = src; im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; b.append(im);
+      b.addEventListener('click', () => showImage(k, true)); return b;
+    })));
     document.getElementById('dCode').textContent = f.title;
     document.getElementById('dKind').textContent = f.years || '';
     document.getElementById('dText').textContent = f.text || '';
