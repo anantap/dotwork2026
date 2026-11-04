@@ -529,6 +529,38 @@ rep("#detail:focus { outline: none; }", """#detail:focus { outline: none; }
 }""")
 rep("    det.scrollTop = 0; info.scrollTop = 0; document.getElementById('dMedia').scrollTop = 0;", "    det.scrollTop = 0; info.scrollTop = 0;")
 
+# topic grid on desktop: a column right of the header (like the project page), using the full height, with room under each title
+rep("""    const W = vw * (mobile ? 0.92 : 0.6), H = vh * (mobile ? 0.54 : 0.64);
+    const N = Math.max(1, focusList.length);
+    const pxU = innerHeight / vh, fit = TH => { // tile size for the best column count, leaving TH under each row for a title
+      let best = { t: 0, cols: 1, rows: 1 };
+      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), t = Math.min(W / cols / 1.15, H / rows - TH * 1.15); if (t > best.t) best = { t, cols, rows }; }
+      return best;
+    };
+    let TH = 30 / pxU, best = fit(TH);""",
+"""    const pxU = innerHeight / vh;
+    // desktop: the sheet fills a box right of the header, from near the top to just above the About button (all in px)
+    const side = innerWidth >= 1024; // wide screens: header left, grid right. Narrower: grid under the header, as on phones
+    const box = { L: 24 + 440 + 64, R: innerWidth - 48, T: 24, B: innerHeight - 112 };
+    const W = side ? (box.R - box.L) / pxU : vw * 0.92, H = side ? (box.B - box.T) / pxU : vh * 0.54;
+    const N = Math.max(1, focusList.length), maxT = side ? 320 / pxU : Infinity; // side-by-side tiles at most 320px
+    const fit = TH => { // tile size for the best column count, leaving TH under each row for a title
+      let best = { t: 0, cols: 1, rows: 1 };
+      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), t = Math.min(W / cols / 1.15, H / rows - TH * 1.15, maxT); if (t >= best.t) best = { t, cols, rows }; }
+      return best;
+    };
+    let TH = (side ? 48 : 30) / pxU, best = fit(TH); // desktop: extra room between a title and the next row""")
+rep("""      f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2) * sx + ox).addScaledVector(up, ((rows - 1) / 2 - r) * sy + oy + TH / 2);
+      f.gscale = Math.min(t / 0.62, 14);""",
+"""      if (!side) f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2) * sx + ox).addScaledVector(up, ((rows - 1) / 2 - r) * sy + oy + TH / 2);
+      else { // centred across the box, starting at its top
+        const x = ((box.L + box.R) / 2 - innerWidth / 2) / pxU + (c - (cols - 1) / 2) * sx, y = (innerHeight / 2 - box.T) / pxU - t / 2 - r * sy;
+        f.gpos = center.clone().addScaledVector(right, x).addScaledVector(up, y);
+      }
+      f.gscale = Math.min(t / 0.62, side ? 99 : 14);""")
+
+rep("    const ox = mobile ? 0 : vw * 0.06, oy = mobile ? -vh * 0.06 : -vh * 0.04;", "    const ox = 0, oy = -vh * 0.06; // used below 1024px wide: centred under the header")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)

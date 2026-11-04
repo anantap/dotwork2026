@@ -578,23 +578,31 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const center = focusGoal.clone().addScaledVector(fwd, G);
     const vh = 2 * G * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), vw = vh * camera.aspect;
     const mobile = innerWidth < 760;
-    const W = vw * (mobile ? 0.92 : 0.6), H = vh * (mobile ? 0.54 : 0.64);
-    const N = Math.max(1, focusList.length);
-    const pxU = innerHeight / vh, fit = TH => { // tile size for the best column count, leaving TH under each row for a title
+    const pxU = innerHeight / vh;
+    // desktop: the sheet fills a box right of the header, from near the top to just above the About button (all in px)
+    const side = innerWidth >= 1024; // wide screens: header left, grid right. Narrower: grid under the header, as on phones
+    const box = { L: 24 + 440 + 64, R: innerWidth - 48, T: 24, B: innerHeight - 112 };
+    const W = side ? (box.R - box.L) / pxU : vw * 0.92, H = side ? (box.B - box.T) / pxU : vh * 0.54;
+    const N = Math.max(1, focusList.length), maxT = side ? 320 / pxU : Infinity; // side-by-side tiles at most 320px
+    const fit = TH => { // tile size for the best column count, leaving TH under each row for a title
       let best = { t: 0, cols: 1, rows: 1 };
-      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), t = Math.min(W / cols / 1.15, H / rows - TH * 1.15); if (t > best.t) best = { t, cols, rows }; }
+      for (let cols = 1; cols <= N; cols++) { const rows = Math.ceil(N / cols), t = Math.min(W / cols / 1.15, H / rows - TH * 1.15, maxT); if (t >= best.t) best = { t, cols, rows }; }
       return best;
     };
-    let TH = 30 / pxU, best = fit(TH);
+    let TH = (side ? 48 : 30) / pxU, best = fit(TH); // desktop: extra room between a title and the next row
     titlesOn = best.t * 1.15 * pxU >= 84; // columns too narrow for a title (lots of projects on a phone): tiles only, bigger
     if (!titlesOn) { TH = 0; best = fit(0); }
     const { t, cols, rows } = best, sx = t * 1.15, sy = t + TH * 1.15; // tile, plus a gap across and a title line down
     cellPx = sx * pxU;
-    const ox = mobile ? 0 : vw * 0.06, oy = mobile ? -vh * 0.06 : -vh * 0.04;
+    const ox = 0, oy = -vh * 0.06; // used below 1024px wide: centred under the header
     focusList.forEach((f, i) => {
       const c = i % cols, r = Math.floor(i / cols);
-      f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2) * sx + ox).addScaledVector(up, ((rows - 1) / 2 - r) * sy + oy + TH / 2);
-      f.gscale = Math.min(t / 0.62, 14);
+      if (!side) f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2) * sx + ox).addScaledVector(up, ((rows - 1) / 2 - r) * sy + oy + TH / 2);
+      else { // centred across the box, starting at its top
+        const x = ((box.L + box.R) / 2 - innerWidth / 2) / pxU + (c - (cols - 1) / 2) * sx, y = (innerHeight / 2 - box.T) / pxU - t / 2 - r * sy;
+        f.gpos = center.clone().addScaledVector(right, x).addScaledVector(up, y);
+      }
+      f.gscale = Math.min(t / 0.62, side ? 99 : 14);
       f.inF = true; f.order = i;
     });
     // header
