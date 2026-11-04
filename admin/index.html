@@ -209,7 +209,7 @@ details.project > summary::-webkit-details-marker { display: none; }
           text,
           el('label', {}, 'Topics', tags, el('div', { class: 'tagadd' }, tagInput, el('button', { class: 'btn small', type: 'button', text: 'Add', onclick: () => addTag() })), sugg),
           el('label', {}, 'Images', imgs),
-          field('Link (optional)', 'link', 'url', 'https://'),
+          el('div', { class: 'row' }, field('Link (optional)', 'link', 'url', 'https://'), field('Link text (optional)', 'linkLabel', 'text', 'Shows the address if empty')),
           el('div', {}, del)));
       list.append(det);
     });
