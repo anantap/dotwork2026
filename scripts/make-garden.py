@@ -202,7 +202,7 @@ rep("    f.base = f.real ? 1.8 : 1;", "    f.base = 2; // small squares on the g
 rep("    if (f.real) obj.renderOrder = 2;", "    obj.renderOrder = 2;")
 rep("      if (f.facing && e > 0) dummy.quaternion.copy(camera.quaternion);", "      if (true) dummy.quaternion.copy(camera.quaternion); // squares always face the viewer")
 rep("      f.opT = op;", '''      f.opT = op;
-      const img = inFocus && f.inF; // blue square on the globe, the project's image in a topic view
+      const img = f.showImg || (inFocus && f.inF); // once a tile has shown its image it keeps it (tiles are hidden on the globe), so a fade-out never flashes blue
       if (f.showImg !== img) { f.showImg = img; f.obj.material.map = img ? f.tex : null; f.obj.material.color.set(img ? 0xffffff : C.sample); f.obj.material.needsUpdate = true; }''')
 
 # ---------------- counts, topics, status ----------------
@@ -311,7 +311,7 @@ rep("    updateTip();\n    renderer.render", """    { // project titles under th
           f.titleEl.style.transform = `translate(${(tmp.x + 1) / 2 * innerWidth}px, ${(1 - tmp.y) / 2 * innerHeight + half + 8}px) translate(-50%, 0)`;
           f.titleEl.style.maxWidth = `${Math.max(80, half / f.ah * 2.4)}px`; // about the cell's width
         }
-        const op = on && performance.now() > f.t0 + f.dur * 0.6 ? '1' : '0'; // fade in as the tile settles
+        const op = on && f.obj.material.opacity > 0.6 ? '1' : '0'; // titles appear once their tile has faded in
         if (f.titleEl.style.opacity !== op) { f.titleEl.style.opacity = op; f.titleEl.tabIndex = op === '1' ? 0 : -1; f.titleEl.style.pointerEvents = op === '1' ? 'auto' : 'none'; }
       });
     }
@@ -378,6 +378,16 @@ rep("  function step(d) { const i = detList.indexOf(detFrame) + d; if (i >= 0 &&
 # the About button reads "Close" to screen readers while the panel is open
 rep("    menu.querySelectorAll('.m-bar button').forEach(b => b.setAttribute('aria-expanded', String(b.dataset.sec === sec)));",
     "    menu.querySelectorAll('.m-bar button').forEach(b => { b.setAttribute('aria-expanded', String(b.dataset.sec === sec)); b.setAttribute('aria-label', b.dataset.sec === sec ? 'Close' : 'About'); });")
+
+# ---------- tiles fade instead of flying (they no longer have a visible spot on the globe to fly from) ----------
+# enter: an invisible tile jumps to its place in the grid and fades in once the camera has arrived;
+# exit: tiles stay where they are and fade out; a tile already showing (topic to topic) still glides to its new place
+rep("      const to = focused ? f.gpos : f.home, sTo = focused ? f.gscale : f.base;",
+    "      const to = focused ? f.gpos : f.pTo, sTo = focused ? f.gscale : f.sTo;")
+rep("      f.t0 = now + (reduced ? 0 : stagger(f)); f.dur = reduced ? 0 : 1100;",
+    "      const shown = f.obj.material.opacity > 0.3;\n      f.t0 = now + (reduced || !shown ? 0 : stagger(f)); f.dur = reduced || !shown ? 0 : 1100;")
+rep("      f.obj.material.opacity += (f.opT - f.obj.material.opacity) * (reduced ? 1 : 0.1);",
+    "      const want = view === 'focus' && camTw && f.obj.material.opacity < 0.3 ? 0 : f.opT; // hold new tiles until the camera arrives\n      f.obj.material.opacity += (want - f.obj.material.opacity) * (reduced ? 1 : want < f.obj.material.opacity ? 0.2 : 0.09);")
 
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
