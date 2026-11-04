@@ -446,6 +446,10 @@ rep("    document.getElementById('dClose').focus({ preventScroll: true });",
 rep("  document.getElementById('dClose').addEventListener('click', closeDetail);",
     "  document.getElementById('dClose').addEventListener('click', closeDetail);\n  document.getElementById('dCloseB').addEventListener('click', closeDetail);")
 
+# a tighter gap between the name and the status line
+rep(".status { margin-top: 10px; font: 400 16px var(--pixel);", ".status { margin-top: 4px; font: 400 16px var(--pixel);")
+rep("  .status { margin-top: 6px; font-size: 14px; }", "  .status { margin-top: 4px; font-size: 14px; }")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)
