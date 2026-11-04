@@ -174,7 +174,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   #detail { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; gap: 20px; overflow-y: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   .d-media { min-height: auto; overflow: visible; } /* keep the row as tall as the photo; min-height: 0 let it shrink so the photo spilled over the caption */
   .d-media { height: 58vh; justify-content: center; } /* fixed frame: wide and tall photos don't shift the caption */
-  .d-media img { max-height: 100%; }
+  .d-media img { max-height: 58vh; max-width: 100%; width: auto; height: auto; } /* a fixed limit, not a percentage of the frame: Safari mis-sized photos against 100% */
   .d-info { overflow: visible; }
 }
 </style>

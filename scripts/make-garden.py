@@ -251,7 +251,7 @@ rep("""      f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2)
       f.gscale = Math.min(t / 0.62, 14);""")
 rep("    const W = vw * (mobile ? 0.9 : 0.6), H = vh * (mobile ? 0.48 : 0.62);", "    const W = vw * (mobile ? 0.92 : 0.6), H = vh * (mobile ? 0.54 : 0.64);")
 # light box: on phones the photo sits in a fixed-height frame, so stepping between tall and wide photos doesn't move the text below
-rep("  .d-media img { max-height: 58vh; }", "  .d-media { height: 58vh; justify-content: center; } /* fixed frame: wide and tall photos don't shift the caption */\n  .d-media img { max-height: 100%; }")
+rep("  .d-media img { max-height: 58vh; }", "  .d-media { height: 58vh; justify-content: center; } /* fixed frame: wide and tall photos don't shift the caption */\n  .d-media img { max-height: 58vh; max-width: 100%; width: auto; height: auto; } /* a fixed limit, not a percentage of the frame: Safari mis-sized photos against 100% */")
 rep("near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${t}\">${t}</button>`)", "near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${esc(t)}\">${esc(t)}</button>`)")
 rep("'<span>Often with</span>'", "'<span>Also</span>'")
 
