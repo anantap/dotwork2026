@@ -167,6 +167,7 @@ s = s[:i] + r"""  // Everything shown comes from content.json: projects (title, 
 
   const prng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   const rnd = prng(20260601);
+  const detailEl = document.getElementById('detail');
   let titlesOn = true, cellPx = 120; // set by the contact-sheet layout
   const frames = PROJECTS.map((p, n) => ({ ...p, n, tags: p.tags || [], real: true, aspect: 1, image: p.images[0] }));
   document.getElementById('name').textContent = CONTENT.name || '';
@@ -251,7 +252,7 @@ rep("""      f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2)
       f.gscale = Math.min(t / 0.62, 14);""")
 rep("    const W = vw * (mobile ? 0.9 : 0.6), H = vh * (mobile ? 0.48 : 0.62);", "    const W = vw * (mobile ? 0.92 : 0.6), H = vh * (mobile ? 0.54 : 0.64);")
 # light box: on phones the photo sits in a fixed-height frame, so stepping between tall and wide photos doesn't move the text below
-rep("  .d-media img { max-height: 58vh; }", "  .d-media { height: 58vh; justify-content: center; } /* fixed frame: wide and tall photos don't shift the caption */\n  .d-media img { max-height: 58vh; max-width: 100%; width: auto; height: auto; } /* a fixed limit, not a percentage of the frame: Safari mis-sized photos against 100% */")
+rep("  .d-media img { max-height: 58vh; }", "  .d-media { height: auto; }\n  .d-media img { width: 100%; height: auto; max-height: none; } /* phones: photos at full width, the story scrolls */\n  .d-thumbs { display: none !important; }\n  .d-stack { display: grid; gap: 12px; }")
 rep("near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${t}\">${t}</button>`)", "near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${esc(t)}\">${esc(t)}</button>`)")
 rep("'<span>Often with</span>'", "'<span>Also</span>'")
 
@@ -314,7 +315,7 @@ rep("  const tip = document.getElementById('tip');", """  const tip = document.g
 rep("    updateTip();\n    renderer.render", """    { // project titles under the tiles while a topic is open
       const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
       frames.forEach(f => {
-        const on = view === 'focus' && f.inF && f.showImg && !f.pending && titlesOn;
+        const on = view === 'focus' && f.inF && f.showImg && !f.pending && titlesOn && detailEl.hidden; // hidden behind an open project
         if (on) {
           tmp.copy(f.obj.position); const dist = tmp.distanceTo(camera.position); tmp.project(camera);
           const half = 0.31 * f.obj.scale.x * pxPerUnit / dist * f.ah; // half the tile's height
@@ -424,6 +425,12 @@ rep("""    if (!f) { tip.style.opacity = 0; return; }
     tip.style.opacity = 1;
   }""", """    tip.style.opacity = 0;
   }""")
+
+# phones: the rest of a project's photos follow the text at full width (desktop keeps one big photo plus thumbnails)
+rep("""    <div class="d-thumbs" id="dThumbs" hidden></div>\n  </aside>""", """    <div class="d-thumbs" id="dThumbs" hidden></div>\n    <div class="d-stack" id="dStack"></div>\n  </aside>""")
+rep(".d-thumbs[hidden] { display: none; }", ".d-thumbs[hidden] { display: none; }\n.d-stack { display: none; }\n.d-stack img { width: 100%; height: auto; display: block; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); }")
+rep("    document.getElementById('dCode').textContent = f.title;",
+    "    document.getElementById('dStack').replaceChildren(...f.images.slice(1).map(src => { const im = new Image(); im.src = src; im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; return im; }));\n    document.getElementById('dCode').textContent = f.title;")
 
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)

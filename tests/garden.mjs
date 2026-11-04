@@ -98,6 +98,10 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
       const v = await p.evaluate(() => ({ big: document.querySelectorAll('#dMedia img').length, thumbs: document.querySelectorAll('#dThumbs button').length, src: document.getElementById('dImg').getAttribute('src') }));
       check(v.big === 1 && v.thumbs === many.images.length && v.src === many.images[0], `${name}: "${many.title}" opens with one image and ${many.images.length} thumbnails`, v);
       await p.screenshot({ path: `${OUT}/${name}-4b-many-images.png` });
+      if (opts.hasTouch) { // phones: no thumbnails; the other photos follow the text at full width
+        const st = await p.evaluate(() => ({ thumbs: getComputedStyle(document.getElementById('dThumbs')).display, stack: [...document.querySelectorAll('#dStack img')].map(i => Math.round(i.getBoundingClientRect().width)), big: Math.round(document.getElementById('dImg').getBoundingClientRect().width), vw: innerWidth }));
+        check(st.thumbs === 'none' && st.stack.length === many.images.length - 1 && st.stack.every(w => w > st.vw * 0.85) && st.big > st.vw * 0.85, `${name}: "${many.title}" shows every photo at full width, one under the other`, { ...st, stack: st.stack.length });
+      } else {
       const k = Math.min(4, many.images.length - 1);
       await tap(p.locator('#dThumbs button').nth(k)); await sleep(700);
       check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k], `${name}: a thumbnail shows that image big`);
@@ -107,6 +111,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
       await p.evaluate(k => document.querySelectorAll('#dThumbs button')[k].click(), k); await sleep(400);
       if (!opts.hasTouch) { await p.keyboard.press('ArrowRight'); await sleep(500);
         check(await p.evaluate(() => document.getElementById('dImg').getAttribute('src')) === many.images[k + 1] && await p.textContent('#dCode') === many.title, `${name}: → steps to the next photo of the same project`); }
+      }
       await p.keyboard.press('Escape'); await sleep(900); await p.keyboard.press('Escape'); await sleep(1600);
     }
   }
