@@ -276,8 +276,8 @@ rep("    tagPairs.forEach(q => { q.w = w[q.i][q.j]; q.keep = q.w >= 1 && counts[
 rep("      labelEls[i].innerHTML = `${esc(t.name)}<small>${counts[i]}</small>`;", '''      const solo = counts[i] < MIN_SHARED;
       labelEls[i].innerHTML = solo ? esc(t.name) : `${esc(t.name)}<small>${counts[i]}</small>`;
       labelEls[i].classList.toggle('solo', solo);''')
-rep("      el.dataset.base = inFocus || counts[i] < MIN_SHARED ? 0 :", "      el.dataset.base = inFocus ? 0 : counts[i] < MIN_SHARED ? (h ? (h.tag === i ? 1 : 0.12) : 0.5) :")
-rep(".tag-label.on { color: var(--link); }", ".tag-label.on { color: var(--link); }\n.tag-label.solo { color: var(--muted); font-size: 14px; }\n.tag-label.solo.on { color: var(--link); }\n.tag-label.solo::before { width: 3px; height: 3px; }")
+rep("      el.dataset.base = inFocus || counts[i] < MIN_SHARED ? 0 :", "      el.dataset.base = inFocus ? 0 : counts[i] < MIN_SHARED ? (h ? (h.tag === i ? 1 : 0.12) : 1) :")
+rep(".tag-label.on { color: var(--link); }", ".tag-label.on { color: var(--link); }\n.tag-label.solo { font-size: 14px; }\n.tag-label.solo.on { color: var(--link); }\n.tag-label.solo::before { width: 3px; height: 3px; }")
 
 # a topic with one project opens that project directly; a shared topic opens its topic view
 rep("  function enterFocus(key) {", '''  function openTopic(name) {
