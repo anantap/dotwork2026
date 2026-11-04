@@ -98,7 +98,20 @@ rep('''    <div class="d-nav"><button type="button" id="dPrev" aria-label="Previ
     <a class="d-link" id="dLink" target="_blank" rel="noopener" hidden></a>''')
 
 # ---------------- load content.json first ----------------
-rep("<script>\n(() => {\n", "<script>\nfetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(CONTENT => {\n")
+rep("<script>\n(() => {\n", """<script>
+// content.json sits next to this page. Opened as /garden (no trailing slash), relative URLs point one folder up, so
+// look inside the folder too, and if the content is there, make it the base for every other relative URL (images).
+(async () => {
+  const get = async u => { try { const r = await fetch(u); return r.ok ? await r.json() : null; } catch { return null; } };
+  let c = await get('content.json');
+  if (!c && !/\\/$|\\.[a-z]+$/i.test(location.pathname)) {
+    const dir = location.pathname + '/';
+    c = await get(dir + 'content.json');
+    if (c) { const b = document.createElement('base'); b.href = dir; document.head.prepend(b); }
+  }
+  return c;
+})().then(CONTENT => {
+""")
 rep("  resize(); recount(); measureUI(); tick();\n})();", "  resize(); recount(); measureUI(); tick();\n});")
 rep("  if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return cantDraw('This map needs WebGL, which is turned off or unavailable in this browser.');",
     "  if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return cantDraw('This map needs WebGL, which is turned off or unavailable in this browser.');\n"

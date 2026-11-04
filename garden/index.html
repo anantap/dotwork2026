@@ -194,7 +194,18 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script>
-fetch('content.json').then(r => r.ok ? r.json() : null).catch(() => null).then(CONTENT => {
+// content.json sits next to this page. Opened as /garden (no trailing slash), relative URLs point one folder up, so
+// look inside the folder too, and if the content is there, make it the base for every other relative URL (images).
+(async () => {
+  const get = async u => { try { const r = await fetch(u); return r.ok ? await r.json() : null; } catch { return null; } };
+  let c = await get('content.json');
+  if (!c && !/\/$|\.[a-z]+$/i.test(location.pathname)) {
+    const dir = location.pathname + '/';
+    c = await get(dir + 'content.json');
+    if (c) { const b = document.createElement('base'); b.href = dir; document.head.prepend(b); }
+  }
+  return c;
+})().then(CONTENT => {
   // Without three.js or WebGL there is no map: say so where the frame count goes, and drop the controls that need it
   const cantDraw = msg => {
     document.body.dataset.view = 'globe';

@@ -15,7 +15,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   const ctx = await b.newContext(opts); await ctx.addInitScript(`(${HOOK})()`);
   if (args['three-dir']) await ctx.route('https://cdn.jsdelivr.net/npm/three@0.147.0/**', r => r.fulfill({ path: path.join(args['three-dir'], new URL(r.request().url()).pathname.replace('/npm/three@0.147.0/', '')), contentType: 'text/javascript' }));
   const p = await ctx.newPage(); const errs = [];
-  p.on('pageerror', e => errs.push(String(e))); p.on('console', m => m.type() === 'error' && errs.push(m.text())); p.on('requestfailed', q => errs.push('failed ' + q.url()));
+  p.on('pageerror', e => errs.push(String(e))); p.on('console', m => m.type() === 'error' && !(/\/garden$/.test(BASE) && /404/.test(m.text())) && errs.push(m.text())); // without a trailing slash the first content.json lookup 404s by design p.on('requestfailed', q => errs.push('failed ' + q.url()));
   const tap = async loc => opts.hasTouch ? loc.tap() : loc.click();
   const tiles = () => p.evaluate(() => window.__scene.children.filter(o => o.userData.f).map(o => ({ title: o.userData.f.title, img: !!o.material.map, inF: o.userData.f.inF })));
   await p.goto(BASE); await p.waitForFunction(() => window.__frames > 30); await sleep(3000);
