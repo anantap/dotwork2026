@@ -12,7 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1]?.startsWith('--') ? true : all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/';
+const BASE = args.base || 'http://localhost:3000/photos/';
 const ENGINES = (args.engines || 'chromium,firefox,webkit').split(',');
 const OUT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'out');
 const THREE_DIR = args['three-dir'];

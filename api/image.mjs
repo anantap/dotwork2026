@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     if (!type || bytes.length < 100) return send(res, 400, { error: 'Only JPG, PNG or WebP images.' });
     if (bytes.length > 3_000_000) return send(res, 413, { error: 'That image is too large (over 3 MB after resizing).' });
     const base = String(body.name || 'image').toLowerCase().replace(/\.[a-z0-9]+$/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 50) || 'image';
-    const path = `garden/img/${base}-${crypto.randomBytes(3).toString('hex')}.${type[0]}`;
+    const path = `img/${base}-${crypto.randomBytes(3).toString('hex')}.${type[0]}`;
     const blob = await gh(c, 'POST', '/git/blobs', { content: bytes.toString('base64'), encoding: 'base64' });
     send(res, 200, { path, sha: blob.sha });
   } catch (e) { fail(res, e); }

@@ -1,4 +1,4 @@
-// GET /api/content → the current garden/content.json straight from GitHub (not the deployed copy), with its version.
+// GET /api/content → the current content.json straight from GitHub (not the deployed copy), with its version.
 import { ready, send, loggedIn, gh, fail, CONTENT_PATH } from './_lib.mjs';
 
 export default async function handler(req, res) {

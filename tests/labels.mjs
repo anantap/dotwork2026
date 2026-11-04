@@ -2,7 +2,7 @@
 //   node tests/labels.mjs [--base http://localhost:3000/] [--three-dir /path/to/three/package]
 import { chromium, devices } from 'playwright'; import path from 'node:path';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/';
+const BASE = args.base || 'http://localhost:3000/photos/';
 const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] });
 let fail = 0;
 for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 } }], ['iPhone 14', devices['iPhone 14']], ['Pixel 7', devices['Pixel 7']], ['iPhone 14 landscape', devices['iPhone 14 landscape']]]) {

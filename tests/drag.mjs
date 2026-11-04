@@ -3,7 +3,7 @@
 //   node tests/drag.mjs [--base http://localhost:3000/] [--three-dir /path/to/three/package]
 import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/';
+const BASE = args.base || 'http://localhost:3000/photos/';
 const here = path.dirname(fileURLToPath(import.meta.url)); const src = fs.readFileSync(path.join(here, 'run.mjs'), 'utf8');
 const HOOK = src.slice(src.indexOf('const HOOK = () => {') + 13, src.indexOf('\n};\n', src.indexOf('const HOOK')) + 2);
 const sleep = ms => new Promise(r => setTimeout(r, ms));

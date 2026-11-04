@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/';
+const BASE = args.base || 'http://localhost:3000/photos/';
 const DEVICE = args.device || 'Pixel 7'; // Chromium emulation; iPhone 14 works too
 const here = path.dirname(fileURLToPath(import.meta.url));
 const runSrc = fs.readFileSync(path.join(here, 'run.mjs'), 'utf8');

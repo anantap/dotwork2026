@@ -1,13 +1,13 @@
-// Project map (garden/): content from content.json, only topics on the globe, a topic shows images with titles,
+// Project map (the home page): content from content.json, only topics on the globe, a topic shows images with titles,
 // a project opens as images and text, the menu is Filter / About / CV.
-//   node tests/garden.mjs [--base http://localhost:3000/garden/] [--three-dir /path/to/three/package]
+//   node tests/garden.mjs [--base http://localhost:3000/] [--three-dir /path/to/three/package]
 import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/garden/';
+const BASE = args.base || 'http://localhost:3000/';
 const here = path.dirname(fileURLToPath(import.meta.url)); const src = fs.readFileSync(path.join(here, 'run.mjs'), 'utf8');
 const HOOK = src.slice(src.indexOf('const HOOK = () => {') + 13, src.indexOf('\n};\n', src.indexOf('const HOOK')) + 2);
 const OUT = path.join(here, 'out', 'garden'); fs.mkdirSync(OUT, { recursive: true });
-const content = JSON.parse(fs.readFileSync(path.join(here, '..', 'garden', 'content.json'), 'utf8'));
+const content = JSON.parse(fs.readFileSync(path.join(here, '..', 'content.json'), 'utf8'));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] });
 let fail = 0; const check = (ok, name, d) => { console.log(ok ? 'PASS' : 'FAIL', name, d !== undefined ? JSON.stringify(d) : ''); if (!ok) fail++; };

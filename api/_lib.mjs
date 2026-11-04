@@ -1,13 +1,13 @@
 // Shared helpers for the admin API (files starting with "_" are not routes on Vercel).
 // Settings come from environment variables set in Vercel → Settings → Environment Variables:
-//   ADMIN_PASSWORD   the password for /garden/admin/
+//   ADMIN_PASSWORD   the password for /admin/
 //   GITHUB_TOKEN     a fine-grained GitHub token with "Contents: read and write" on this repository
 //   GITHUB_REPO      optional, default anantap/rollamonth
 //   GITHUB_BRANCH    optional, default: the branch this deployment was built from
 import crypto from 'node:crypto';
 
-export const CONTENT_PATH = 'garden/content.json';
-export const IMAGE_PATH = /^garden\/img\/[a-z0-9][a-z0-9-]{0,80}\.(jpg|png|webp)$/;
+export const CONTENT_PATH = 'content.json';
+export const IMAGE_PATH = /^img\/[a-z0-9][a-z0-9-]{0,80}\.(jpg|png|webp)$/;
 
 export function config() {
   const e = process.env;

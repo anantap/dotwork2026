@@ -16,7 +16,7 @@ function fakeGitHub({ token = 'test-token', branch = 'main' } = {}) {
   const blobSha = buf => crypto.createHash('sha1').update(`blob ${buf.length}\0`).update(buf).digest('hex');
   const putBlob = buf => { const sha = blobSha(buf); blobs.set(sha, buf); return sha; };
   const putTree = files => { const sha = crypto.createHash('sha1').update(JSON.stringify([...files].sort())).digest('hex'); trees.set(sha, new Map(files)); return sha; };
-  const seed = new Map([['garden/content.json', putBlob(fs.readFileSync(path.join(ROOT, 'garden/content.json')))]]);
+  const seed = new Map([['content.json', putBlob(fs.readFileSync(path.join(ROOT, 'content.json')))]]);
   let head = crypto.randomBytes(20).toString('hex');
   commits.set(head, { tree: putTree(seed), parents: [], message: 'seed' });
   const repo = {
@@ -95,5 +95,5 @@ export async function start({ sitePort = 3300, githubPort = 3301, password = 'te
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   await start();
-  console.log('admin test site on http://localhost:3300/garden/admin/ (password "test"), fake GitHub on :3301');
+  console.log('admin test site on http://localhost:3300/admin/ (password "test"), fake GitHub on :3301');
 }

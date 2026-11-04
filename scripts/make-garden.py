@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Builds garden/index.html (Ananta's project map) from the photo globe's index.html.
+"""Builds index.html (Ananta's project map, the site's home page) from the photo globe's index.html.
 
-    python3 scripts/make-garden.py index.html garden/index.html
+    python3 scripts/make-garden.py photos/index.html index.html
 
-The page's content (projects, about, CV) is not in here: garden/content.json is read when the page loads.
+The page's content (projects, about, CV) is not in here: content.json is read when the page loads.
 """
 import sys
 SRC, OUT = sys.argv[1], sys.argv[2]
@@ -99,7 +99,7 @@ rep('''    <div class="d-nav"><button type="button" id="dPrev" aria-label="Previ
 
 # ---------------- load content.json first ----------------
 rep("<script>\n(() => {\n", """<script>
-// content.json sits next to this page. Opened as /garden (no trailing slash), relative URLs point one folder up, so
+// content.json sits next to this page. Opened from a folder without its trailing slash, relative URLs point one folder up, so
 // look inside the folder too, and if the content is there, make it the base for every other relative URL (images).
 (async () => {
   const get = async u => { try { const r = await fetch(u); return r.ok ? await r.json() : null; } catch { return null; } };

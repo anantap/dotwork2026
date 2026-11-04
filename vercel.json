@@ -1,3 +1,15 @@
 {
-  "trailingSlash": true
+  "trailingSlash": true,
+  "redirects": [
+    {
+      "source": "/garden",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/garden/:path*",
+      "destination": "/:path*",
+      "permanent": true
+    }
+  ]
 }

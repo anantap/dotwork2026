@@ -2,7 +2,7 @@
 //   node tests/fallback.mjs [--base http://localhost:3000/] [--three-dir /path/to/three/package]
 import { chromium } from 'playwright'; import path from 'node:path';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/';
+const BASE = args.base || 'http://localhost:3000/photos/';
 let fail = 0;
 for (const [name, launchArgs, cdnUp, expect] of [['WebGL off', ['--disable-webgl', '--disable-3d-apis'], true, /needs WebGL/], ['three.js unreachable', [], false, /didn.t load/]]) {
   const b = await chromium.launch({ args: launchArgs }); const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });

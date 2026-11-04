@@ -3,7 +3,7 @@
 import { chromium, devices } from 'playwright';
 import path from 'node:path'; import fs from 'node:fs'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/';
+const BASE = args.base || 'http://localhost:3000/photos/';
 const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), 'out', 'safe-area'); fs.mkdirSync(OUT, { recursive: true });
 const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] });
 const cases = [

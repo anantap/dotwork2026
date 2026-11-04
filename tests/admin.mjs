@@ -1,4 +1,4 @@
-// End-to-end test of /garden/admin/ against a local stand-in for Vercel and GitHub (tests/admin-server.mjs).
+// End-to-end test of /admin/ against a local stand-in for Vercel and GitHub (tests/admin-server.mjs).
 //   node tests/admin.mjs
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
@@ -13,7 +13,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 let fail = 0; const check = (ok, name, d) => { console.log(ok ? 'PASS' : 'FAIL', name, d !== undefined ? JSON.stringify(d) : ''); if (!ok) fail++; };
 
 const { repo, close } = await start();
-const content = () => JSON.parse(repo.read('garden/content.json').toString());
+const content = () => JSON.parse(repo.read('content.json').toString());
 const before = content();
 const b = await chromium.launch();
 
@@ -32,9 +32,9 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1280, height: 900 }
   const ctx = await b.newContext(opts); const p = await ctx.newPage();
   const errs = [], missing = []; p.on('pageerror', e => errs.push(String(e)));
   // 401/409 are expected answers; a 404 is only allowed for images this test uploaded (they live in the fake GitHub, not on disk)
-  p.on('response', r => { if (r.status() === 404) (/\/garden\/img\/[a-z]+-[0-9a-f]{6}\.jpg$/.test(r.url()) ? missing : errs).push('404 ' + r.url()); });
-  await p.goto(`${SITE}/garden/admin`); await sleep(500);
-  check(p.url().endsWith('/garden/admin/') && await p.isVisible('#loginForm'), `${name}: /garden/admin redirects to /garden/admin/ and asks for the password`);
+  p.on('response', r => { if (r.status() === 404) (/\/img\/[a-z]+-[0-9a-f]{6}\.jpg$/.test(r.url()) ? missing : errs).push('404 ' + r.url()); });
+  await p.goto(`${SITE}/admin`); await sleep(500);
+  check(p.url().endsWith('/admin/') && await p.isVisible('#loginForm'), `${name}: /admin redirects to /admin/ and asks for the password`);
   await p.fill('#pw', 'wrong'); await p.click('#loginForm button[type=submit]'); await sleep(400);
   check(await p.isVisible('#loginErr'), `${name}: wrong password shows an error`, await p.textContent('#loginErr'));
   await p.fill('#pw', 'test'); await p.click('#loginForm button[type=submit]'); await sleep(800);
@@ -54,7 +54,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1280, height: 900 }
   await p.locator('details.project').first().locator('.tagadd input').fill('testing'); await p.locator('details.project').first().locator('.tagadd input').press('Enter'); await sleep(150);
   const chooser = p.waitForEvent('filechooser');
   await p.locator('details.project').first().locator('.drop').click();
-  await (await chooser).setFiles([path.join(here, '..', 'garden', 'img', 'nvd.jpg'), path.join(here, '..', 'garden', 'img', 'kinfill.jpg')]);
+  await (await chooser).setFiles([path.join(here, '..', 'img', 'nvd.jpg'), path.join(here, '..', 'img', 'kinfill.jpg')]);
   await p.waitForFunction(() => document.querySelectorAll('details.project')[0].querySelectorAll('.img img').length === 2, null, { timeout: 10000 }).catch(() => {});
   const thumbs = await p.locator('details.project').first().locator('.img img').count();
   check(thumbs === 2, `${name}: two images added and previewed`, thumbs);
@@ -68,14 +68,14 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1280, height: 900 }
   check(/^Saved/.test(status), `${name}: save succeeds`, status);
   const after = content(), np = after.projects.find(x => x.title === title);
   check(after.projects.length === n0 + 1 && np && np.years === '2025' && np.tags.join() === 'website,testing' && np.text.includes('\n\n'), `${name}: content.json on GitHub has the new project`, np);
-  check(np && np.images.length === 2 && np.images.every(s => /^img\/[a-z0-9-]+\.jpg$/.test(s) && repo.read('garden/' + s)), `${name}: both images committed, paths the map can use`, np?.images);
+  check(np && np.images.length === 2 && np.images.every(s => /^img\/[a-z0-9-]+\.jpg$/.test(s) && repo.read(s)), `${name}: both images committed, paths the map can use`, np?.images);
   check(np && /^img\/kinfill-/.test(np.images[0]), `${name}: image order kept (moved image is the tile)`, np?.images);
   check(repo.commits.size === commitsBefore + 1, `${name}: one save is one commit`, repo.commits.size - commitsBefore);
   check(await p.locator('details.project').first().locator('.img img').first().evaluate(i => i.naturalWidth > 0), `${name}: previews still show right after saving`);
   await p.screenshot({ path: `${OUT}/${name}-3-saved.png`, fullPage: true });
 
   // someone edits content.json elsewhere → the next save is refused, nothing overwritten
-  const edited = content(); edited.intro = 'Edited on GitHub'; repo.externalEdit('garden/content.json', Buffer.from(JSON.stringify(edited, null, 2)));
+  const edited = content(); edited.intro = 'Edited on GitHub'; repo.externalEdit('content.json', Buffer.from(JSON.stringify(edited, null, 2)));
   await p.fill('#role', 'Designer'); await p.click('#save');
   await p.waitForFunction(() => /changed|Saved/.test(document.getElementById('status').textContent), null, { timeout: 10000 });
   check(/changed somewhere else/.test(await p.textContent('#status')) && content().intro === 'Edited on GitHub', `${name}: a conflicting save is refused, the other edit survives`, await p.textContent('#status'));

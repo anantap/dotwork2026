@@ -1,17 +1,18 @@
 # Roll a Month
 
 Single-page photo globe (three.js r147 core from jsDelivr, own free-orbit controls, Geist from Google Fonts, Geist Pixel inline).
-Static: `index.html`, `thumbs/`, `full/`. No build step.
+Static, no build step. `/` is the project map (`index.html`, `content.json`, `img/`, `admin/`, `api/`); the photo globe
+lives at `/photos/` (`photos/index.html`, `photos/thumbs/`, `photos/full/`).
 
-## Project map (`garden/`)
+## Project map (the home page)
 
-`garden/` is a second map on the same engine: a globe of the topics in Ananta's work. **Filter** lists the
+The site's home page is a map on the same engine as the photo globe: a globe of the topics in Ananta's work. **Filter** lists the
 topics that two or more projects share; picking one pulls those projects forward as images with their titles, and a
 project opens as its images and text. **About** and **CV** open as panels from the same bar.
 
 ### Adding or changing content
 
-**The admin: `/garden/admin/`** (password-protected, works on a phone). Add, edit, reorder and delete projects; drop in
+**The admin: `/admin/`** (password-protected, works on a phone). Add, edit, reorder and delete projects; drop in
 images (they're resized in the browser to 1600px JPGs); edit the About text, photo, links and CV. *Save and publish*
 makes one commit to this repository and Vercel republishes about a minute later. If the content was changed somewhere
 else in the meantime (say on GitHub), the save is refused instead of overwriting it: reload and redo the change.
@@ -27,7 +28,7 @@ One-time setup in Vercel → your project → *Settings → Environment Variable
 The token stays on the server (`api/`), never in the browser. Until both are set, the admin says so instead of
 showing a login.
 
-**By hand**: everything on the page comes from `garden/content.json`; images live in `garden/img/`. On GitHub you can
+**By hand**: everything on the page comes from `content.json`; images live in `img/`. On GitHub you can
 upload images (*Add file → Upload files*) and edit `content.json` (pencil icon) in the browser.
 
 A project looks like this:
@@ -49,7 +50,7 @@ A project looks like this:
 - `years` and `link` are optional.
 - `name`, `role`, `intro`, `photo`, `links` and `cv` at the top fill the title, About and CV.
 
-`garden/index.html` itself is generated from the photo globe's `index.html` (`npm run build:garden`), so engine fixes
+`index.html` itself is generated from the photo globe's `photos/index.html` (`npm run build:garden`), so engine fixes
 carry over; you never need to edit it for content.
 
 ## Run locally
@@ -77,7 +78,7 @@ npm test             # in another
 - `tests/touch.mjs`: tap vs drag (5px threshold), pinch, two-finger tap, long-press preview, ghost clicks, stuck hover (Chromium, CDP touch).
 - `tests/safe-area.mjs`: fakes iPhone notch/home-indicator insets and checks the UI stays inside them (Chromium).
 - `tests/drag.mjs`: the globe turns freely over the poles, drags starting anywhere (labels included) turn it, labels still hover and open.
-- `tests/garden.mjs`: the project map: content.json, blue squares, a topic view with images and titles, the project view, About and CV.
+- `tests/garden.mjs`: the project map (home page): content.json, blue squares, a topic view with images and titles, the project view, About and CV.
 - `tests/admin.mjs`: the admin end to end against a local stand-in for Vercel and GitHub (`tests/admin-server.mjs`):
   login, adding a project with images, one commit per save, conflicts, validation, delete, logout.
 - `tests/labels.mjs`: globe tag labels never sit on the UI, off screen, or on each other (Chromium, 4 sizes).
