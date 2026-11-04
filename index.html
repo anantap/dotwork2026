@@ -105,6 +105,13 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   padding-block: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px)); }
 #detail[hidden], #dLink[hidden] { display: none; }
 #detail:focus { outline: none; }
+@media (min-width: 761px) {
+  #detail { overflow-y: auto; scrollbar-width: none; align-items: start; }
+  #detail::-webkit-scrollbar { display: none; }
+  .d-media { overflow: visible; min-height: calc(100vh - 48px); justify-content: center; }
+  .d-media:has(.d-stack img) { justify-content: flex-start; }
+  .d-info { position: sticky; top: 0; max-height: calc(100vh - 48px); }
+}
 .d-text { margin: 0; font-size: 16px; line-height: 24px; text-wrap: pretty; white-space: pre-line; }
 .d-link, .contact a { display: inline-flex; align-items: center; gap: 4px; font: 400 12px var(--sans); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; text-decoration: none; }
 .d-link { align-self: flex-start; }
@@ -703,7 +710,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
   function renderDetail() {
     const f = detFrame; detImg = 0;
     dImg.src = f.images[0]; dImg.alt = f.alt || f.title;
-    det.scrollTop = 0; info.scrollTop = 0; document.getElementById('dMedia').scrollTop = 0;
+    det.scrollTop = 0; info.scrollTop = 0;
     // one big image; the rest as thumbnails under the text (tap one to show it big)
     const thumbs = document.getElementById('dThumbs'); thumbs.hidden = f.images.length < 2;
     thumbs.replaceChildren(...(f.images.length < 2 ? [] : f.images.map((src, k) => {

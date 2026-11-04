@@ -518,6 +518,17 @@ rep("      (innerWidth < 760 ? xb : document.getElementById('dClose')).focus({ p
     "      (byKey ? (innerWidth < 760 ? xb : document.getElementById('dClose')) : det).focus({ preventScroll: true }); }")
 rep("  let returnFocus = null;", "  let returnFocus = null, byKey = false; // was the last input a key (then show focus) or a pointer\n  addEventListener('keydown', () => { byKey = true; }, true);\n  addEventListener('pointerdown', () => { byKey = false; }, true);")
 
+# desktop: the whole project view scrolls (wheel anywhere), the text column stays pinned beside the photos
+rep("#detail:focus { outline: none; }", """#detail:focus { outline: none; }
+@media (min-width: 761px) {
+  #detail { overflow-y: auto; scrollbar-width: none; align-items: start; }
+  #detail::-webkit-scrollbar { display: none; }
+  .d-media { overflow: visible; min-height: calc(100vh - 48px); justify-content: center; }
+  .d-media:has(.d-stack img) { justify-content: flex-start; }
+  .d-info { position: sticky; top: 0; max-height: calc(100vh - 48px); }
+}""")
+rep("    det.scrollTop = 0; info.scrollTop = 0; document.getElementById('dMedia').scrollTop = 0;", "    det.scrollTop = 0; info.scrollTop = 0;")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)
