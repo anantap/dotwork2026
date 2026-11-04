@@ -180,6 +180,94 @@
       ],
       "link": "https://decorrespondent.nl/12422/lees-en-luister-deze-zanger-ging-in-transitie-en-daarmee-veranderde-ook-alles-voor-zijn-band/ebe2e705-d529-03d4-1c86-7a41d010730d",
       "linkLabel": "Read the article"
+    },
+    {
+      "title": "Texel",
+      "text": "A few days on Texel in March, on medium-format film: lambing season, caravans in the dunes and low spring light.",
+      "images": [
+        "img/texel-01.jpg",
+        "img/texel-02.jpg",
+        "img/texel-03.jpg",
+        "img/texel-04.jpg",
+        "img/texel-05.jpg",
+        "img/texel-06.jpg",
+        "img/texel-07.jpg",
+        "img/texel-08.jpg"
+      ],
+      "tags": [
+        "photography",
+        "film",
+        "travel"
+      ]
+    },
+    {
+      "title": "Milos",
+      "text": "Film photographs from Milos: white rock, blue railings and the ferry out.",
+      "images": [
+        "img/milos-01.jpg",
+        "img/milos-02.jpg",
+        "img/milos-03.jpg",
+        "img/milos-04.jpg"
+      ],
+      "tags": [
+        "photography",
+        "film",
+        "travel"
+      ]
+    },
+    {
+      "title": "Portraits",
+      "text": "Portraits of friends and strangers, mostly on medium-format film.",
+      "images": [
+        "img/portraits-01.jpg",
+        "img/portraits-02.jpg",
+        "img/portraits-03.jpg",
+        "img/portraits-04.jpg"
+      ],
+      "tags": [
+        "photography",
+        "film",
+        "portrait"
+      ]
+    },
+    {
+      "title": "Lovers",
+      "text": "Couples on the street, on black-and-white film.",
+      "images": [
+        "img/lovers-01.jpg",
+        "img/lovers-02.jpg"
+      ],
+      "tags": [
+        "photography",
+        "film",
+        "street"
+      ]
+    },
+    {
+      "title": "Random",
+      "text": "Photos that don’t belong to anything in particular: beaches, birds, a brass band, a marathon and a road trip from Faro to Porto.",
+      "images": [
+        "img/random-01.jpg",
+        "img/random-02.jpg",
+        "img/random-03.jpg",
+        "img/random-04.jpg",
+        "img/random-05.jpg",
+        "img/random-06.jpg",
+        "img/random-07.jpg",
+        "img/random-08.jpg",
+        "img/random-09.jpg",
+        "img/random-10.jpg",
+        "img/random-11.jpg",
+        "img/random-12.jpg",
+        "img/random-13.jpg",
+        "img/random-14.jpg",
+        "img/random-15.jpg"
+      ],
+      "tags": [
+        "photography",
+        "street",
+        "travel"
+      ]
     }
   ]
 }
