@@ -4,12 +4,10 @@
   "type": "module",
   "scripts": {
     "start": "serve . -l 3000",
-    "test": "node tests/run.mjs && node tests/touch.mjs --device \"iPhone 14\" && node tests/touch.mjs --device \"Pixel 7\" && node tests/safe-area.mjs && node tests/drag.mjs && node tests/labels.mjs && node tests/fallback.mjs && node tests/garden.mjs && node tests/admin.mjs",
-    "test:install": "playwright install chromium firefox webkit",
-    "build:garden": "python3 scripts/make-garden.py photos/index.html index.html",
+    "test": "node tests/garden.mjs && node tests/routes.mjs && node tests/drag.mjs && node tests/labels.mjs && node tests/safe-area.mjs && node tests/fallback.mjs && node tests/admin.mjs",
     "test:admin": "node tests/admin.mjs",
     "admin:local": "node tests/admin-server.mjs",
-    "build": "python3 scripts/make-garden.py photos/index.html index.html && node scripts/build-three.mjs && python3 scripts/optimize-images.py && node scripts/build-pages.mjs",
+    "build": "node scripts/build-three.mjs && python3 scripts/optimize-images.py && node scripts/build-pages.mjs",
     "build:fonts": "python3 scripts/build-fonts.py",
     "perf": "node tests/perf.mjs"
   },

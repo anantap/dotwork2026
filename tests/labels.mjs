@@ -1,13 +1,12 @@
 // Tag labels on the globe must not sit on the title or the menu, run off screen, or overlap each other.
-//   node tests/labels.mjs [--base http://localhost:3000/] [--three-dir /path/to/three/package]
+//   node tests/labels.mjs [--base http://localhost:3000/]
 import { chromium, devices } from 'playwright'; import path from 'node:path';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/photos/';
+const BASE = args.base || 'http://localhost:3000/';
 const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] });
 let fail = 0;
 for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 } }], ['iPhone 14', devices['iPhone 14']], ['Pixel 7', devices['Pixel 7']], ['iPhone 14 landscape', devices['iPhone 14 landscape']]]) {
   const ctx = await b.newContext(opts);
-  if (args['three-dir']) await ctx.route('https://cdn.jsdelivr.net/npm/three@0.147.0/**', r => r.fulfill({ path: path.join(args['three-dir'], new URL(r.request().url()).pathname.replace('/npm/three@0.147.0/', '')), contentType: 'text/javascript' }));
   const p = await ctx.newPage(); await p.goto(BASE); await p.waitForTimeout(3500);
   const bad = new Set();
   for (let k = 0; k < 12; k++) { // sample while the globe turns; the second half with the Subject panel open

@@ -1,11 +1,10 @@
 // Project map (the home page): content from content.json, only topics on the globe, a topic shows images with titles,
 // a project opens as images and text, the menu is one About panel (intro, contact, projects, experience).
-//   node tests/garden.mjs [--base http://localhost:3000/] [--three-dir /path/to/three/package]
-import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+//   node tests/garden.mjs [--base http://localhost:3000/]
+import { HOOK } from './hook.mjs'; import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
 const BASE = args.base || 'http://localhost:3000/';
-const here = path.dirname(fileURLToPath(import.meta.url)); const src = fs.readFileSync(path.join(here, 'run.mjs'), 'utf8');
-const HOOK = src.slice(src.indexOf('const HOOK = () => {') + 13, src.indexOf('\n};\n', src.indexOf('const HOOK')) + 2);
+const here = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(here, 'out', 'garden'); fs.mkdirSync(OUT, { recursive: true });
 const content = JSON.parse(fs.readFileSync(path.join(here, '..', 'content.json'), 'utf8'));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -13,17 +12,15 @@ const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-a
 let fail = 0; const check = (ok, name, d) => { console.log(ok ? 'PASS' : 'FAIL', name, d !== undefined ? JSON.stringify(d) : ''); if (!ok) fail++; };
 for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 } }], ['iphone-14', devices['iPhone 14']]]) {
   const ctx = await b.newContext(opts); await ctx.addInitScript(`(${HOOK})()`);
-  if (args['three-dir']) await ctx.route('https://cdn.jsdelivr.net/npm/three@0.147.0/**', r => r.fulfill({ path: path.join(args['three-dir'], new URL(r.request().url()).pathname.replace('/npm/three@0.147.0/', '')), contentType: 'text/javascript' }));
   const p = await ctx.newPage(); const errs = [];
   p.on('pageerror', e => errs.push(String(e))); p.on('console', m => m.type() === 'error' && !(/\/garden$/.test(BASE) && /404/.test(m.text())) && errs.push(m.text())); // without a trailing slash the first content.json lookup 404s by design p.on('requestfailed', q => errs.push('failed ' + q.url()));
   const tap = async loc => opts.hasTouch ? loc.tap() : loc.click();
-  const tiles = () => p.evaluate(() => window.__scene.children.filter(o => o.userData.f).map(o => ({ title: o.userData.f.title, img: !!o.material.map, inF: o.userData.f.inF })));
   await p.goto(BASE); await p.waitForFunction(() => window.__frames > 30); await sleep(3000);
   await p.screenshot({ path: `${OUT}/${name}-1-globe.png` });
 
   check((await p.textContent('#status')) === content.status && await p.evaluate(() => getComputedStyle(document.getElementById('status'), '::before').backgroundColor !== 'rgba(0, 0, 0, 0)'), `${name}: status line from content.json, with its green dot`, await p.textContent('#status'));
-  const t0 = await p.evaluate(() => window.__tileXY().map(t => +t.op.toFixed(3)));
-  check(t0.length === content.projects.length && t0.every(o => o < 0.02), `${name}: no project tiles on the globe, just topics`, t0);
+  const meshes = await p.evaluate(() => window.__scene.children.map(o => o.type));
+  check(meshes.join() === 'LineSegments', `${name}: the globe is its topic lines only`, meshes);
   const buttons = await p.evaluate(() => [...document.querySelectorAll('.m-bar button')].filter(b => !b.hidden).map(b => b.textContent));
   check(JSON.stringify(buttons) === '["About"]', `${name}: menu is one About button`, buttons);
   // one-off topics: quiet background labels (no count, can't be tapped); only shared topics are chips and open a view
@@ -77,9 +74,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   check(fx === 'detail', `${name}: opened by click or tap, no focus ring on the close button`, fx);
   await p.screenshot({ path: `${OUT}/${name}-4-project.png` });
   await p.keyboard.press('Escape'); await sleep(700); await p.keyboard.press('Escape'); await sleep(1800);
-  const t2 = await tiles();
-  const t3 = await p.evaluate(() => window.__tileXY().map(t => t.op));
-  check(await p.evaluate(() => document.body.dataset.view === 'globe' && document.getElementById('sheet').hidden) && t3.every(o => o < 0.05), `${name}: back on the globe, topic page gone`, t3.map(o => +o.toFixed(2)));
+  check(await p.evaluate(() => document.body.dataset.view === 'globe' && document.getElementById('sheet').hidden), `${name}: back on the globe, topic page gone`);
 
   if (!opts.hasTouch) { // keyboard only: a topic label → a project title → Enter opens it → Esc returns focus to the title
     const focusOn = async (sel, max = 60) => { for (let k = 0; k < max; k++) { if (await p.evaluate(q => document.activeElement?.matches(q), sel)) return true; await p.keyboard.press('Tab'); } return false; };
@@ -105,7 +100,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
       await p.evaluate(t => [...document.querySelectorAll('#sGrid .s-tile')].find(e => e.querySelector('span').textContent === t).click(), many.title); await sleep(1300);
       await p.screenshot({ path: `${OUT}/${name}-4b-many-images.png` });
       // every photo in a stack, no thumbnails; on a phone at full width, on desktop each fitting the screen
-      const st = await p.evaluate(() => ({ src: document.getElementById('dImg').getAttribute('src'), thumbs: getComputedStyle(document.getElementById('dThumbs')).display,
+      const st = await p.evaluate(() => ({ src: document.getElementById('dImg').getAttribute('src'), thumbs: document.getElementById('dThumbs') ? 'shown' : 'none',
         stack: [...document.querySelectorAll('#dStack img')].map(i => i.getBoundingClientRect()).map(r => [Math.round(r.width), Math.round(r.height)]), big: Math.round(document.getElementById('dImg').getBoundingClientRect().width), vw: innerWidth, vh: innerHeight }));
       const fits = opts.hasTouch ? st.stack.every(([w]) => w > st.vw * 0.85) && st.big > st.vw * 0.85 : st.stack.every(([w, h]) => w > 0 && h <= st.vh);
       check((st.src === many.images[0] || st.src.includes(`/${many.images[0].slice(4).replace(/\.[a-z]+$/i, '')}-`)) && st.thumbs === 'none' && st.stack.length === many.images.length - 1 && fits, `${name}: "${many.title}" shows all ${many.images.length} photos one under the other`, { ...st, stack: st.stack.length });
@@ -142,7 +137,6 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
 // The page explains itself if content.json is missing
 {
   const ctx = await b.newContext({ viewport: { width: 1000, height: 700 } });
-  if (args['three-dir']) await ctx.route('https://cdn.jsdelivr.net/npm/three@0.147.0/**', r => r.fulfill({ path: path.join(args['three-dir'], new URL(r.request().url()).pathname.replace('/npm/three@0.147.0/', '')), contentType: 'text/javascript' }));
   await ctx.route('**/content.json', r => r.fulfill({ status: 404, body: '' }));
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(String(e)));
   await p.goto(BASE); await sleep(1500);

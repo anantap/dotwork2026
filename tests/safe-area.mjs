@@ -1,9 +1,9 @@
 // Safe-area check (Chromium only): fakes iPhone notch / home-indicator insets via CDP and checks the UI stays inside them.
-//   node tests/safe-area.mjs [--base http://localhost:3000/] [--three-dir /path/to/three/package]
+//   node tests/safe-area.mjs [--base http://localhost:3000/]
 import { chromium, devices } from 'playwright';
 import path from 'node:path'; import fs from 'node:fs'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/photos/';
+const BASE = args.base || 'http://localhost:3000/';
 const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), 'out', 'safe-area'); fs.mkdirSync(OUT, { recursive: true });
 const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] });
 const cases = [
@@ -13,7 +13,6 @@ const cases = [
 let fail = 0;
 for (const c of cases) {
   const ctx = await b.newContext({ ...c.dev });
-  if (args['three-dir']) await ctx.route('https://cdn.jsdelivr.net/npm/three@0.147.0/**', r => r.fulfill({ path: path.join(args['three-dir'], new URL(r.request().url()).pathname.replace('/npm/three@0.147.0/', '')), contentType: 'text/javascript' }));
   const p = await ctx.newPage(); const cdp = await ctx.newCDPSession(p);
   await cdp.send('Emulation.setSafeAreaInsetsOverride', { insets: c.insets });
   await p.goto(BASE); await p.waitForTimeout(3000);

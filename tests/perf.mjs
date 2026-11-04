@@ -1,12 +1,11 @@
 // Page weight and load time, measured in a fresh browser (empty cache) on a throttled connection.
-//   node tests/perf.mjs --base http://localhost:3000/ [--runs 3] [--three-dir /path/to/three/package]
+//   node tests/perf.mjs --base http://localhost:3000/ [--runs 3]
 // Reports, per network profile: bytes over the wire and requests for the home page, the time until the globe is drawn,
 // DOMContentLoaded and load, then what opening a topic and a project adds.
-import { chromium } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import { HOOK } from './hook.mjs'; import { chromium } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
 const BASE = args.base || 'http://localhost:3000/', RUNS = +(args.runs || 3);
-const here = path.dirname(fileURLToPath(import.meta.url)); const src = fs.readFileSync(path.join(here, 'run.mjs'), 'utf8');
-const HOOK = src.slice(src.indexOf('const HOOK = () => {') + 13, src.indexOf('\n};\n', src.indexOf('const HOOK')) + 2);
+const here = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES = { 'slow 4G': { down: 1.6e6 / 8, up: 750e3 / 8, rtt: 150 }, 'fast': { down: 20e6 / 8, up: 5e6 / 8, rtt: 20 } };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const median = a => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
@@ -14,7 +13,6 @@ const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-un
 
 async function once(prof) {
   const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } }); await ctx.addInitScript(`(${HOOK})()`);
-  if (args['three-dir']) await ctx.route('https://cdn.jsdelivr.net/npm/three@0.147.0/**', r => r.fulfill({ path: path.join(args['three-dir'], new URL(r.request().url()).pathname.replace('/npm/three@0.147.0/', '')), contentType: 'text/javascript' }));
   const p = await ctx.newPage(), cdp = await ctx.newCDPSession(p);
   await cdp.send('Network.enable'); // a fresh context starts with an empty cache; within the visit the cache works as normal
   await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: prof.rtt, downloadThroughput: prof.down, uploadThroughput: prof.up });

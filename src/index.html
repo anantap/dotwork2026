@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<base href="/">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ananta Mulyono</title>
+<meta name="description" content="Ananta Mulyono, UX designer: projects on a map, connected by the work they share.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ananta Mulyono">
+<meta property="og:description" content="Ananta Mulyono, UX designer: projects on a map, connected by the work they share.">
+<meta property="og:url" content="https://rollamonth.vercel.app/">
+<meta property="og:image" content="https://rollamonth.vercel.app/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="fonts/geist-pixel-41cc3c73.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/geist-d0250e38.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="content.json" as="fetch" crossorigin>
+<style>
+/* Three layers: a globe of topics (WebGL), a topic page over it, a project over that. Geist, with Geist Pixel for headings
+   and labels. Dark only. Spacing on a 4/8px grid; type at 12, 14, 16, 24, 32 and 48px. */
+@font-face { font-family: "Geist Pixel"; src: url(fonts/geist-pixel-41cc3c73.woff2) format("woff2"); font-display: swap; }
+@font-face { font-family: "Geist"; src: url(fonts/geist-d0250e38.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+:root {
+  --bg: #000000;
+  --ink: #f2f2f2;
+  --muted: #8b8b8b;
+  --line: rgba(255, 255, 255, 0.14);
+  --wire: #2f2fff;
+  --link: #7c7cff;
+  --live: #5dff7a;
+  --sans: "Geist", "Helvetica Neue", Arial, sans-serif;
+  --pixel: "Geist Pixel", ui-monospace, Menlo, monospace;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); overflow: hidden; -webkit-font-smoothing: antialiased; }
+button:focus-visible { outline: 1px solid var(--link); outline-offset: 2px; }
+
+/* The globe and its topic labels */
+#stage { position: fixed; inset: 0; }
+#stage canvas { display: block; touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+#labels { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.tag-label { position: absolute; left: 0; top: 0; display: flex; align-items: center; gap: 8px; padding: 2px 4px; border: 0; background: none; white-space: nowrap;
+  pointer-events: none; cursor: pointer; font: 400 16px var(--pixel); letter-spacing: .02em; color: var(--ink); transition: opacity .25s, color .2s; }
+.tag-label::before { content: ""; width: 5px; height: 5px; background: currentColor; }
+.tag-label small { font-size: 12px; color: var(--muted); }
+.tag-label.on { color: var(--link); }
+.tag-label.solo { font-size: 14px; }
+.tag-label.solo::before { width: 3px; height: 3px; }
+.tag-label:focus-visible { outline: 1px solid var(--link); }
+
+/* Home: name and status top left, the About button at the bottom */
+.ui { position: fixed; inset: 0; pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); }
+.head { max-width: 440px; transition: opacity .35s ease, transform .5s var(--ease); }
+h1 { margin: 0; font: 400 48px/1 var(--pixel); letter-spacing: -0.01em; }
+.status { margin-top: 4px; font: 400 16px var(--pixel); letter-spacing: .02em; color: var(--live); }
+.status.online { display: flex; align-items: center; gap: 8px; }
+.status.online::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); } /* the "online" dot */
+.menu { display: flex; justify-content: center; transition: opacity .3s, visibility .3s; }
+.m-bar { pointer-events: auto; display: flex; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.m-bar button { font: 400 12px var(--sans); color: var(--ink); background: transparent; border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: background-color .2s, color .2s; }
+.m-bar button .x { display: none; }
+.m-bar button[aria-expanded="true"] { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; background: var(--ink); color: var(--bg); } /* About turns into a round ✕ */
+.m-bar button[aria-expanded="true"] .lbl { display: none; }
+.m-bar button[aria-expanded="true"] .x { display: block; }
+body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
+body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belongs to the home page */
+
+/* About: a card in the middle of the page */
+.m-panel { position: fixed; left: 50%; top: 50%; z-index: 8; box-sizing: border-box; width: min(560px, calc(100vw - 32px)); max-height: min(78vh, 720px); padding: 24px;
+  overflow-y: auto; scrollbar-width: none; border: 1px solid var(--line); border-radius: 16px; background: rgba(0,0,0,.82); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  box-shadow: 0 20px 60px rgba(0,0,0,.6); pointer-events: auto; opacity: 0; visibility: hidden; transform: translate(-50%, calc(-50% + 10px));
+  transition: opacity .25s ease, transform .4s var(--ease), visibility 0s linear .4s; }
+.m-panel::-webkit-scrollbar { display: none; }
+.menu.open .m-panel { opacity: 1; visibility: visible; transform: translate(-50%, -50%); transition-delay: 0s; }
+.m-panel section { display: grid; gap: 24px; }
+.m-panel section[hidden] { display: none; }
+.about { display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: start; }
+.about img { width: 120px; height: 120px; object-fit: cover; border-radius: 4px; }
+.a-text { min-width: 0; }
+.lede { margin: 0; font-size: 14px; line-height: 20px; text-wrap: pretty; }
+.contact { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+.a-block h3 { margin: 0 0 8px; font: 400 12px var(--pixel); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.cv { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cv li { display: grid; grid-template-columns: 104px 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
+.cv .yrs { font: 400 12px var(--pixel); color: var(--muted); font-variant-numeric: tabular-nums; }
+.cv .role { display: block; font-size: 12px; color: var(--muted); }
+
+/* Buttons shared by the layers */
+.back { font: 400 12px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
+.chip { font: 400 12px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; cursor: pointer; white-space: nowrap; }
+.d-link, .contact a { display: inline-flex; align-items: center; gap: 4px; font: 400 12px var(--sans); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; text-decoration: none; }
+.d-x { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; display: grid; place-items: center; }
+.d-xb { display: none; }
+@media (hover: hover) {
+  .tag-label:hover { color: var(--link); }
+  .back:hover, .chip:hover, .d-x:hover, .d-link:hover, .contact a:hover { border-color: var(--ink); }
+}
+
+/* Topic page: a scrolling page over the globe. Wide screens: the header pinned left, 3 columns; narrower: header on top, 2 columns */
+#sheet { position: fixed; inset: 0; z-index: 10; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; opacity: 0; transition: opacity .35s ease;
+  display: grid; grid-template-columns: 440px minmax(0, 1fr); column-gap: 64px; align-items: start;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(48px, env(safe-area-inset-right, 0px)) 48px max(24px, env(safe-area-inset-left, 0px)); }
+#sheet::-webkit-scrollbar { display: none; }
+#sheet[hidden] { display: none; }
+#sheet.on { opacity: 1; }
+.focus-head { position: sticky; top: 0; }
+.ftitle { margin: 16px 0 0; font: 400 48px/1 var(--pixel); color: var(--link); overflow-wrap: anywhere; }
+.fsub { margin-top: 8px; font: 400 16px var(--pixel); color: var(--live); }
+.fwith { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12px; color: var(--muted); }
+.fwith span { margin-right: 4px; }
+.s-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 16px; }
+.s-tile { appearance: none; border: 0; padding: 0; background: none; color: var(--ink); cursor: pointer; display: grid; gap: 8px; text-align: center; min-width: 0; font: inherit; }
+.s-tile img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #111; transition: opacity .2s; }
+.s-tile span { font: 400 14px/20px var(--pixel); letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+.s-tile:focus-visible { outline: 1px solid var(--ink); outline-offset: 4px; }
+@media (hover: hover) { .s-tile:hover img { opacity: .8; } }
+@media (prefers-reduced-motion: no-preference) {
+  #sheet.on .s-tile { animation: sIn .5s var(--ease) both; animation-delay: calc(var(--d) * 1ms); }
+}
+@keyframes sIn { from { opacity: 0; transform: translateY(12px); } }
+
+/* Project: wide screens scroll the photos with the text pinned beside them; phones show the first photo, the text, then the rest */
+#detail { position: fixed; inset: 0; z-index: 20; background: rgba(0, 0, 0, 0.95); display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 32px; align-items: start;
+  overflow-y: auto; scrollbar-width: none;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); }
+#detail::-webkit-scrollbar { display: none; }
+#detail[hidden], #dLink[hidden] { display: none; }
+#detail:focus { outline: none; }
+.d-media { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.d-media img { max-width: 100%; max-height: calc(100vh - 48px); width: auto; height: auto; object-fit: contain; display: block; flex: none; border-radius: 4px; box-shadow: 0 0 0 1px var(--line); }
+.d-stack { display: grid; gap: 16px; width: 100%; justify-items: center; }
+.d-stack:empty { display: none; }
+.d-info { position: sticky; top: 0; max-height: calc(100vh - 48px); min-width: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 24px; }
+.d-info::-webkit-scrollbar { display: none; }
+.d-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.d-code { font: 400 24px/28px var(--pixel); }
+.d-text { margin: 0; font-size: 16px; line-height: 24px; text-wrap: pretty; white-space: pre-line; }
+.d-link { align-self: flex-start; }
+
+/* Phones on their side */
+@media (max-height: 500px) and (orientation: landscape) {
+  h1 { font-size: 24px; }
+  .status { font-size: 14px; }
+  .m-panel { max-height: calc(100vh - 110px); }
+}
+/* Tablets and narrower: the topic page stacks, Return pinned at the bottom where the About button sits */
+@media (max-width: 1023px) {
+  #sheet { display: block; padding: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-right, 0px)) 120px max(24px, env(safe-area-inset-left, 0px)); }
+  .focus-head { position: static; margin-bottom: 32px; }
+  .s-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 16px; }
+  #back { position: fixed; z-index: 2; left: 50%; top: calc(100% - 60px); transform: translateX(-50%); background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+}
+/* Phones */
+@media (max-width: 760px) {
+  .ui { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  h1 { font-size: 32px; }
+  .status { font-size: 14px; }
+  .ftitle { font-size: 32px; }
+  #sheet { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  #detail { display: flex; flex-direction: column; align-items: stretch; gap: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-bottom: 88px; }
+  .d-media { display: contents; }
+  #dImg { order: 1; } .d-info { order: 2; position: static; max-height: none; overflow: visible; } .d-stack { order: 3; }
+  .d-media img { width: 100%; max-height: none; }
+  #dClose { display: none; }
+  .d-xb { display: grid; place-items: center; position: fixed; z-index: 2; left: 50%; top: calc(100% - 64px); width: 40px; height: 40px; margin-left: -20px; padding: 0; border-radius: 50%;
+    border: 1px solid var(--line); background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: var(--ink); cursor: pointer; }
+}
+@media (max-width: 560px) {
+  .about { grid-template-columns: 1fr; }
+  .about img { width: 96px; height: 96px; }
+  .m-panel { padding: 16px; }
+}
+</style>
+
+<div id="stage"></div>
+<div id="labels"></div>
+<div class="ui">
+  <header class="head">
+    <h1 id="name">Ananta Mulyono</h1>
+    <div class="status" id="status"></div>
+  </header>
+  <nav class="menu" id="menu" aria-label="About">
+    <div class="m-panel" id="mPanel">
+      <section data-sec="about" aria-label="About" hidden>
+        <div class="about"><img id="aPhoto" alt=""><div class="a-text"><p class="lede" id="aIntro"></p><div class="contact" id="aContact"></div></div></div>
+        <div class="a-block"><h3>Experience</h3><ul class="cv" id="cvList"></ul></div>
+      </section>
+    </div>
+    <div class="m-bar" id="mBar">
+      <button type="button" data-sec="about" aria-expanded="false" aria-controls="mPanel" aria-label="About"><span class="lbl">About</span><svg class="x" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5"/></svg></button>
+    </div>
+  </nav>
+</div>
+
+<section id="sheet" hidden aria-labelledby="fTitle">
+  <div class="focus-head">
+    <button type="button" class="back" id="back">← Return</button>
+    <h2 class="ftitle" id="fTitle"></h2>
+    <div class="fsub" id="fSub"></div>
+    <div class="fwith" id="fWith"></div>
+  </div>
+  <div class="s-grid" id="sGrid"></div>
+</section>
+
+<div id="detail" hidden role="dialog" aria-modal="true" aria-labelledby="dCode" tabindex="-1">
+  <div class="d-media" id="dMedia"><img id="dImg" alt=""><div class="d-stack" id="dStack"></div></div>
+  <aside class="d-info">
+    <div class="d-top">
+      <div class="d-code" id="dCode"></div>
+      <button type="button" class="d-x" id="dClose" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5"/></svg></button>
+    </div>
+    <p class="d-text" id="dText"></p>
+    <a class="d-link" id="dLink" target="_blank" rel="noopener" hidden></a>
+  </aside>
+  <button type="button" class="d-xb" id="dCloseB" aria-label="Close"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5"/></svg></button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script>
+(async () => { try { const r = await fetch('content.json'); return r.ok ? await r.json() : null; } catch { return null; } })().then(CONTENT => {
+  // Without three.js or WebGL there is no globe: say so under the name and drop the controls that need it
+  const cantDraw = msg => {
+    document.body.dataset.view = 'globe';
+    document.getElementById('status').textContent = msg;
+    document.getElementById('menu').style.display = 'none';
+  };
+  if (!window.THREE) return cantDraw('The map didn’t load. Check your connection and reload.');
+  const probe = document.createElement('canvas');
+  if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return cantDraw('This map needs WebGL, which is turned off or unavailable in this browser.');
+  if (!CONTENT || !Array.isArray(CONTENT.projects)) return cantDraw('The projects didn’t load. Reload the page to try again.');
+
+  // Everything shown comes from content.json: projects (title, text, images, tags, link), the status line, About and experience
+  const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EASE = 'cubic-bezier(.2,.7,.2,1)';
+  const RAD = 14; // the globe's radius
+  const MIN_SHARED = 2; // a topic gets a label with a count and a page of its own only when two or more projects share it
+  const frames = CONTENT.projects.filter(p => p && p.title && (p.images || []).length).map(p => ({ ...p, tags: p.tags || [], image: p.images[0] }));
+  const tagList = [...new Set(frames.flatMap(f => f.tags))].map(name => ({ name }));
+  const tagIdx = Object.fromEntries(tagList.map((t, i) => [t.name, i]));
+  frames.forEach(f => { f.ti = f.tags.map(t => tagIdx[t]); });
+  const T = tagList.length, counts = tagList.map((_, i) => frames.filter(f => f.ti.includes(i)).length);
+  document.getElementById('name').textContent = CONTENT.name || '';
+  document.title = CONTENT.name || document.title;
+  { const st = document.getElementById('status'); st.textContent = CONTENT.status || ''; st.classList.toggle('online', !!CONTENT.status); st.hidden = !CONTENT.status; }
+
+  // Photos: the light versions from scripts/optimize-images.py when there are any, so each screen loads the size it needs
+  const IMG = {}; // filled in by scripts/build-pages.mjs: {"img/name.jpg": "<hash>"}
+  const opt = (src, kind) => `img/opt/${src.slice(4).replace(/\.[a-z0-9]+$/i, '')}-${IMG[src]}-${kind}.webp`;
+  const GRID = '(min-width: 1024px) calc((100vw - 616px) / 3), (min-width: 761px) calc((100vw - 64px) / 2), calc((100vw - 48px) / 2)', WIDE = '(min-width: 761px) calc(100vw - 400px), 100vw';
+  function setPhoto(im, src, kinds, sizes) { // falls back to the original when a light version is missing (a photo added since the last build)
+    im.onerror = () => { im.onerror = null; im.removeAttribute('srcset'); im.src = src; };
+    if (IMG[src]) { im.sizes = sizes; im.srcset = kinds.map(k => `${opt(src, k)} ${k.replace(/\D/g, '')}w`).join(', '); im.src = opt(src, kinds[kinds.length - 1]); }
+    else { im.removeAttribute('srcset'); im.src = src; }
+  }
+
+  // Topics laid out on the globe's surface: topics that share projects pull together, all of them push apart
+  const prng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const rnd = prng(20260601);
+  const co = Array.from({ length: T }, () => new Float32Array(T));
+  frames.forEach(f => { for (const a of f.ti) for (const b of f.ti) if (a !== b) co[a][b]++; });
+  const maxCo = Math.max(1, ...co.map(r => Math.max(...r)));
+  const P = tagList.map(() => new THREE.Vector3(rnd() - .5, rnd() - .5, rnd() - .5).normalize().multiplyScalar(RAD));
+  for (let it = 0; it < 500; it++) {
+    const F = P.map(() => new THREE.Vector3());
+    for (let i = 0; i < T; i++) for (let j = i + 1; j < T; j++) {
+      const d = new THREE.Vector3().subVectors(P[j], P[i]); const L = Math.max(d.length(), 0.3);
+      d.normalize().multiplyScalar((co[i][j] / maxCo) * 0.3 * (L - 13) - 900 / (L * L));
+      F[i].add(d); F[j].sub(d);
+    }
+    P.forEach((p, i) => p.add(F[i].clampLength(0, 0.6)).normalize().multiplyScalar(RAD));
+  }
+  const D = P.map(p => p.clone().normalize());
+
+  // Scene
+  const stage = document.getElementById('stage');
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true }); }
+  catch (e) { return cantDraw('This map needs WebGL, which is turned off or unavailable in this browser.'); }
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 1);
+  stage.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x000000, 40, 64);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 300);
+  camera.position.set(0, 10, 58);
+
+  // Free orbit: a drag turns the globe any way, over the poles too; a screen height of drag is a full turn, with inertia.
+  // Left alone it turns by itself on a diagonal, about a turn every 90 seconds, a couple of seconds after you let go. No zoom.
+  const controls = (() => {
+    const el = renderer.domElement, ptrs = new Map(), DAMP = 0.07, q = new THREE.Quaternion(), right = new THREE.Vector3(), fwd = new THREE.Vector3();
+    const c = { enabled: true, autoRotate: !reduced, hold: false }; // hold: pause the spin (pointer on a label)
+    const SPIN = 2 * Math.PI / 90, SPIN_ANGLE = 0.5, IDLE_MS = 2500; // radians a second, tilt of the spin (about 30°), wait before resuming
+    let lastTouch = -IDLE_MS, lastT = performance.now(), rx = 0, ry = 0;
+    el.addEventListener('pointerdown', e => {
+      if (!c.enabled) return;
+      el.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); lastTouch = performance.now();
+    });
+    el.addEventListener('pointermove', e => {
+      const prev = ptrs.get(e.pointerId); if (!prev) return;
+      ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+      if (!c.enabled || ptrs.size !== 1) return; // two fingers don't turn it (and don't zoom)
+      rx += 2 * Math.PI * (e.clientX - prev[0]) / el.clientHeight; ry += 2 * Math.PI * (e.clientY - prev[1]) / el.clientHeight;
+    });
+    const up = e => { ptrs.delete(e.pointerId); };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+    c.update = () => {
+      const now = performance.now(), dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+      if (ptrs.size || c.hold) lastTouch = now;
+      if (c.autoRotate && now - lastTouch > IDLE_MS) { const a = SPIN * dt; rx += a * Math.cos(SPIN_ANGLE); ry += a * Math.sin(SPIN_ANGLE); } // with the damping below, the steady turn is SPIN
+      if (c.hold && !ptrs.size) { rx *= 0.6; ry *= 0.6; } // pointer on a label: stop within a few frames instead of coasting
+      const sx = rx * DAMP, sy = ry * DAMP; rx -= sx; ry -= sy;
+      // drag right: the camera swings left round its own up axis; drag down: it swings up round its right axis
+      q.setFromAxisAngle(camera.up, -sx); camera.position.applyQuaternion(q);
+      fwd.copy(camera.position).negate().normalize(); right.crossVectors(fwd, camera.up).normalize();
+      q.setFromAxisAngle(right, -sy); camera.position.applyQuaternion(q); camera.up.applyQuaternion(q);
+      fwd.copy(camera.position).normalize(); camera.up.addScaledVector(fwd, -camera.up.dot(fwd)).normalize();
+      camera.lookAt(0, 0, 0);
+    };
+    return c;
+  })();
+
+  // The globe is drawn by its connections: an arc along the surface between every two topics that share a project
+  const cssColor = k => new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue(k).trim());
+  const C = { wire: cssColor('--wire'), ink: cssColor('--ink') }, BLACK = new THREE.Color(0, 0, 0), tmpC = new THREE.Color();
+  const dim = (c, k) => tmpC.copy(c).multiplyScalar(k);
+  const tagPairs = []; for (let i = 0; i < T; i++) for (let j = i + 1; j < T; j++) if (co[i][j]) tagPairs.push({ i, j, w: co[i][j] });
+  const tagLines = (() => {
+    const SEGS = 48, pos = [], spans = [];
+    tagPairs.forEach(e => {
+      const start = pos.length / 3;
+      for (let k = 0; k < SEGS; k++) pos.push(...D[e.i].clone().lerp(D[e.j], k / SEGS).normalize().multiplyScalar(RAD).toArray(), ...D[e.i].clone().lerp(D[e.j], (k + 1) / SEGS).normalize().multiplyScalar(RAD).toArray());
+      spans.push([start, pos.length / 3]);
+    });
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(pos.length), 3));
+    const line = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    scene.add(line);
+    return { line, spans, target: new Float32Array(pos.length) };
+  })();
+  let lineAnim = 0; // frames left of the colour fade
+  const paintLines = colorOf => {
+    tagPairs.forEach((e, n) => { const col = colorOf(e), [s0, s1] = tagLines.spans[n]; for (let v = s0; v < s1; v++) { tagLines.target[v * 3] = col.r; tagLines.target[v * 3 + 1] = col.g; tagLines.target[v * 3 + 2] = col.b; } });
+    lineAnim = reduced ? 1 : 60;
+  };
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  let camTw = null;
+  const WORLD_UP = new THREE.Vector3(0, 1, 0);
+  // Flights also bring the camera's up back to world up, so the globe is never left tilted after a free spin
+  function flyTo(to, dur) { camTw = { from: camera.position.clone(), to: to.clone(), upFrom: camera.up.clone(), qUp: new THREE.Quaternion().setFromUnitVectors(camera.up.clone().normalize(), WORLD_UP), t0: performance.now(), dur: reduced ? 0 : dur }; controls.enabled = false; }
+  const viewDist = () => innerWidth < 760 ? 72 : 58;
+
+  // Topic labels: buttons for the keyboard; the canvas finds them for the pointer (so a drag starting on one still turns the globe)
+  const labelsEl = document.getElementById('labels'), labelEls = [];
+  const hoverable = (el, key) => {
+    // mouse only: touch fires an emulated mouseenter on tap but never a mouseleave, which left a highlight stuck on
+    el.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') setHl(key); });
+    el.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') setHl(null); });
+    el.addEventListener('focus', () => setHl(key)); el.addEventListener('blur', () => setHl(null));
+  };
+  tagList.forEach((t, i) => {
+    const b = document.createElement('button'); b.className = 'tag-label'; b.type = 'button';
+    const solo = counts[i] < MIN_SHARED; // one-off topics: smaller, no count, and they open their one project
+    b.innerHTML = solo ? esc(t.name) : `${esc(t.name)}<small>${counts[i]}</small>`; b.classList.toggle('solo', solo);
+    b.addEventListener('click', () => openTopic(t.name)); hoverable(b, t.name);
+    labelsEl.appendChild(b); labelEls.push(b);
+  });
+
+  // About, from content.json
+  const menu = document.getElementById('menu'), mPanel = document.getElementById('mPanel');
+  {
+    const photo = document.getElementById('aPhoto');
+    if (CONTENT.photo) { photo.loading = 'lazy'; setPhoto(photo, CONTENT.photo, ['a240'], '120px'); } else photo.remove(); // loads when About opens
+    document.getElementById('aIntro').textContent = CONTENT.intro || '';
+    document.getElementById('aContact').innerHTML = (CONTENT.links || []).map(l => `<a href="${esc(l.href)}"${/^mailto:/.test(l.href) ? '' : ' target="_blank" rel="noopener"'}>${esc(l.label)}</a>`).join('');
+    document.getElementById('cvList').innerHTML = (CONTENT.cv || []).map(e => `<li><span class="yrs">${esc(e.years)}</span><span>${esc(e.place)}${e.role ? `<span class="role">${esc(e.role)}</span>` : ''}</span></li>`).join('');
+  }
+  // The About button opens the card; the same button (now a ✕), Esc or a tap on the globe closes it
+  let menuSec = null;
+  function setMenu(sec) {
+    menuSec = sec;
+    menu.classList.toggle('open', !!sec);
+    menu.querySelectorAll('.m-bar button').forEach(b => { b.setAttribute('aria-expanded', String(b.dataset.sec === sec)); b.setAttribute('aria-label', b.dataset.sec === sec ? 'Close' : 'About'); });
+    if (sec) mPanel.querySelectorAll('section').forEach(el => { el.hidden = el.dataset.sec !== sec; });
+    else setHl(null);
+    measureUI();
+  }
+  const closeMenu = () => { if (menuSec) setMenu(null); };
+  menu.querySelector('.m-bar').addEventListener('click', e => { const b = e.target.closest('button[data-sec]'); if (b) setMenu(menuSec === b.dataset.sec ? null : b.dataset.sec); });
+
+  // State: view is 'globe' or 'focus' (a topic page is open); hl is the topic the pointer or focus is on
+  let view = 'globe', focus = null, hl = null, focusGoal = null, focusList = [];
+  const parseKey = key => key == null ? null : { tag: tagIdx[key], key };
+  const keyName = k => tagList[k.tag].name;
+
+  function paint() {
+    const h = view === 'globe' ? parseKey(hl) : null, k = view === 'focus' ? 0.12 : 1;
+    paintLines(q => h ? (q.i === h.tag || q.j === h.tag ? dim(C.ink, 0.85) : dim(C.wire, 0.35)) : dim(C.wire, k));
+    labelEls.forEach((el, i) => {
+      el.classList.toggle('on', !!h && h.tag === i);
+      const linked = h && tagPairs.some(q => (q.i === h.tag && q.j === i) || (q.j === h.tag && q.i === i));
+      el.dataset.base = view === 'focus' ? 0 : counts[i] < MIN_SHARED ? (h ? (h.tag === i ? 1 : 0.12) : 1) : (!h || h.tag === i || linked) ? 1 : 0.25;
+    });
+  }
+  function setHl(key) { if (view !== 'globe') return; hl = key; paint(); }
+
+  // Addresses: / is the globe, /<topic>/ a topic page, /<project>/ a project. Every step is a history entry, so Back works;
+  // scripts/build-pages.mjs writes a page per address with its own title and link preview.
+  const slugOf = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); // same rule as the build scripts
+  const ROOT = new URL('./', document.baseURI).pathname, SITE_TITLE = document.title;
+  let routing = false;
+  const here = () => (location.pathname.startsWith(ROOT) ? decodeURIComponent(location.pathname.slice(ROOT.length)) : '').replace(/\/+$/, '');
+  const pageTitle = slug => { const f = slug && frames.find(f => slugOf(f.title) === slug), t = slug && tagList.find(t => slugOf(t.name) === slug); return f ? `${f.title} · ${SITE_TITLE}` : t ? `${t.name} · ${SITE_TITLE}` : SITE_TITLE; };
+  function goTo(slug, replace) { // the address follows what is on screen
+    if (routing || here() === slug) return;
+    history[replace ? 'replaceState' : 'pushState']({}, '', ROOT + (slug ? slug + '/' : '')); document.title = pageTitle(slug);
+  }
+
+  // Topic page: the globe turns to the topic behind it; the page lists its projects as a grid of photos
+  function layoutFocus() {
+    focusList = frames.filter(f => f.ti.includes(focus.tag));
+    const n = D[focus.tag].clone(); n.y = Math.max(-0.55, Math.min(0.55, n.y));
+    focusGoal = n.normalize().multiplyScalar(RAD + 26);
+    document.getElementById('fTitle').textContent = keyName(focus);
+    document.getElementById('fSub').textContent = `${focusList.length} project${focusList.length === 1 ? '' : 's'}`;
+    const near = tagPairs.filter(q => counts[q.i] >= MIN_SHARED && counts[q.j] >= MIN_SHARED && (q.i === focus.tag || q.j === focus.tag)).sort((a, b) => b.w - a.w).slice(0, 4).map(q => tagList[q.i === focus.tag ? q.j : q.i].name);
+    document.getElementById('fWith').innerHTML = near.length ? '<span>Also</span>' + near.map(t => `<button type="button" class="chip" data-tag="${esc(t)}">${esc(t)}</button>`).join('') : '';
+    const grid = document.getElementById('sGrid'), key = keyName(focus); // rebuilt only when the topic changes
+    if (grid.dataset.key !== key) {
+      grid.dataset.key = key;
+      grid.replaceChildren(...focusList.map((f, i) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 's-tile'; b.style.setProperty('--d', 160 + Math.min(i, 11) * 45);
+        const im = new Image(); im.alt = ''; im.decoding = 'async'; if (i > 8) im.loading = 'lazy'; setPhoto(im, f.image, ['sq400', 'sq800'], GRID);
+        const t = document.createElement('span'); t.textContent = f.title;
+        b.append(im, t); b.addEventListener('click', () => openDetail(f, im)); f.domTile = im;
+        return b;
+      }));
+    }
+  }
+  function openTopic(name) { // a topic with one project opens that project
+    const only = frames.filter(f => f.tags.includes(name));
+    if (only.length === 1) { closeMenu(); setHl(null); openDetail(only[0]); } else enterFocus(name);
+  }
+  function enterFocus(key) {
+    closeMenu();
+    hl = null; focus = parseKey(key); view = 'focus';
+    document.body.dataset.view = 'focus';
+    layoutFocus();
+    const sh = document.getElementById('sheet'), mb = document.getElementById('mBar').getBoundingClientRect();
+    sh.hidden = false; sh.scrollTop = 0; requestAnimationFrame(() => sh.classList.add('on'));
+    if (mb.height) document.getElementById('back').style.top = `${mb.top + mb.height / 2 - 16}px`; // narrow screens: Return where the About button sits
+    flyTo(focusGoal, 1300);
+    paint();
+    goTo(slugOf(keyName(focus)));
+    if (!reduced) ['fTitle', 'fSub', 'fWith'].forEach((id, i) => document.getElementById(id).animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 160 + i * 70, easing: EASE, fill: 'backwards' }));
+  }
+  function exitFocus() {
+    if (view !== 'focus') return;
+    view = 'globe'; focus = null;
+    const sh = document.getElementById('sheet'); sh.classList.remove('on'); setTimeout(() => { if (view !== 'focus') sh.hidden = true; }, 350);
+    document.body.dataset.view = 'globe';
+    flyTo(camera.position.clone().setLength(viewDist()), 1200);
+    paint();
+    goTo('');
+  }
+  document.getElementById('back').addEventListener('click', exitFocus);
+  document.getElementById('fWith').addEventListener('click', e => { const t = e.target.closest('[data-tag]'); if (t) enterFocus(t.dataset.tag); });
+
+  // Project: grows out of the tile that opened it (or fades in), shrinks back into it on close. ← and → step through the topic.
+  const det = document.getElementById('detail'), dImg = document.getElementById('dImg'), info = det.querySelector('.d-info');
+  let detFrame = null, detList = [], closing = false, returnFocus = null, byKey = false; // byKey: was the last input a key (then show focus) or a pointer
+  addEventListener('keydown', () => { byKey = true; }, true);
+  addEventListener('pointerdown', () => { byKey = false; }, true);
+  const restoreFocus = () => { const el = returnFocus; returnFocus = null; if (el && el.isConnected && el !== document.body) el.focus({ preventScroll: true }); };
+  const domRect = el => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight && r.width ? { l: r.left, t: r.top, w: r.width, h: r.height } : null; };
+  function flip(el, r, reverse) {
+    el.style.opacity = '';
+    const b = el.getBoundingClientRect();
+    if (!b.width || !r.w) return Promise.resolve();
+    const dx = (r.l + r.w / 2) - (b.left + b.width / 2), dy = (r.t + r.h / 2) - (b.top + b.height / 2), sc = Math.min(r.w / b.width, r.h / b.height);
+    const kf = [{ transform: `translate(${dx}px, ${dy}px) scale(${sc})`, opacity: 0.5 }, { transform: 'none', opacity: 1 }];
+    return el.animate(reverse ? kf.reverse() : kf, { duration: reverse ? 380 : 560, easing: EASE, fill: reverse ? 'forwards' : 'none' }).finished;
+  }
+  function renderDetail() {
+    const f = detFrame;
+    setPhoto(dImg, f.images[0], ['w800', 'w1600'], WIDE); dImg.alt = f.alt || f.title;
+    document.getElementById('dStack').replaceChildren(...f.images.slice(1).map(src => { const im = new Image(); im.alt = ''; im.loading = 'lazy'; im.decoding = 'async'; setPhoto(im, src, ['w800', 'w1600'], WIDE); return im; }));
+    det.scrollTop = 0; info.scrollTop = 0;
+    document.getElementById('dCode').textContent = f.title;
+    document.getElementById('dText').textContent = f.text || '';
+    const link = document.getElementById('dLink'); link.hidden = !f.link;
+    if (f.link) { link.href = f.link; link.textContent = `${f.linkLabel || f.link.replace(/^https?:\/\//, '').replace(/\/$/, '')} ↗`; }
+  }
+  function openDetail(f, srcEl) {
+    detList = view === 'focus' ? focusList : frames;
+    if (!detList.includes(f)) detList = [f];
+    const from = srcEl && domRect(srcEl);
+    detFrame = f;
+    renderDetail();
+    goTo(slugOf(f.title));
+    det.getAnimations({ subtree: true }).forEach(a => a.cancel());
+    if (det.hidden) returnFocus = document.activeElement; // keyboard users land back where they were on close
+    det.hidden = false; closing = false;
+    const mb = document.getElementById('mBar').getBoundingClientRect(), xb = document.getElementById('dCloseB'); // phones: ✕ where the About button sits
+    if (mb.height) xb.style.top = `${mb.top + mb.height / 2 - 20}px`;
+    (byKey ? (innerWidth < 760 ? xb : document.getElementById('dClose')) : det).focus({ preventScroll: true }); // no focus ring after a click or tap
+    if (reduced) return;
+    dImg.style.opacity = '0';
+    det.animate([{ backgroundColor: 'rgba(0,0,0,0)' }, { backgroundColor: 'rgba(0,0,0,0.95)' }], { duration: 420, easing: 'ease' });
+    info.animate([{ opacity: 0, transform: 'translateX(28px)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 160, easing: EASE, fill: 'backwards' });
+    const go = () => {
+      if (detFrame !== f) return;
+      if (from) return flip(dImg, from, false);
+      dImg.style.opacity = '';
+      dImg.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: EASE });
+    };
+    dImg.decode().then(go, go);
+  }
+  function closeDetail() {
+    if (det.hidden || closing) return;
+    const f = detFrame;
+    goTo(view === 'focus' && focus ? slugOf(keyName(focus)) : '');
+    if (reduced) { det.hidden = true; detFrame = null; restoreFocus(); return; }
+    closing = true;
+    const to = view === 'focus' && f.domTile && f.domTile.isConnected && domRect(f.domTile);
+    const p1 = to ? flip(dImg, to, true) : dImg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' }).finished;
+    info.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateX(28px)' }], { duration: 260, easing: 'ease', fill: 'forwards' });
+    const p2 = det.animate([{ backgroundColor: 'rgba(0,0,0,0.95)' }, { backgroundColor: 'rgba(0,0,0,0)' }], { duration: 400, easing: 'ease', fill: 'forwards' }).finished;
+    Promise.all([p1, p2]).then(() => { det.hidden = true; detFrame = null; closing = false; restoreFocus(); det.getAnimations({ subtree: true }).forEach(a => a.cancel()); dImg.style.opacity = ''; });
+  }
+  function step(d) {
+    const i = detList.indexOf(detFrame) + d; if (i < 0 || i >= detList.length) return;
+    detFrame = detList[i]; renderDetail(); goTo(slugOf(detFrame.title), true);
+    if (!reduced) dImg.animate([{ opacity: 0, transform: `translateX(${d * 28}px)` }, { opacity: 1, transform: 'none' }], { duration: 340, easing: EASE });
+  }
+  document.getElementById('dClose').addEventListener('click', closeDetail);
+  document.getElementById('dCloseB').addEventListener('click', closeDetail);
+  det.querySelector('.d-media').addEventListener('click', e => { if (e.target === e.currentTarget) closeDetail(); });
+  addEventListener('keydown', e => {
+    if (!det.hidden && !closing) {
+      if (e.key === 'Escape') closeDetail();
+      else if (e.key === 'ArrowLeft') step(-1);
+      else if (e.key === 'ArrowRight') step(1);
+      return;
+    }
+    if (e.key !== 'Escape') return;
+    if (menuSec) { const b = menu.querySelector(`.m-bar [data-sec="${menuSec}"]`); closeMenu(); if (menu.contains(document.activeElement)) b.focus(); }
+    else exitFocus();
+  });
+
+  // Pointer on the globe: the labels let drags through, so the canvas finds them itself. Hovering one highlights it (and pauses the
+  // spin); a tap or click (down and up within 5px) opens it; a tap anywhere else closes About.
+  const canvas = renderer.domElement, labelHits = [];
+  const labelAt = (x, y) => { for (let k = labelHits.length - 1; k >= 0; k--) { const [i, l, t, r, b] = labelHits[k]; if (x >= l - 4 && x <= r + 4 && y >= t - 4 && y <= b + 4) return i; } return -1; };
+  let hoverXY = null, downXY = null, downId = null, labelHover = null, swallowClickUntil = 0;
+  const downIds = new Set();
+  function hoverLabel(name) { if (name === labelHover) return; const was = labelHover; labelHover = name; if (name) setHl(name); else if (hl === was) setHl(null); }
+  canvas.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') hoverXY = [e.clientX, e.clientY]; });
+  canvas.addEventListener('pointerleave', () => { hoverXY = null; controls.hold = false; canvas.style.cursor = ''; hoverLabel(null); });
+  canvas.addEventListener('pointerdown', e => {
+    downIds.add(e.pointerId);
+    if (downIds.size === 1) { downXY = [e.clientX, e.clientY]; downId = e.pointerId; } else downXY = null; // a second finger cancels the tap
+  }, true);
+  addEventListener('pointercancel', e => { downIds.delete(e.pointerId); downXY = null; }, true);
+  addEventListener('pointerup', e => {
+    downIds.delete(e.pointerId);
+    if (!downXY || e.pointerId !== downId || e.target !== canvas) { downXY = null; return; }
+    const moved = Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]); downXY = null;
+    if (moved > 5) return;
+    const li = view === 'globe' ? labelAt(e.clientX, e.clientY) : -1;
+    if (li < 0) return closeMenu();
+    // On touch the browser fires a click after this pointerup at the same spot; by then the topic page or project is under the finger
+    if (e.pointerType !== 'mouse') swallowClickUntil = performance.now() + 700;
+    hoverLabel(null); openTopic(tagList[li].name);
+  }, true);
+  addEventListener('mousedown', e => { if (performance.now() < swallowClickUntil) e.preventDefault(); }, true); // no focus (and so no highlight) where the ghost click lands
+  addEventListener('click', e => { if (performance.now() < swallowClickUntil) { swallowClickUntil = 0; e.stopPropagation(); e.preventDefault(); } }, true);
+  function updateHover() {
+    if (!hoverXY || !det.hidden) return;
+    const li = view === 'globe' ? labelAt(hoverXY[0], hoverXY[1]) : -1;
+    hoverLabel(li >= 0 ? tagList[li].name : null);
+    controls.hold = li >= 0; canvas.style.cursor = li >= 0 ? 'pointer' : '';
+  }
+
+  // Labels give way to the name, the About button and card, the screen edges, and each other (front ones and bigger topics first)
+  let labelSize = labelEls.map(() => [0, 0]), uiRects = [];
+  const labelOrder = labelEls.map((_, i) => i);
+  const measureLabels = () => { labelSize = labelEls.map(el => [el.offsetWidth, el.offsetHeight]); };
+  function measureUI() {
+    uiRects = ['.head', '.m-bar', ...(menuSec ? ['.m-panel'] : [])].map(sel => document.querySelector(sel).getBoundingClientRect()).filter(r => r.width).map(r => [r.left - 6, r.top - 4, r.right + 6, r.bottom + 4]);
+  }
+  function resize() {
+    renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight;
+    if (view === 'globe' && !camTw) camera.position.setLength(viewDist());
+    scene.fog.near = viewDist() - 6; scene.fog.far = viewDist() + 18;
+    camera.updateProjectionMatrix();
+    if (view === 'focus') { layoutFocus(); camera.position.copy(focusGoal); camera.lookAt(0, 0, 0); }
+  }
+  addEventListener('resize', resize);
+  // re-measure when anything moves the name, the button or the labels (resize, fonts arriving, wrapping)
+  if (window.ResizeObserver) { const ro = new ResizeObserver(measureUI); ['.head', '.m-bar', '.m-panel'].forEach(sel => ro.observe(document.querySelector(sel))); }
+  addEventListener('resize', measureUI);
+  mPanel.addEventListener('transitionend', measureUI); // the card slides 10px into place; measure where it ends up
+  document.fonts.addEventListener?.('loadingdone', () => { measureUI(); measureLabels(); });
+  document.fonts.ready.then(() => { measureUI(); measureLabels(); });
+
+  const tmp = new THREE.Vector3(), camDir = new THREE.Vector3(), qa = new THREE.Quaternion(), qi = new THREE.Quaternion(), va = new THREE.Vector3(), vb = new THREE.Vector3();
+  function tick() {
+    const now = performance.now();
+    if (camTw) {
+      const e = camTw.dur ? ease(Math.min(1, (now - camTw.t0) / camTw.dur)) : 1;
+      va.copy(camTw.from).normalize(); vb.copy(camTw.to).normalize();
+      qa.setFromUnitVectors(va, vb); qi.identity().slerp(qa, e);
+      camera.position.copy(va.applyQuaternion(qi)).multiplyScalar(camTw.from.length() + (camTw.to.length() - camTw.from.length()) * e);
+      camera.up.copy(camTw.upFrom).applyQuaternion(qi.identity().slerp(camTw.qUp, e));
+      camera.lookAt(0, 0, 0);
+      if (e >= 1) { camTw = null; if (view === 'globe') controls.enabled = true; }
+    } else if (view === 'globe') controls.update();
+    camDir.copy(camera.position).normalize();
+    if (lineAnim > 0) {
+      lineAnim--;
+      const a = tagLines.line.geometry.attributes.color, arr = a.array, t = tagLines.target, kk = lineAnim === 0 ? 1 : 0.1;
+      for (let i = 0; i < arr.length; i++) arr[i] += (t[i] - arr[i]) * kk;
+      a.needsUpdate = true;
+    }
+    const placed = [], isFront = i => D[i].dot(camDir) >= -0.05;
+    labelHits.length = 0;
+    labelOrder.sort((a, b) => isFront(b) - isFront(a) || counts[b] - counts[a]).forEach(i => {
+      const el = labelEls[i], sz = labelSize[i];
+      tmp.copy(D[i]).multiplyScalar(RAD + 2.2).project(camera);
+      const x = (tmp.x + 1) / 2 * innerWidth, y = (1 - tmp.y) / 2 * innerHeight;
+      el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+      const front = isFront(i);
+      let op = (+el.dataset.base || 0) * (front ? 1 : 0.12);
+      if (op > 0) {
+        // a few px of margin: a label that has to give way fades for .25s while the globe keeps turning, so it starts early
+        const r = [x - sz[0] / 2 - 6, y - sz[1] / 2 - 3, x + sz[0] / 2 + 6, y + sz[1] / 2 + 3];
+        const hits = q => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1];
+        if (r[0] < 4 || r[2] > innerWidth - 4 || uiRects.some(hits) || placed.some(hits)) op = 0;
+        else if (front) placed.push(r);
+      }
+      el.style.opacity = op;
+      if (op >= 0.2) labelHits.push([i, x - sz[0] / 2, y - sz[1] / 2, x + sz[0] / 2, y + sz[1] / 2]);
+    });
+    updateHover();
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  document.body.dataset.view = 'globe';
+  resize(); measureLabels(); measureUI(); paint(); tick();
+
+  // Open what the address points at (a shared link), and follow Back and Forward
+  function apply(slug) {
+    routing = true;
+    try {
+      const f = slug && frames.find(f => slugOf(f.title) === slug);
+      const ti = f || !slug ? -1 : tagList.findIndex((t, i) => slugOf(t.name) === slug && counts[i] >= MIN_SHARED);
+      if (f) { if (det.hidden || closing) openDetail(f); else if (detFrame !== f) { detFrame = f; renderDetail(); } }
+      else {
+        if (!det.hidden && !closing) closeDetail();
+        if (ti >= 0) { if (view !== 'focus' || focus.tag !== ti) enterFocus(tagList[ti].name); }
+        else if (view === 'focus') exitFocus();
+        if (slug && ti < 0) history.replaceState({}, '', ROOT); // an address that leads nowhere: the globe
+      }
+      document.title = pageTitle(f || ti >= 0 ? slug : '');
+    } finally { routing = false; }
+  }
+  if (here()) apply(here());
+  addEventListener('popstate', () => apply(here()));
+});
+</script>

@@ -1,24 +1,16 @@
 {
- "file": "js/three-768b6e65.js",
+ "file": "js/three-d964120b.js",
  "names": [
   "AdditiveBlending",
-  "Box3",
   "BufferGeometry",
   "Color",
   "Float32BufferAttribute",
   "Fog",
   "LineBasicMaterial",
   "LineSegments",
-  "MathUtils",
-  "Mesh",
-  "MeshBasicMaterial",
-  "Object3D",
   "PerspectiveCamera",
-  "PlaneGeometry",
   "Quaternion",
-  "Raycaster",
   "Scene",
-  "Vector2",
   "Vector3",
   "WebGLRenderer"
  ]

@@ -1,10 +1,10 @@
 // A three.js build with only the parts the page uses, served from the site itself.
-//   node scripts/build-three.mjs            (after scripts/make-garden.py; needs the devDependencies: three, esbuild)
+//   node scripts/build-three.mjs            (needs the devDependencies: three, esbuild)
 // Collects every THREE.Something the page's script names, bundles just those from three r147 (tree-shaken, minified)
 // to js/three-<hash>.js exposing the same global THREE, and records the file name in js/three.json.
 import { build } from 'esbuild'; import fs from 'node:fs'; import crypto from 'node:crypto'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url))); process.chdir(root);
-const page = fs.readFileSync('index.html', 'utf8');
+const page = fs.readFileSync('src/index.html', 'utf8');
 const names = [...new Set([...page.matchAll(/\bTHREE\.([A-Za-z0-9_]+)/g)].map(m => m[1]))].sort();
 const entry = `import { ${names.join(', ')} } from 'three';\nwindow.THREE = {}; Object.assign(window.THREE, { ${names.join(', ')} }); // filled in one by one, as three.min.js does\n`;
 const res = await build({ stdin: { contents: entry, resolveDir: root, loader: 'js' }, bundle: true, minify: true, format: 'iife', write: false, target: ['es2019'], legalComments: 'none' });

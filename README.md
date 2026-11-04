@@ -1,17 +1,12 @@
-# Roll a Month
+# Ananta Mulyono — portfolio
 
-Single-page photo globe (three.js r147 core from jsDelivr, own free-orbit controls, Geist from Google Fonts, Geist Pixel inline).
-Static, no build step. `/` is the project map (`index.html`, `content.json`, `img/`, `admin/`, `api/`). The photo globe in
-`photos/` is no longer published (see `.vercelignore`); it stays in the repo because `index.html` is generated from it.
+A static site in three layers: a globe of the topics in Ananta's work (three.js, own free-orbit controls), a topic page
+over it (a grid of its projects), and a project over that (photos and text). Every topic and project has its own address
+(`/photography/`, `/kinfill/`) with its own link preview. **About** opens a card with intro, contact and experience.
+The page source is `src/index.html`; `npm run build` makes the published files (see Build).
 
-## Project map (the home page)
-
-The site's home page is a map on the same engine as the photo globe: a globe of the topics in Ananta's work. **Filter** lists the
-topics that two or more projects share; picking one pulls those projects forward as images with their titles, and a
-project opens as its images and text. **About** and **CV** open as panels from the same bar.
-
-Link previews (`og:image` and friends) need the site's full address: it is `SITE_URL` at the top of
-`scripts/make-garden.py`. Change it when the custom domain goes live, run `npm run build:garden`, and remake `og.jpg`
+Link previews (`og:image` and friends) need the site's full address: it is in the `og:url` and `og:image` tags at the top
+of `src/index.html`. Change them when the custom domain goes live, run `npm run build`, and remake `og.jpg`
 (a 1200×630 render of the home page) if the map has changed a lot. `favicon.svg`, `apple-touch-icon.png` and
 `404.html` live at the root.
 
@@ -55,8 +50,7 @@ A project looks like this:
 - `years` and `link` are optional.
 - `name`, `role`, `intro`, `photo`, `links` and `cv` at the top fill the title, About and CV.
 
-`index.html` itself is generated from the photo globe's `photos/index.html`, so engine fixes carry over; you never need
-to edit it for content.
+You never need to edit the page for content.
 
 ## Build
 
@@ -66,11 +60,10 @@ npm install && npm run build
 
 `npm run build` makes everything the site serves, in order:
 
-1. `scripts/make-garden.py` writes a readable `index.html` from the engine.
-2. `scripts/build-three.mjs` bundles only the parts of three.js the page uses into `js/three-<hash>.js` (no CDN).
-3. `scripts/optimize-images.py` makes light WebP versions of every photo in `content.json` (`img/opt/`: square grid
+1. `scripts/build-three.mjs` bundles only the parts of three.js the page uses into `js/three-<hash>.js` (no CDN).
+2. `scripts/optimize-images.py` makes light WebP versions of every photo in `content.json` (`img/opt/`: square grid
    crops, 800 and 1600px versions) and a 1200x630 link-preview image per project (`img/og/`).
-4. `scripts/build-pages.mjs` minifies the page, lists the light photos in it, and writes a page per project and shared
+3. `scripts/build-pages.mjs` turns `src/index.html` into the minified `index.html`, lists the light photos in it, and writes a page per project and shared
    topic (`/kinfill/`, `/photography/` ...) with its own title and preview.
 
 Fonts are self-hosted and cut down to Latin (`fonts/`, made by `npm run build:fonts` from `scripts/fonts-src/`, needs
@@ -81,7 +74,7 @@ them light versions, their own address and a link preview. `npm run perf` measur
 
 ## Run locally
 
-Serve over HTTP (textures don't load from `file://`):
+Build, then serve over HTTP (the page doesn't work from `file://`):
 
 ```bash
 npx serve . -l 3000
@@ -92,23 +85,19 @@ npx serve . -l 3000
 ## Tests
 
 ```bash
-npm install
-npm run test:install
+npm install && npm run build
 npm start            # in one terminal
 npm test             # in another
 ```
 
-- `tests/run.mjs`: Chromium, Firefox and WebKit × desktop 1440×900, iPhone 14 and Pixel 7. Loads the globe, opens the
-  `interior` tag view through the Subject menu, opens the first scan, then →, Esc, Esc, and measures frame rate. Writes screenshots and
-  `report.json` to `tests/out/`.
-- `tests/touch.mjs`: tap vs drag (5px threshold), pinch, two-finger tap, long-press preview, ghost clicks, stuck hover (Chromium, CDP touch).
 - `tests/safe-area.mjs`: fakes iPhone notch/home-indicator insets and checks the UI stays inside them (Chromium).
 - `tests/drag.mjs`: the globe turns freely over the poles, drags starting anywhere (labels included) turn it, labels still hover and open.
-- `tests/garden.mjs`: the project map (home page): content.json, blue squares, a topic view with images and titles, the project view, About and CV.
+- `tests/garden.mjs`: the home page, topic pages (grid, columns, margins, Return), projects (stacked photos, scrolling, keyboard), About.
+- `tests/routes.mjs`: every project and topic has a page and preview; shared links open them; Back and Forward step through the layers.
+- `tests/perf.mjs`: page weight and load times on a throttled connection (`npm run perf`).
 - `tests/admin.mjs`: the admin end to end against a local stand-in for Vercel and GitHub (`tests/admin-server.mjs`):
   login, adding a project with images, one commit per save, conflicts, validation, delete, logout.
 - `tests/labels.mjs`: globe tag labels never sit on the UI, off screen, or on each other (Chromium, 4 sizes).
 - `tests/fallback.mjs`: with WebGL off, or three.js unreachable, the page says so without script errors.
 
-Pass `--three-dir <path to three@0.147.0 package>` if jsDelivr is unreachable; the tests then serve three.js locally.
-`tests/screenshots/` holds a reduced copy of the last run.
+Shared test setup (error capture, access to the scene) is in `tests/hook.mjs`.

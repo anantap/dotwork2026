@@ -1,4 +1,4 @@
-// Finishes the pages after scripts/make-garden.py (run everything with `npm run build`):
+// Builds the published pages from src/index.html (run everything with `npm run build`):
 //  - uses the site's own three.js build (scripts/build-three.mjs) instead of the CDN
 //  - lists which photos have light versions (img/opt/manifest.json, from scripts/optimize-images.py)
 //  - minifies the page's CSS and JavaScript
@@ -7,8 +7,7 @@
 import { transform } from 'esbuild'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url))); process.chdir(root);
 const MARK = '<meta name="generator" content="build-pages">';
-let html = fs.readFileSync('index.html', 'utf8');
-if (html.includes(MARK)) { console.error('index.html is already built. Run `npm run build` (it makes a fresh one first).'); process.exit(1); }
+let html = fs.readFileSync('src/index.html', 'utf8');
 const content = JSON.parse(fs.readFileSync('content.json', 'utf8'));
 const manifest = fs.existsSync('img/opt/manifest.json') ? JSON.parse(fs.readFileSync('img/opt/manifest.json', 'utf8')) : {};
 const three = JSON.parse(fs.readFileSync('js/three.json', 'utf8')).file;
@@ -17,6 +16,9 @@ const slugOf = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').rep
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 const must = (cond, msg) => { if (!cond) { console.error(msg); process.exit(1); } };
 
+// the current font files (scripts/build-fonts.py)
+const fonts = JSON.parse(fs.readFileSync('fonts/fonts.json', 'utf8'));
+html = html.replace(/fonts\/geist-pixel-[0-9a-f]{8}\.woff2/g, fonts.pixel).replace(/fonts\/geist-[0-9a-f]{8}\.woff2/g, fonts.sans);
 // three.js from the site, fetched early
 must(html.includes('https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js'), 'three.js script tag not found');
 html = html.replace('<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>', `<script src="${three}"></script>`)

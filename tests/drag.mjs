@@ -1,17 +1,15 @@
 // Spinning the globe: a drag must keep turning it in any direction (no stop at the poles), and a drag that
 // starts anywhere on the globe (outside the menu) must turn it.
-//   node tests/drag.mjs [--base http://localhost:3000/] [--three-dir /path/to/three/package]
-import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+//   node tests/drag.mjs [--base http://localhost:3000/]
+import { HOOK } from './hook.mjs'; import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
-const BASE = args.base || 'http://localhost:3000/photos/';
-const here = path.dirname(fileURLToPath(import.meta.url)); const src = fs.readFileSync(path.join(here, 'run.mjs'), 'utf8');
-const HOOK = src.slice(src.indexOf('const HOOK = () => {') + 13, src.indexOf('\n};\n', src.indexOf('const HOOK')) + 2);
+const BASE = args.base || 'http://localhost:3000/';
+const here = path.dirname(fileURLToPath(import.meta.url));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const b = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] });
 let fail = 0; const check = (ok, name, d) => { console.log(ok ? 'PASS' : 'FAIL', name, d ? JSON.stringify(d) : ''); if (!ok) fail++; };
 for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 } }], ['iPhone 14', devices['iPhone 14']]]) {
   const ctx = await b.newContext(opts); await ctx.addInitScript(`(${HOOK})()`);
-  if (args['three-dir']) await ctx.route('https://cdn.jsdelivr.net/npm/three@0.147.0/**', r => r.fulfill({ path: path.join(args['three-dir'], new URL(r.request().url()).pathname.replace('/npm/three@0.147.0/', '')), contentType: 'text/javascript' }));
   const p = await ctx.newPage(); await p.goto(BASE); await p.waitForFunction(() => window.__frames > 30); await sleep(2500);
   const touch = !!opts.hasTouch, cdp = touch ? await ctx.newCDPSession(p) : null;
   const drag = async (x, y, dx, dy, steps = 10) => {
@@ -54,8 +52,9 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   const lab2 = await visibleLabel();
   if (touch) await p.touchscreen.tap(lab2[0], lab2[1]); else await p.mouse.click(lab2[0], lab2[1]);
   await sleep(1200);
-  const fv = await p.evaluate(() => [document.body.dataset.view, document.getElementById('fTitle').textContent]);
-  check(fv[0] === 'focus' && fv[1] === lab2[2], `${name}: tapping the "${lab2[2]}" label opens its tag view`, fv);
+  // a shared topic opens its page; a one-off topic opens its one project
+  const fv = await p.evaluate(() => [document.body.dataset.view, document.getElementById('fTitle').textContent, !document.getElementById('detail').hidden]);
+  check((fv[0] === 'focus' && fv[1] === lab2[2]) || fv[2], `${name}: tapping the "${lab2[2]}" label opens it`, fv);
   await ctx.close();
 }
 await b.close(); process.exitCode = fail ? 1 : 0;
