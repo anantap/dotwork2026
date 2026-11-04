@@ -182,8 +182,8 @@ rep("      chipEls[t.name].innerHTML = `${t.name}<span>${counts[i]}</span>`;",
     "      chipEls[t.name].innerHTML = `${esc(t.name)}<span>${counts[i]}</span>`; chipEls[t.name].hidden = counts[i] < MIN_SHARED;")
 rep("      labelEls[i].innerHTML = `${t.name}<small>${counts[i]}</small>`;", "      labelEls[i].innerHTML = `${esc(t.name)}<small>${counts[i]}</small>`;")
 rep("      if (inFocus) op = f.inF ? (f.real ? 1 : f.priv ? 0.6 : 0.42) : 0.025;", "      if (inFocus) op = f.inF ? 1 : 0.025;")
-rep("      else if (h) op = matches(f, h) ? 1 : 0.06;", "      else if (h) op = matches(f, h) ? 0.95 : 0.15;")
-rep("      else op = f.real ? 1 : f.priv ? 0.55 : 0.45;", "      else op = 0.85;")
+rep("      else if (h) op = matches(f, h) ? 1 : 0.06;", "      else if (h) op = 0; // the globe is topics only: projects show up once a topic pulls them forward")
+rep("      else op = f.real ? 1 : f.priv ? 0.55 : 0.45;", "      else op = 0;")
 rep("      el.dataset.base = inFocus || counts[i] === 0 ? 0 :", "      el.dataset.base = inFocus || counts[i] < MIN_SHARED ? 0 :")
 rep("focusList = frames.filter(f => shown(f) && matches(f, focus)).sort((a, b) => (b.real - a.real) || (a.month - b.month) || (a.n - b.n));", "focusList = frames.filter(f => matches(f, focus));")
 rep("    const scans = focusList.filter(f => f.real).length;\n", "")
@@ -287,6 +287,12 @@ rep("  function enterFocus(key) {", '''  function openTopic(name) {
   function enterFocus(key) {''')
 rep("    b.addEventListener('click', () => enterFocus(t.name)); hoverable(b, t.name);", "    b.addEventListener('click', () => openTopic(t.name)); hoverable(b, t.name);")
 rep("hoverLabel(null); enterFocus(tagList[li].name); return; }", "hoverLabel(null); openTopic(tagList[li].name); return; }")
+
+# no lines between projects either: they'd end in empty space now the projects are hidden on the globe
+rep("      if (!shown(e.f) || !shown(e.g)) return BLACK;", "      return BLACK;")
+
+# "Also" in a topic view lists other shared topics only (a one-off there would open a one-tile view)
+rep("const near = tagPairs.filter(q => q.keep && (q.i === focus.tag || q.j === focus.tag))", "const near = tagPairs.filter(q => q.keep && counts[q.i] >= MIN_SHARED && counts[q.j] >= MIN_SHARED && (q.i === focus.tag || q.j === focus.tag))")
 
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)

@@ -475,8 +475,8 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     frames.forEach(f => {
       let op;
       if (inFocus) op = f.inF ? 1 : 0.025;
-      else if (h) op = matches(f, h) ? 0.95 : 0.15;
-      else op = 0.85;
+      else if (h) op = 0; // the globe is topics only: projects show up once a topic pulls them forward
+      else op = 0;
       f.opT = op;
       const img = inFocus && f.inF; // blue square on the globe, the project's image in a topic view
       if (f.showImg !== img) { f.showImg = img; f.obj.material.map = img ? f.tex : null; f.obj.material.color.set(img ? 0xffffff : C.sample); f.obj.material.needsUpdate = true; }
@@ -488,7 +488,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
       return dim(C.wire, (h ? 0.45 : 1) * k);
     });
     paintSpans(webLines, webEdges, e => {
-      if (!shown(e.f) || !shown(e.g)) return BLACK;
+      return BLACK;
       if (inFocus) return dim(C.wire, 0.05);
       if (h) return matches(e.f, h) && matches(e.g, h) ? dim(C.link, 0.8) : dim(C.wire, 0.12);
       return dim(C.wire, 0.55);
@@ -533,7 +533,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     document.getElementById('fTitle').textContent = keyName(focus);
     document.getElementById('fSub').textContent = `${focusList.length} project${focusList.length === 1 ? '' : 's'}`;
     const withEl = document.getElementById('fWith');
-    const near = tagPairs.filter(q => q.keep && (q.i === focus.tag || q.j === focus.tag)).sort((a, b) => b.w - a.w).slice(0, 4).map(q => tagList[q.i === focus.tag ? q.j : q.i].name);
+    const near = tagPairs.filter(q => q.keep && counts[q.i] >= MIN_SHARED && counts[q.j] >= MIN_SHARED && (q.i === focus.tag || q.j === focus.tag)).sort((a, b) => b.w - a.w).slice(0, 4).map(q => tagList[q.i === focus.tag ? q.j : q.i].name);
     withEl.innerHTML = near.length ? '<span>Also</span>' + near.map(t => `<button type="button" class="chip" data-tag="${esc(t)}">${esc(t)}</button>`).join('') : '';
   }
   function openTopic(name) {

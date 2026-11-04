@@ -1,4 +1,4 @@
-// Project map (garden/): content from content.json, blue squares on the globe, a topic shows images with titles,
+// Project map (garden/): content from content.json, only topics on the globe, a topic shows images with titles,
 // a project opens as images and text, the menu is Filter / About / CV.
 //   node tests/garden.mjs [--base http://localhost:3000/garden/] [--three-dir /path/to/three/package]
 import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
@@ -22,8 +22,8 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   await p.screenshot({ path: `${OUT}/${name}-1-globe.png` });
 
   check((await p.textContent('#status')) === `${content.role} · ${content.projects.length} projects`, `${name}: status line from content.json`, await p.textContent('#status'));
-  const t0 = await tiles();
-  check(t0.length === content.projects.length && t0.every(t => !t.img), `${name}: globe shows ${content.projects.length} plain squares, no images`, t0.length);
+  const t0 = await p.evaluate(() => window.__tileXY().map(t => +t.op.toFixed(3)));
+  check(t0.length === content.projects.length && t0.every(o => o < 0.02), `${name}: no project tiles on the globe, just topics`, t0);
   const buttons = await p.evaluate(() => [...document.querySelectorAll('.m-bar button')].filter(b => !b.hidden).map(b => b.textContent));
   check(JSON.stringify(buttons) === '["Filter","About","CV"]', `${name}: menu is Filter, About, CV`, buttons);
   // one-off topics: quiet background labels (no count, can't be tapped); only shared topics are chips and open a view
@@ -49,6 +49,9 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   check(t1.length === expect && t1.every(t => t.img), `${name}: topic view shows the projects' images`, t1.map(t => t.img));
   const titles = await p.evaluate(() => [...document.querySelectorAll('.p-title')].filter(e => +getComputedStyle(e).opacity > 0.9).map(e => e.textContent));
   check(titles.length === expect, `${name}: titles under the tiles`, titles);
+  const also = await p.evaluate(() => [...document.querySelectorAll('#fWith .chip')].map(c => c.textContent));
+  const shared = t => content.projects.filter(x => x.tags.includes(t)).length >= 2;
+  check(also.every(shared), `${name}: "Also" lists shared topics only`, also);
   await p.screenshot({ path: `${OUT}/${name}-3-topic-website.png` });
 
   const t = await p.evaluate(() => window.__tileXY().filter(t => t.inF).sort((a, b) => a.order - b.order)[0]);
@@ -62,7 +65,8 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   await p.screenshot({ path: `${OUT}/${name}-4-project.png` });
   await p.keyboard.press('Escape'); await sleep(700); await p.keyboard.press('Escape'); await sleep(1800);
   const t2 = await tiles();
-  check(await p.evaluate(() => document.body.dataset.view) === 'globe' && t2.every(t => !t.img), `${name}: back on the globe, squares again`);
+  const t3 = await p.evaluate(() => window.__tileXY().map(t => t.op));
+  check(await p.evaluate(() => document.body.dataset.view) === 'globe' && t2.every(t => !t.img) && t3.every(o => o < 0.05), `${name}: back on the globe, projects hidden again`);
 
   await tap(p.locator('.m-bar [data-sec=about]')); await sleep(600);
   const ab = await p.evaluate(() => ({ intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: document.getElementById('aPhoto')?.naturalWidth }));

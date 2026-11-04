@@ -5,7 +5,7 @@ Static: `index.html`, `thumbs/`, `full/`. No build step.
 
 ## Project map (`garden/`)
 
-`garden/` is a second map on the same engine: Ananta's projects as small blue squares on the globe. **Filter** lists the
+`garden/` is a second map on the same engine: a globe of the topics in Ananta's work. **Filter** lists the
 topics that two or more projects share; picking one pulls those projects forward as images with their titles, and a
 project opens as its images and text. **About** and **CV** open as panels from the same bar.
 
