@@ -49,6 +49,12 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   check(t1.length === expect && t1.every(t => t.img), `${name}: topic view shows the projects' images`, t1.map(t => t.img));
   const titles = await p.evaluate(() => [...document.querySelectorAll('.p-title')].filter(e => +getComputedStyle(e).opacity > 0.9).map(e => e.textContent));
   check(titles.length === expect, `${name}: titles under the tiles`, titles);
+  const overlaps = await p.evaluate(() => {
+    const pxu = innerHeight / (2 * Math.tan(window.__camera.fov * Math.PI / 360)), out = [];
+    const tiles = window.__scene.children.filter(o => o.userData.f && o.userData.f.inF).map(o => { const v = o.position.clone(), d = v.distanceTo(window.__camera.position); v.project(window.__camera); o.geometry.computeBoundingBox(); const bb = o.geometry.boundingBox, k = o.scale.x * pxu / d, x = (v.x + 1) / 2 * innerWidth, y = (1 - v.y) / 2 * innerHeight; return { t: o.userData.f.title, r: [x + bb.min.x * k, y - bb.max.y * k, x + bb.max.x * k, y - bb.min.y * k] }; });
+    for (const e of document.querySelectorAll('.p-title')) { if (+getComputedStyle(e).opacity < 0.5) continue; const b = e.getBoundingClientRect(); for (const t of tiles) if (t.t !== e.textContent && b.left < t.r[2] && b.right > t.r[0] && b.top < t.r[3] && b.bottom > t.r[1]) out.push(`${e.textContent} on ${t.t}`); }
+    return out; });
+  check(!overlaps.length, `${name}: no title sits on another tile`, overlaps);
   const also = await p.evaluate(() => [...document.querySelectorAll('#fWith .chip')].map(c => c.textContent));
   const shared = t => content.projects.filter(x => x.tags.includes(t)).length >= 2;
   check(also.every(shared), `${name}: "Also" lists shared topics only`, also);

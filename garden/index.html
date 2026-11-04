@@ -326,7 +326,12 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     const dir = f.dir;
     const r = RAD + 0.6;
     f.home = dir.clone().multiplyScalar(r);
-    f.tex = loader.load(f.image);
+    // a tile takes its image's proportions, fitted inside the same square cell (wide photos get wide tiles)
+    f.ah = 1;
+    f.tex = loader.load(f.image, t => {
+      const a = t.image.width / t.image.height, w = a >= 1 ? 1 : a, h = a >= 1 ? 1 / a : 1;
+      f.ah = h; f.obj.geometry = twoFaced(new THREE.PlaneGeometry(0.62 * w, 0.62 * h));
+    });
     const obj = new THREE.Mesh(geoS, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false }));
     obj.material.color.copy(C.sample); f.showImg = false;
     f.base = 2; // small squares on the globe; the contact sheet makes them big
@@ -526,7 +531,7 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     focusList.forEach((f, i) => {
       const c = i % cols, r = Math.floor(i / cols);
       f.gpos = center.clone().addScaledVector(right, (c - (cols - 1) / 2) * s + ox).addScaledVector(up, ((rows - 1) / 2 - r) * s + oy);
-      f.gscale = Math.min(s * 0.82 / 0.62, 14); // a little more room between tiles for the titles
+      f.gscale = Math.min(s * 0.72 / 0.62, 14); // room between tiles for the titles underneath
       f.inF = true; f.order = i;
     });
     // header
@@ -822,9 +827,9 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
         const on = view === 'focus' && f.inF && f.showImg;
         if (on) {
           tmp.copy(f.obj.position); const dist = tmp.distanceTo(camera.position); tmp.project(camera);
-          const half = 0.31 * f.obj.scale.x * pxPerUnit / dist;
+          const half = 0.31 * f.obj.scale.x * pxPerUnit / dist * f.ah; // half the tile's height
           f.titleEl.style.transform = `translate(${(tmp.x + 1) / 2 * innerWidth}px, ${(1 - tmp.y) / 2 * innerHeight + half + 8}px) translate(-50%, 0)`;
-          f.titleEl.style.maxWidth = `${Math.max(80, half * 2.4)}px`;
+          f.titleEl.style.maxWidth = `${Math.max(80, half / f.ah * 2.4)}px`; // about the cell's width
         }
         const op = on && performance.now() > f.t0 + f.dur * 0.6 ? '1' : '0'; // fade in as the tile settles
         if (f.titleEl.style.opacity !== op) f.titleEl.style.opacity = op;

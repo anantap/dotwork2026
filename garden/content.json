@@ -4,54 +4,134 @@
   "intro": "My work is about making complexity legible. I observe, ask questions, challenge assumptions, and bring structure across stakeholders, processes, and the design itself. I’m drawn to problems where the answer isn’t just on the screen, but in the people and context around it.",
   "photo": "img/about.jpg",
   "links": [
-    { "label": "Email", "href": "mailto:anantadotwork@gmail.com" },
-    { "label": "LinkedIn", "href": "https://www.linkedin.com/in/anantadotpm/" }
+    {
+      "label": "Email",
+      "href": "mailto:anantadotwork@gmail.com"
+    },
+    {
+      "label": "LinkedIn",
+      "href": "https://www.linkedin.com/in/anantadotpm/"
+    }
   ],
   "cv": [
-    { "years": "2023 — Now", "place": "Gemeente Den Haag", "role": "UX designer" },
-    { "years": "2021 — 2023", "place": "Eneco" },
-    { "years": "2019 — 2021", "place": "Harborn (fka Connect Holland)" },
-    { "years": "2017 — 2019", "place": "Silo" }
+    {
+      "years": "2023 — Now",
+      "place": "Gemeente Den Haag",
+      "role": "UX designer"
+    },
+    {
+      "years": "2021 — 2023",
+      "place": "Eneco"
+    },
+    {
+      "years": "2019 — 2021",
+      "place": "Harborn (fka Connect Holland)"
+    },
+    {
+      "years": "2017 — 2019",
+      "place": "Silo"
+    }
   ],
   "projects": [
     {
       "title": "Nationale Veteranendag",
       "text": "For Nationale Veteranendag I applied a new campaign identity to the website, restructuring the information hierarchy to balance campaign messaging with veterans’ personal stories.",
-      "images": ["img/nvd.jpg"],
-      "tags": ["website", "content architecture", "campaign identity", "public sector"]
+      "images": [
+        "img/nvd.jpg"
+      ],
+      "tags": [
+        "website",
+        "content architecture",
+        "campaign identity",
+        "public sector"
+      ]
     },
     {
       "title": "Kinfill",
       "text": "For Kinfill, a Rotterdam-based sustainable cleaning brand, I redesigned the website while a technical team improved performance and future-proofed their logistical processes.",
-      "images": ["img/kinfill.jpg"],
-      "tags": ["website", "redesign", "e-commerce", "sustainability", "retail"]
+      "images": [
+        "img/kinfill.jpg"
+      ],
+      "tags": [
+        "website",
+        "redesign",
+        "e-commerce",
+        "sustainability",
+        "retail"
+      ]
     },
     {
       "title": "Eneco",
       "years": "2021 — 2023",
       "text": "At Eneco I worked on the redesign and continued improvement of the sales flow, with additional contributions to the design system and UX operations.",
-      "images": ["img/eneco.jpg"],
-      "tags": ["redesign", "flows", "design system", "UX operations", "energy", "sustainability"]
+      "images": [
+        "img/eneco.jpg"
+      ],
+      "tags": [
+        "redesign",
+        "flows",
+        "design system",
+        "UX operations",
+        "energy",
+        "sustainability"
+      ]
     },
     {
       "title": "Riserve",
       "text": "For Riserve I designed the website and UX flows for a platform connecting talent and jobs with a shared passion for football.",
-      "images": ["img/riserve.jpg"],
-      "tags": ["website", "flows", "platform", "sport", "recruitment"]
+      "images": [
+        "img/riserve.jpg"
+      ],
+      "tags": [
+        "website",
+        "flows",
+        "platform",
+        "sport",
+        "recruitment"
+      ]
     },
     {
       "title": "Gemeente Den Haag",
       "years": "2023 — Now",
       "text": "At Gemeente Den Haag I work as a UX designer across research, content architecture, design, and project coordination for the people and businesses the city serves.",
-      "images": ["img/gdh.jpg"],
-      "tags": ["research", "content architecture", "project coordination", "public sector"]
+      "images": [
+        "img/gdh.jpg"
+      ],
+      "tags": [
+        "research",
+        "content architecture",
+        "project coordination",
+        "public sector"
+      ]
     },
     {
       "title": "bami.blog",
       "text": "A logbook of instant noodles. Every pack gets a photo, a number, a flag and a rating out of five.",
-      "images": ["img/bami.jpg"],
-      "tags": ["website", "code", "logbook", "food"],
+      "images": [
+        "img/bami.jpg"
+      ],
+      "tags": [
+        "website",
+        "code",
+        "logbook",
+        "food"
+      ],
       "link": "https://bami.blog"
+    },
+    {
+      "title": "Fundament",
+      "text": "Photography for Fundament, a specialty coffee roaster in Rotterdam’s Van Nellefabriek: images for the website and the packaging.",
+      "images": [
+        "img/fundament-1.jpg",
+        "img/fundament-2.jpg"
+      ],
+      "tags": [
+        "photography",
+        "packaging",
+        "website",
+        "food"
+      ],
+      "link": "https://fundament.coffee"
     }
   ]
 }

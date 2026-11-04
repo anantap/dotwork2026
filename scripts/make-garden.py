@@ -153,7 +153,12 @@ rep("  const loader = new THREE.TextureLoader();", '''  const loader = new THREE
   }));''')
 rep("    const r = RAD + (f.real ? 0.6 : 0.15 + rnd() * 0.3);", "    const r = RAD + 0.6;")
 i = s.index("    let obj;\n    if (f.real) {"); j = s.index("    f.base = f.real ? 1.8 : 1;")
-s = s[:i] + """    f.tex = loader.load(f.image);
+s = s[:i] + """    // a tile takes its image's proportions, fitted inside the same square cell (wide photos get wide tiles)
+    f.ah = 1;
+    f.tex = loader.load(f.image, t => {
+      const a = t.image.width / t.image.height, w = a >= 1 ? 1 : a, h = a >= 1 ? 1 / a : 1;
+      f.ah = h; f.obj.geometry = twoFaced(new THREE.PlaneGeometry(0.62 * w, 0.62 * h));
+    });
     const obj = new THREE.Mesh(geoS, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false }));
     obj.material.color.copy(C.sample); f.showImg = false;
 """ + s[j:]
@@ -188,7 +193,7 @@ rep("      el.dataset.base = inFocus || counts[i] === 0 ? 0 :", "      el.datase
 rep("focusList = frames.filter(f => shown(f) && matches(f, focus)).sort((a, b) => (b.real - a.real) || (a.month - b.month) || (a.n - b.n));", "focusList = frames.filter(f => matches(f, focus));")
 rep("    const scans = focusList.filter(f => f.real).length;\n", "")
 rep("${focusList.length} frames · ${scans} scan${scans === 1 ? '' : 's'} · ${tagList[focus.tag].axis}", "${focusList.length} project${focusList.length === 1 ? '' : 's'}")
-rep("      f.gscale = Math.min(s * 0.9 / 0.62, 6);", "      f.gscale = Math.min(s * 0.82 / 0.62, 14); // a little more room between tiles for the titles")
+rep("      f.gscale = Math.min(s * 0.9 / 0.62, 6);", "      f.gscale = Math.min(s * 0.72 / 0.62, 14); // room between tiles for the titles underneath")
 rep("near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${t}\">${t}</button>`)", "near.map(t => `<button type=\"button\" class=\"chip\" data-tag=\"${esc(t)}\">${esc(t)}</button>`)")
 rep("'<span>Often with</span>'", "'<span>Also</span>'")
 
@@ -247,9 +252,9 @@ rep("    updateTip();\n    renderer.render", """    { // project titles under th
         const on = view === 'focus' && f.inF && f.showImg;
         if (on) {
           tmp.copy(f.obj.position); const dist = tmp.distanceTo(camera.position); tmp.project(camera);
-          const half = 0.31 * f.obj.scale.x * pxPerUnit / dist;
+          const half = 0.31 * f.obj.scale.x * pxPerUnit / dist * f.ah; // half the tile's height
           f.titleEl.style.transform = `translate(${(tmp.x + 1) / 2 * innerWidth}px, ${(1 - tmp.y) / 2 * innerHeight + half + 8}px) translate(-50%, 0)`;
-          f.titleEl.style.maxWidth = `${Math.max(80, half * 2.4)}px`;
+          f.titleEl.style.maxWidth = `${Math.max(80, half / f.ah * 2.4)}px`; // about the cell's width
         }
         const op = on && performance.now() > f.t0 + f.dur * 0.6 ? '1' : '0'; // fade in as the tile settles
         if (f.titleEl.style.opacity !== op) f.titleEl.style.opacity = op;
