@@ -182,6 +182,22 @@
         "film"
       ],
       "link": "https://amatterofconcrete.com/"
+    },
+    {
+      "title": "De Correspondent",
+      "text": "Portraits of Eli for an article on De Correspondent about a singer who transitioned, and how that changed everything for his band too.",
+      "images": [
+        "img/correspondent-1.jpg",
+        "img/correspondent-2.jpg",
+        "img/correspondent-3.jpg",
+        "img/correspondent-4.jpg"
+      ],
+      "tags": [
+        "photography",
+        "portrait",
+        "editorial"
+      ],
+      "link": "https://decorrespondent.nl/12422/lees-en-luister-deze-zanger-ging-in-transitie-en-daarmee-veranderde-ook-alles-voor-zijn-band/ebe2e705-d529-03d4-1c86-7a41d010730d"
     }
   ]
 }
