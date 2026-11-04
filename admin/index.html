@@ -73,8 +73,6 @@ details.project > summary::-webkit-details-marker { display: none; }
 .list { display: grid; gap: 8px; }
 .pair { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 8px; align-items: center; }
 .cvrow { display: grid; grid-template-columns: 130px 1fr 1fr auto; gap: 8px; align-items: center; }
-.photo { display: flex; gap: 12px; align-items: center; }
-.photo img { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; background: #1a1a1f; }
 
 .bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: rgba(0,0,0,.88); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border-top: 1px solid var(--line);
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px max(12px, env(safe-area-inset-bottom, 0px)); }
@@ -116,7 +114,6 @@ details.project > summary::-webkit-details-marker { display: none; }
       <div class="card">
         <div class="row"><label>Name<input type="text" id="name"></label><label>Line under your name<input type="text" id="statusLine" placeholder="Chronically Online"></label></div>
         <label>Intro<textarea id="intro"></textarea></label>
-        <div class="photo"><img id="photoPrev" alt=""><div class="list"><span class="note">Photo in the About panel</span><div><button class="btn small" type="button" id="photoBtn">Change photo</button></div></div></div>
         <div><span class="note">Links</span><div class="list" id="links" style="margin-top:8px"></div><p><button class="btn small" type="button" id="addLink">+ Add link</button></p></div>
       </div>
     </section>
@@ -169,7 +166,7 @@ details.project > summary::-webkit-details-marker { display: none; }
     const keys = [];
     for (const f of files.filter(f => f.type.startsWith('image/') || /\.(jpe?g|png|webp|heic)$/i.test(f.name))) { try { keys.push(await prepare(f)); } catch { setStatus(`Couldn’t read ${f.name}. Try a JPG or PNG.`, 'bad'); } }
     if (!keys.length) return;
-    if (target === 'photo') data.photo = keys[0]; else { data.projects[target].images.push(...keys); open.add(target); }
+    data.projects[target].images.push(...keys); open.add(target);
     touch(); render();
   }
 
@@ -217,7 +214,6 @@ details.project > summary::-webkit-details-marker { display: none; }
     dl.replaceChildren(...all.map(t => el('option', { value: t })));
     // about
     $('name').value = data.name || ''; $('statusLine').value = data.status || ''; $('intro').value = data.intro || '';
-    $('photoPrev').src = data.photo ? src(data.photo) : '';
     $('links').replaceChildren(...(data.links || []).map((l, k) => el('div', { class: 'pair' },
       el('input', { type: 'text', placeholder: 'Label', value: l.label, 'aria-label': 'Link label', oninput: e => { l.label = e.target.value; touch(); } }),
       el('input', { type: 'text', placeholder: 'https://… or mailto:…', value: l.href, 'aria-label': 'Link address', oninput: e => { l.href = e.target.value.trim(); touch(); } }),
@@ -229,7 +225,6 @@ details.project > summary::-webkit-details-marker { display: none; }
       el('button', { class: 'btn small danger', type: 'button', text: 'Remove', onclick: () => { data.cv.splice(k, 1); touch(); render(); } }))));
   }
   for (const [id, k] of [['name', 'name'], ['statusLine', 'status'], ['intro', 'intro']]) $(id).addEventListener('input', e => { data[k] = e.target.value; touch(); });
-  $('photoBtn').addEventListener('click', () => pick('photo'));
   $('addLink').addEventListener('click', () => { (data.links ||= []).push({ label: '', href: '' }); touch(); render(); });
   $('addCv').addEventListener('click', () => { (data.cv ||= []).unshift({ years: '', place: '' }); touch(); render(); });
   $('addProject').addEventListener('click', () => { data.projects.unshift({ title: '', text: '', images: [], tags: [] }); open.clear(); open.add(0); touch(); render(); document.querySelector('details.project input')?.focus(); });
@@ -241,7 +236,7 @@ details.project > summary::-webkit-details-marker { display: none; }
     if (bad >= 0) { open.add(bad); render(); setStatus(data.projects[bad].title?.trim() ? `“${data.projects[bad].title}” needs at least one image.` : 'A project needs a title.', 'bad'); return; }
     busy = true; $('save').disabled = true;
     try {
-      const used = new Set([...data.projects.flatMap(p => p.images), data.photo].filter(s => s && s.startsWith('new:')));
+      const used = new Set(data.projects.flatMap(p => p.images).filter(s => s && s.startsWith('new:')));
       const uploaded = [], map = {};
       let n = 0;
       for (const key of used) {
@@ -253,7 +248,6 @@ details.project > summary::-webkit-details-marker { display: none; }
       }
       const content = JSON.parse(JSON.stringify(data));
       content.projects.forEach(p => { p.images = p.images.map(s => map[s] || s); });
-      if (content.photo && map[content.photo]) content.photo = map[content.photo];
       setStatus('Saving…');
       const r = await api('save', { method: 'POST', body: JSON.stringify({ content, baseSha, images: uploaded }) });
       if (!r.ok) throw new Error(r.error || 'Saving failed.');

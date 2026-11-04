@@ -81,12 +81,8 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
 .menu.open .m-panel { opacity: 1; visibility: visible; transform: translate(-50%, -50%); transition-delay: 0s; }
 .m-panel section { display: grid; gap: 24px; }
 .m-panel section[hidden] { display: none; }
-.about { display: grid; grid-template-columns: 120px 1fr; gap: 16px; align-items: start; }
-.about img { width: 120px; height: 120px; object-fit: cover; border-radius: 4px; }
-.a-text { min-width: 0; }
 .lede { margin: 0; font-size: 14px; line-height: 20px; text-wrap: pretty; }
 .contact { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
-.a-block h3 { margin: 0 0 8px; font: 400 12px var(--pixel); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .cv { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .cv li { display: grid; grid-template-columns: 104px 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
 .cv .yrs { font: 400 12px var(--pixel); color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -173,8 +169,6 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
     border: 1px solid var(--line); background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: var(--ink); cursor: pointer; }
 }
 @media (max-width: 560px) {
-  .about { grid-template-columns: 1fr; }
-  .about img { width: 96px; height: 96px; }
   .m-panel { padding: 16px; }
 }
 </style>
@@ -189,8 +183,8 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
   <nav class="menu" id="menu" aria-label="About">
     <div class="m-panel" id="mPanel">
       <section data-sec="about" aria-label="About" hidden>
-        <div class="about"><img id="aPhoto" alt=""><div class="a-text"><p class="lede" id="aIntro"></p><div class="contact" id="aContact"></div></div></div>
-        <div class="a-block"><h3>Experience</h3><ul class="cv" id="cvList"></ul></div>
+        <div><p class="lede" id="aIntro"></p><div class="contact" id="aContact"></div></div>
+        <ul class="cv" id="cvList" aria-label="Experience"></ul>
       </section>
     </div>
     <div class="m-bar" id="mBar">
@@ -377,8 +371,6 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
   // About, from content.json
   const menu = document.getElementById('menu'), mPanel = document.getElementById('mPanel');
   {
-    const photo = document.getElementById('aPhoto');
-    if (CONTENT.photo) { photo.loading = 'lazy'; setPhoto(photo, CONTENT.photo, ['a240'], '120px'); } else photo.remove(); // loads when About opens
     document.getElementById('aIntro').textContent = CONTENT.intro || '';
     document.getElementById('aContact').innerHTML = (CONTENT.links || []).map(l => `<a href="${esc(l.href)}"${/^mailto:/.test(l.href) ? '' : ' target="_blank" rel="noopener"'}>${esc(l.label)}</a>`).join('');
     document.getElementById('cvList').innerHTML = (CONTENT.cv || []).map(e => `<li><span class="yrs">${esc(e.years)}</span><span>${esc(e.place)}${e.role ? `<span class="role">${esc(e.role)}</span>` : ''}</span></li>`).join('');

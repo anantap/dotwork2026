@@ -6,7 +6,6 @@
 Reads content.json and writes, next to the originals (which stay as they are):
   img/opt/<name>-<hash>-sq400.webp, -sq800.webp   square crops for the topic grid
   img/opt/<name>-<hash>-w800.webp,  -w1600.webp   the photo itself, for phones and for larger screens
-  img/opt/<name>-<hash>-a240.webp                 the About photo
   img/og/<project>-<hash>.jpg                     1200x630 link preview per project (first photo)
   img/opt/manifest.json                           {"img/name.jpg": "<hash>"}; the page uses a light version only when it is listed
 <hash> is taken from the original's bytes, so a replaced photo gets new names (the light versions can be cached for good).
@@ -59,8 +58,6 @@ def cover(im, w, h):
 content = json.load(open('content.json'))
 want, manifest, made = set(), {}, 0
 jobs = [(src, ('sq400', 'sq800', 'w800', 'w1600')) for p in content.get('projects', []) for src in p.get('images', [])]
-if content.get('photo'):
-    jobs.append((content['photo'], ('a240',)))
 for src, kinds in jobs:
     if not os.path.exists(src):
         print('missing', src, file=sys.stderr); continue
@@ -75,8 +72,6 @@ for src, kinds in jobs:
         os.makedirs(os.path.dirname(out), exist_ok=True)
         if kind.startswith('sq'):
             v = square(im, int(kind[2:]))
-        elif kind == 'a240':
-            v = square(im, 240)
         else:
             v = fit(im, int(kind[1:]))
         v.save(out, 'WEBP', quality=78, method=6)
