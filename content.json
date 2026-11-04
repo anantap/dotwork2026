@@ -182,6 +182,22 @@
       "linkLabel": "Read the article"
     },
     {
+      "title": "L&T",
+      "text": "L and T’s wedding day on medium-format film: chips outside the 24-hour snack bar, a can of cola between the fridges, and the dog in a fluffy jumper.",
+      "images": [
+        "img/lt-01.jpg",
+        "img/lt-02.jpg",
+        "img/lt-03.jpg",
+        "img/lt-04.jpg"
+      ],
+      "tags": [
+        "photography",
+        "film",
+        "portrait",
+        "wedding"
+      ]
+    },
+    {
       "title": "Texel",
       "text": "A few days on Texel in March, on medium-format film: lambing season, caravans in the dunes and low spring light.",
       "images": [
