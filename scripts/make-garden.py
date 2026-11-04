@@ -589,6 +589,14 @@ s = s[:_i] + s[_j:_k] + """    const pxU = innerHeight / vh, side = innerWidth >
 # the About button belongs to the home page: it fades away in a topic (kept in the layout, so things that line up with it still can)
 rep('body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }', 'body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }\n.menu { transition: opacity .3s, visibility .3s; }\nbody[data-view="focus"] .menu { opacity: 0; visibility: hidden; }')
 
+# a tile's size on screen follows its depth (along the view), not its straight-line distance: off-centre tiles had titles placed too high
+rep("""      const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+      frames.forEach(f => {""", """      const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))), viewDir = camera.getWorldDirection(new THREE.Vector3());
+      frames.forEach(f => {""")
+rep("""          tmp.copy(f.obj.position); const dist = tmp.distanceTo(camera.position); tmp.project(camera);
+          const half""", """          tmp.copy(f.obj.position); const dist = tmp.clone().sub(camera.position).dot(viewDir); tmp.project(camera);
+          const half""")
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)

@@ -911,11 +911,11 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; }
     });
 
     { // project titles under the tiles while a topic is open
-      const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)));
+      const pxPerUnit = innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))), viewDir = camera.getWorldDirection(new THREE.Vector3());
       frames.forEach(f => {
         const on = view === 'focus' && f.inF && f.showImg && !f.pending && titlesOn && detailEl.hidden; // hidden behind an open project
         if (on) {
-          tmp.copy(f.obj.position); const dist = tmp.distanceTo(camera.position); tmp.project(camera);
+          tmp.copy(f.obj.position); const dist = tmp.clone().sub(camera.position).dot(viewDir); tmp.project(camera);
           const half = 0.31 * f.obj.scale.x * pxPerUnit / dist * f.ah; // half the tile's height
           f.titleEl.style.transform = `translate(${(tmp.x + 1) / 2 * innerWidth}px, ${(1 - tmp.y) / 2 * innerHeight + half + 8}px) translate(-50%, 0)`;
           f.titleEl.style.maxWidth = `${Math.max(60, cellPx - 6)}px`; // no wider than its column
