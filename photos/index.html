@@ -667,7 +667,12 @@ body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
     el.style.opacity = '0';
     det.animate([{ backgroundColor: 'rgba(0,0,0,0)' }, { backgroundColor: 'rgba(0,0,0,0.95)' }], { duration: 420, easing: 'ease' });
     info.animate([{ opacity: 0, transform: 'translateX(28px)' }, { opacity: 1, transform: 'none' }], { duration: 480, delay: 160, easing: EASE, fill: 'backwards' });
-    const go = () => { if (detFrame === f) flip(el, from, false); };
+    const go = () => {
+      if (detFrame !== f) return;
+      if (f.obj.material.opacity > 0.3) return flip(el, from, false); // grow out of the tile you clicked
+      el.style.opacity = ''; // no visible tile to grow from (e.g. opened from a label): fade in
+      el.animate([{ opacity: 0, transform: 'scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: EASE });
+    };
     if (f.real) dImg.decode().then(go, go); else go();
   }
   let returnFocus = null;
