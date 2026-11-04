@@ -11,9 +11,24 @@ project opens as its images and text. **About** and **CV** open as panels from t
 
 ### Adding or changing content
 
-Everything on the page comes from `garden/content.json`; images live in `garden/img/`. On GitHub you can do both in
-the browser: open `garden/img`, choose *Add file → Upload files*, then edit `garden/content.json` (pencil icon) and
-commit. Vercel publishes the change a minute later.
+**The admin: `/garden/admin/`** (password-protected, works on a phone). Add, edit, reorder and delete projects; drop in
+images (they're resized in the browser to 1600px JPGs); edit the About text, photo, links and CV. *Save and publish*
+makes one commit to this repository and Vercel republishes about a minute later. If the content was changed somewhere
+else in the meantime (say on GitHub), the save is refused instead of overwriting it: reload and redo the change.
+
+One-time setup in Vercel → your project → *Settings → Environment Variables* (then redeploy):
+
+| Name | Value |
+|---|---|
+| `ADMIN_PASSWORD` | the password for the admin; pick a long one |
+| `GITHUB_TOKEN` | a fine-grained token: github.com → Settings → Developer settings → Fine-grained tokens → *Generate new token*; Repository access: only `anantap/rollamonth`; Permissions: *Contents → Read and write* |
+| `GITHUB_BRANCH` | optional: the branch Vercel deploys as production, if it isn't the one the deployment was built from |
+
+The token stays on the server (`api/`), never in the browser. Until both are set, the admin says so instead of
+showing a login.
+
+**By hand**: everything on the page comes from `garden/content.json`; images live in `garden/img/`. On GitHub you can
+upload images (*Add file → Upload files*) and edit `content.json` (pencil icon) in the browser.
 
 A project looks like this:
 
@@ -28,11 +43,9 @@ A project looks like this:
 }
 ```
 
-- `images`: the first one is the tile in a topic view; all of them show, stacked, when the project opens. Use JPGs of
-  about 1200–1600px wide.
-- `tags`: the topics. Every topic shows on the globe. One used by a single project is a smaller grey label that opens that
-  project directly; once two or more projects share a topic it opens a topic view and appears in Filter, so reuse the
-  same words across projects ("website", not "web site" in one and "website" in another).
+- `images`: the first one is the tile in a topic view; all of them show, stacked, when the project opens.
+- `tags`: the topics. Every topic shows on the globe; a topic shared by two or more projects opens a topic view and
+  appears in Filter, so reuse the same words across projects.
 - `years` and `link` are optional.
 - `name`, `role`, `intro`, `photo`, `links` and `cv` at the top fill the title, About and CV.
 
@@ -65,6 +78,8 @@ npm test             # in another
 - `tests/safe-area.mjs`: fakes iPhone notch/home-indicator insets and checks the UI stays inside them (Chromium).
 - `tests/drag.mjs`: the globe turns freely over the poles, drags starting anywhere (labels included) turn it, labels still hover and open.
 - `tests/garden.mjs`: the project map: content.json, blue squares, a topic view with images and titles, the project view, About and CV.
+- `tests/admin.mjs`: the admin end to end against a local stand-in for Vercel and GitHub (`tests/admin-server.mjs`):
+  login, adding a project with images, one commit per save, conflicts, validation, delete, logout.
 - `tests/labels.mjs`: globe tag labels never sit on the UI, off screen, or on each other (Chromium, 4 sizes).
 - `tests/fallback.mjs`: with WebGL off, or three.js unreachable, the page says so without script errors.
 
