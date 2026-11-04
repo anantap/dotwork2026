@@ -450,6 +450,56 @@ rep("  document.getElementById('dClose').addEventListener('click', closeDetail);
 rep(".status { margin-top: 10px; font: 400 16px var(--pixel);", ".status { margin-top: 4px; font: 400 16px var(--pixel);")
 rep("  .status { margin-top: 6px; font-size: 14px; }", "  .status { margin-top: 4px; font-size: 14px; }")
 
+# no zooming the globe: the wheel does nothing and two fingers don't pinch
+rep("    const zoomTo = d => camera.position.setLength(Math.max(c.minDistance, Math.min(c.maxDistance, d)));", "    const zoomTo = () => {}; // zoom is off: the globe stays at one size")
+rep("    el.addEventListener('wheel', e => { if (!c.enabled) return; e.preventDefault(); lastTouch = performance.now(); zoomTo(camera.position.length() * Math.pow(0.95, -Math.sign(e.deltaY))); }, { passive: false });\n", "")
+
+# 8-point grid: spacing in steps of 4 (mostly 8), type on one scale (12, 14, 16, 24, 32, 48), line heights on the 4px grid
+for a, b in [
+  ("padding-block: max(28px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-bottom, 0px)); }", "padding-block: max(24px, env(safe-area-inset-top, 0px)) max(24px, env(safe-area-inset-bottom, 0px)); }"),
+  ("h1 sup { color: var(--mark); font-size: 24px; margin-left: 2px; }", "h1 sup { color: var(--mark); font-size: 24px; margin-left: 4px; }"),
+  (".lede { margin: 0; font-size: 15px; line-height: 1.4;", ".lede { margin: 0; font-size: 16px; line-height: 24px;"),
+  (".foot { margin-top: 8px; font-size: 11.5px; color: var(--muted); line-height: 1.45; }", ".foot { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 16px; }"),
+  (".hint { margin-top: 8px; font-size: 11.5px; color: var(--muted); line-height: 1.45; }", ".hint { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 16px; }"),
+  (".back { font: 400 13px var(--sans);", ".back { font: 400 12px var(--sans);"),
+  ("border-radius: 999px; padding: 6px 12px; cursor: pointer; }\n.ftitle", "border-radius: 999px; padding: 8px 12px; cursor: pointer; }\n.ftitle"),
+  (".ftitle { margin-top: 14px; font: 400 56px/1 var(--pixel);", ".ftitle { margin-top: 16px; font: 400 48px/1 var(--pixel);"),
+  (".fsub { margin-top: 10px; font: 400 15px var(--pixel);", ".fsub { margin-top: 8px; font: 400 16px var(--pixel);"),
+  (".m-bar { pointer-events: auto; display: flex; gap: 2px; padding: 3px;", ".m-bar { pointer-events: auto; display: flex; gap: 4px; padding: 4px;"),
+  ("border-radius: 999px; padding: 6px 11px; cursor: pointer; white-space: nowrap;", "border-radius: 999px; padding: 8px 12px; cursor: pointer; white-space: nowrap;"),
+  ("box-sizing: border-box; padding: 14px; border: 1px solid var(--line); border-radius: 16px;", "box-sizing: border-box; padding: 16px; border: 1px solid var(--line); border-radius: 16px;"),
+  ("border-radius: 999px; padding: 3px 9px; cursor: pointer; font-variant-numeric: tabular-nums;", "border-radius: 999px; padding: 4px 8px; cursor: pointer; font-variant-numeric: tabular-nums;"),
+  (".chip span { color: var(--muted); margin-left: 3px; }", ".chip span { color: var(--muted); margin-left: 4px; }"),
+  (".d-text { margin: 0; font-size: 15px; line-height: 1.55;", ".d-text { margin: 0; font-size: 16px; line-height: 24px;"),
+  (".d-link, .contact a { display: inline-flex; align-items: center; gap: 6px; font: 400 13px var(--sans); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;",
+   ".d-link, .contact a { display: inline-flex; align-items: center; gap: 4px; font: 400 12px var(--sans); color: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px;"),
+  (".d-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }", ".d-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }"),
+  ("overflow: hidden; border-radius: 3px; cursor: pointer; opacity: .55;", "overflow: hidden; border-radius: 4px; cursor: pointer; opacity: .55;"),
+  ("max-height: min(78vh, 720px); padding: 22px;", "max-height: min(78vh, 720px); padding: 24px;"),
+  ('.m-panel section[data-sec="about"] { display: grid; gap: 22px; }', '.m-panel section[data-sec="about"] { display: grid; gap: 24px; }'),
+  (".about { display: grid; grid-template-columns: 120px 1fr; gap: 18px;", ".about { display: grid; grid-template-columns: 120px 1fr; gap: 16px;"),
+  (".about .lede { font-size: 15px; }", ".about .lede { font-size: 16px; }"),
+  (".a-block h3 { margin: 0 0 10px;", ".a-block h3 { margin: 0 0 8px;"),
+  (".about .lede { margin: 0; font-size: 14px; line-height: 1.5;", ".about .lede { margin: 0; font-size: 14px; line-height: 20px;"),
+  (".contact { display: flex; flex-wrap: wrap; gap: 6px;", ".contact { display: flex; flex-wrap: wrap; gap: 8px;"),
+  (".cv li { display: grid; grid-template-columns: 104px 1fr; gap: 10px;", ".cv li { display: grid; grid-template-columns: 104px 1fr; gap: 8px;"),
+  (".cv .yrs { font: 400 13px var(--pixel);", ".cv .yrs { font: 400 12px var(--pixel);"),
+  (".status.online { display: flex; align-items: center; gap: 9px; }", ".status.online { display: flex; align-items: center; gap: 8px; }"),
+  (".d-info { min-width: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 22px;", ".d-info { min-width: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 24px;"),
+  (".d-code { font: 400 24px/1.15 var(--pixel); }", ".d-code { font: 400 24px/28px var(--pixel); }"),
+  (".d-kind { margin-top: 6px; font: 400 13px var(--pixel);", ".d-kind { margin-top: 8px; font: 400 12px var(--pixel);"),
+  (".d-x { width: 36px; height: 36px;", ".d-x { width: 40px; height: 40px;"),
+  (".d-stack { display: grid; gap: 12px; }", ".d-stack { display: grid; gap: 16px; }"),
+  ("  h1 { font-size: 28px; }", "  h1 { font-size: 24px; }"),
+  ("padding-top: max(18px, env(safe-area-inset-top, 0px)); }", "padding-top: max(24px, env(safe-area-inset-top, 0px)); }"),
+  ("  h1 { font-size: 34px; }", "  h1 { font-size: 32px; }"),
+  ("  .ftitle { font-size: 40px; }", "  .ftitle { font-size: 32px; }"),
+  ("  .m-bar button { padding: 6px 9px; }\n", ""),
+  ("transition: opacity .25s, color .2s; display: flex; align-items: center; gap: 6px; }", "transition: opacity .25s, color .2s; display: flex; align-items: center; gap: 8px; }"),
+  ("grid-template-rows: auto auto; gap: 20px; overflow-y: auto;", "grid-template-rows: auto auto; gap: 24px; overflow-y: auto;"),
+]:
+    rep(a, b)
+
 leftovers = [w for w in ['month', 'priv', 'thumbs/', 'full/', 'dPh', 'dVis', 'dPrev', 'dRel', 'dTags', 'showPriv', 'scrub', "MONTHS", 'pad('] if w in s.split('<script>')[-1]]
 print('leftover mentions in script:', leftovers)
 open(OUT, 'w').write(s)
