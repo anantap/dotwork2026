@@ -108,7 +108,8 @@
       "title": "bami.blog",
       "text": "A logbook of instant noodles. Every pack gets a photo, a number, a flag and a rating out of five.",
       "images": [
-        "img/bami.jpg"
+        "img/bami.jpg",
+        "img/bami-2.jpg"
       ],
       "tags": [
         "website",
@@ -129,9 +130,7 @@
       ],
       "images": [
         "img/cpc-01.jpg",
-        "img/cpc-02.jpg",
-        "img/cpc-03.jpg",
-        "img/cpc-04.jpg"
+        "img/cpc-02.jpg"
       ]
     }
   ]
