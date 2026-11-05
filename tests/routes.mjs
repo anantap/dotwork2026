@@ -1,4 +1,4 @@
-// Addresses: every project and shared topic has its own page (/kinfill/, /photography/); a shared link opens it,
+// Addresses: every project and shared topic has its own page (/kinfill/, /website/); a shared link opens it,
 // the address follows what is on screen, Back and Forward step through the layers, and each page has its own link preview.
 //   node tests/routes.mjs [--base http://localhost:3000/]     (after `npm run build`)
 import { chromium, devices } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
@@ -9,7 +9,7 @@ const content = JSON.parse(fs.readFileSync(path.join(root, 'content.json'), 'utf
 const slugOf = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 let fail = 0; const check = (ok, name, d) => { console.log(ok ? 'PASS' : 'FAIL', name, d !== undefined ? JSON.stringify(d) : ''); if (!ok) fail++; };
 const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const proj = content.projects.find(p => p.images.length > 1), topic = 'photography';
+const proj = content.projects.find(p => p.images.length > 1), topic = Object.entries(content.projects.flatMap(p => p.tags).reduce((a, t) => (a[t] = (a[t] || 0) + 1, a), {})).sort((a, b) => b[1] - a[1])[0][0]; // the biggest shared topic
 // every project has a page with its own preview
 for (const p of content.projects) {
   const html = await (await fetch(`${BASE}${slugOf(p.title)}/`)).text();

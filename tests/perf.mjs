@@ -2,12 +2,14 @@
 //   node tests/perf.mjs --base http://localhost:3000/ [--runs 3]
 // Reports, per network profile: bytes over the wire and requests for the home page, the time until the globe is drawn,
 // DOMContentLoaded and load, then what opening a topic and a project adds.
-import { HOOK } from './hook.mjs'; import { chromium } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
+import { HOOK } from './hook.mjs'; import content from '../content.json' with { type: 'json' }; import { chromium } from 'playwright'; import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1] ?? true]] : acc), []));
 const BASE = args.base || 'http://localhost:3000/', RUNS = +(args.runs || 3);
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PROFILES = { 'slow 4G': { down: 1.6e6 / 8, up: 750e3 / 8, rtt: 150 }, 'fast': { down: 20e6 / 8, up: 5e6 / 8, rtt: 20 } };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const TOPIC = Object.entries(content.projects.flatMap(p => p.tags).reduce((a, t) => (a[t] = (a[t] || 0) + 1, a), {})).sort((a, b) => b[1] - a[1])[0][0];
+const MANY = content.projects.filter(p => p.tags.includes(TOPIC)).sort((a, b) => b.images.length - a.images.length)[0].title;
 const median = a => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
 const b = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 
@@ -30,11 +32,11 @@ async function once(prof) {
   const home = { bytes, reqs, globe, full, ...nav, byType: { ...byType } };
   // open the biggest topic, then the project with the most photos (scrolled to the end, so every photo loads)
   bytes = 0; reqs = 0;
-  await p.evaluate(() => [...document.querySelectorAll('.tag-label')].find(e => e.firstChild.textContent === 'photography').click());
+  await p.evaluate(t => [...document.querySelectorAll('.tag-label')].find(e => e.firstChild.textContent === t).click(), TOPIC);
   await sleep(500); await p.evaluate(() => { const s = document.getElementById('sheet'); if (s) s.scrollTo(0, 99999); }); await idle();
   const topic = { bytes, reqs };
   bytes = 0; reqs = 0;
-  await p.evaluate(() => { const t = [...document.querySelectorAll('#sGrid .s-tile')].find(e => /Concrete/.test(e.textContent)); t.click(); });
+  await p.evaluate(m => { const t = [...document.querySelectorAll('#sGrid .s-tile')].find(e => e.textContent.includes(m)); t.click(); }, MANY);
   await sleep(800); await p.evaluate(async () => { const d = document.getElementById('detail'); for (let y = 0; y < 40000; y += 600) { d.scrollTo(0, y); document.getElementById('dMedia').scrollTo?.(0, y); await new Promise(r => setTimeout(r, 60)); } });
   await idle(120000);
   const project = { bytes, reqs };
