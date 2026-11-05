@@ -117,6 +117,22 @@
       "link": "https://bami.blog"
     },
     {
+      "title": "CPC 10K",
+      "text": "A training app I built for myself on the way to the CPC Loop 10K in Den Haag: my plan week by week, runs pulled in from intervals.icu, and an AI coach that sums up every run and adjusts the tips for the next one.",
+      "tags": [
+        "app",
+        "code",
+        "AI",
+        "sport"
+      ],
+      "images": [
+        "img/cpc-01.jpg",
+        "img/cpc-02.jpg",
+        "img/cpc-03.jpg",
+        "img/cpc-04.jpg"
+      ]
+    },
+    {
       "title": "Fundament",
       "text": "Photography for Fundament, a specialty coffee roaster in Rotterdam’s Van Nellefabriek: images for the website and the packaging.",
       "images": [
@@ -193,7 +209,8 @@
         "photography",
         "film",
         "portrait",
-        "wedding"
+        "wedding",
+        "couples"
       ]
     },
     {
@@ -211,7 +228,8 @@
       ],
       "tags": [
         "photography",
-        "wedding"
+        "wedding",
+        "couples"
       ]
     },
     {
@@ -229,7 +247,8 @@
       ],
       "tags": [
         "photography",
-        "wedding"
+        "wedding",
+        "couples"
       ]
     },
     {
@@ -253,18 +272,86 @@
       ]
     },
     {
-      "title": "Milos",
-      "text": "Film photographs from Milos: white rock, blue railings and the ferry out.",
-      "images": [
-        "img/milos-01.jpg",
-        "img/milos-02.jpg",
-        "img/milos-03.jpg",
-        "img/milos-04.jpg"
-      ],
+      "title": "Greece",
+      "text": "Film photographs from Greece: the white rocks of Milos, chapels and cats, and the ferry out.",
       "tags": [
         "photography",
         "film",
         "travel"
+      ],
+      "images": [
+        "img/greece-01.jpg",
+        "img/greece-02.jpg",
+        "img/greece-03.jpg",
+        "img/greece-04.jpg",
+        "img/greece-05.jpg",
+        "img/greece-06.jpg",
+        "img/greece-07.jpg",
+        "img/greece-08.jpg"
+      ]
+    },
+    {
+      "title": "Corfu",
+      "text": "Corfu in late summer: boat trips along the cliffs, empty terraces over the sea, beach umbrellas and parking lots at dusk.",
+      "tags": [
+        "photography",
+        "travel"
+      ],
+      "images": [
+        "img/corfu-01.jpg",
+        "img/corfu-02.jpg",
+        "img/corfu-03.jpg",
+        "img/corfu-04.jpg",
+        "img/corfu-05.jpg",
+        "img/corfu-06.jpg",
+        "img/corfu-07.jpg",
+        "img/corfu-08.jpg",
+        "img/corfu-09.jpg",
+        "img/corfu-10.jpg",
+        "img/corfu-11.jpg",
+        "img/corfu-12.jpg",
+        "img/corfu-13.jpg",
+        "img/corfu-14.jpg",
+        "img/corfu-15.jpg",
+        "img/corfu-16.jpg",
+        "img/corfu-17.jpg",
+        "img/corfu-18.jpg",
+        "img/corfu-19.jpg",
+        "img/corfu-20.jpg",
+        "img/corfu-21.jpg"
+      ]
+    },
+    {
+      "title": "Faro to Porto",
+      "text": "A road trip up the Portuguese coast from Faro to Porto: fishing boats on the beach, shrines and pink doors, Lisbon from above and the Douro valley at the end.",
+      "tags": [
+        "photography",
+        "travel"
+      ],
+      "images": [
+        "img/portugal-01.jpg",
+        "img/portugal-02.jpg",
+        "img/portugal-03.jpg",
+        "img/portugal-04.jpg",
+        "img/portugal-05.jpg",
+        "img/portugal-06.jpg",
+        "img/portugal-07.jpg",
+        "img/portugal-08.jpg",
+        "img/portugal-09.jpg",
+        "img/portugal-10.jpg",
+        "img/portugal-11.jpg",
+        "img/portugal-12.jpg",
+        "img/portugal-13.jpg",
+        "img/portugal-14.jpg",
+        "img/portugal-15.jpg",
+        "img/portugal-16.jpg",
+        "img/portugal-17.jpg",
+        "img/portugal-18.jpg",
+        "img/portugal-19.jpg",
+        "img/portugal-20.jpg",
+        "img/portugal-21.jpg",
+        "img/portugal-22.jpg",
+        "img/portugal-23.jpg"
       ]
     },
     {
@@ -284,16 +371,46 @@
       ]
     },
     {
-      "title": "Lovers",
-      "text": "Couples on the street, on black-and-white film.",
-      "images": [
-        "img/lovers-01.jpg",
-        "img/lovers-02.jpg"
-      ],
+      "title": "Snapshots",
+      "text": "Photographs that don’t belong to a project: couples, chairs, clouds and whatever else crossed the street, in colour and on black-and-white film.",
       "tags": [
         "photography",
         "film",
-        "street"
+        "street",
+        "couples"
+      ],
+      "images": [
+        "img/snapshots-01.jpg",
+        "img/snapshots-02.jpg",
+        "img/snapshots-03.jpg",
+        "img/snapshots-04.jpg",
+        "img/snapshots-05.jpg",
+        "img/snapshots-06.jpg",
+        "img/snapshots-07.jpg",
+        "img/snapshots-08.jpg",
+        "img/snapshots-09.jpg",
+        "img/snapshots-10.jpg",
+        "img/snapshots-11.jpg",
+        "img/snapshots-12.jpg",
+        "img/snapshots-13.jpg",
+        "img/snapshots-14.jpg",
+        "img/snapshots-15.jpg",
+        "img/snapshots-16.jpg",
+        "img/snapshots-17.jpg",
+        "img/snapshots-18.jpg",
+        "img/snapshots-19.jpg",
+        "img/snapshots-20.jpg",
+        "img/snapshots-21.jpg",
+        "img/snapshots-22.jpg",
+        "img/snapshots-23.jpg",
+        "img/snapshots-24.jpg",
+        "img/snapshots-25.jpg",
+        "img/snapshots-26.jpg",
+        "img/snapshots-27.jpg",
+        "img/snapshots-28.jpg",
+        "img/snapshots-29.jpg",
+        "img/snapshots-30.jpg",
+        "img/snapshots-31.jpg"
       ]
     }
   ]

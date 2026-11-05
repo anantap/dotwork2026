@@ -112,9 +112,10 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
         await p.mouse.move(1300, 600); await p.mouse.wheel(0, 1500); await sleep(500); // the pointer over the text, not the photos
         const after = await p.evaluate(() => ({ text: Math.round(document.getElementById('dText').getBoundingClientRect().top), scrolled: document.getElementById('detail').scrollTop }));
         check(after.scrolled > 0 && after.text === before, `${name}: scrolling anywhere moves the photos, the text stays put`, { before, ...after });
-        await p.keyboard.press('ArrowRight'); await sleep(500);
+        const inTopic = content.projects.filter(x => x.tags.includes(shared)), last = inTopic[inTopic.length - 1] === many; // the last one has no next: go back instead
+        await p.keyboard.press(last ? 'ArrowLeft' : 'ArrowRight'); await sleep(500);
         const nx = await p.evaluate(() => ({ title: document.getElementById('dCode').textContent, top: document.getElementById('detail').scrollTop }));
-        check(nx.title !== many.title && nx.top === 0, `${name}: → goes to the next project, back at its first photo`, nx);
+        check(nx.title !== many.title && nx.top === 0, `${name}: ${last ? '←' : '→'} goes to the ${last ? 'previous' : 'next'} project, back at its first photo`, nx);
       }
       await p.keyboard.press('Escape'); await sleep(900); await p.keyboard.press('Escape'); await sleep(1600);
     }
