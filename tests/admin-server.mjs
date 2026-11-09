@@ -86,7 +86,7 @@ function site() {
 
 export async function start({ sitePort = 3300, githubPort = 3301, password = 'test' } = {}) {
   const gh = fakeGitHub();
-  Object.assign(process.env, { ADMIN_PASSWORD: password, GITHUB_TOKEN: 'test-token', GITHUB_REPO: 'anantap/rollamonth', GITHUB_BRANCH: 'main', GITHUB_API: `http://127.0.0.1:${githubPort}` });
+  Object.assign(process.env, { ADMIN_PASSWORD: password, GITHUB_TOKEN: 'test-token', GITHUB_REPO: 'anantap/dotwork2026', GITHUB_BRANCH: 'main', GITHUB_API: `http://127.0.0.1:${githubPort}` });
   const s = site();
   await new Promise(ok => gh.server.listen(githubPort, '127.0.0.1', ok));
   await new Promise(ok => s.listen(sitePort, '127.0.0.1', ok));

@@ -2,7 +2,7 @@
 // Settings come from environment variables set in Vercel → Settings → Environment Variables:
 //   ADMIN_PASSWORD   the password for /admin/
 //   GITHUB_TOKEN     a fine-grained GitHub token with "Contents: read and write" on this repository
-//   GITHUB_REPO      optional, default anantap/rollamonth
+//   GITHUB_REPO      optional, default anantap/dotwork2026
 //   GITHUB_BRANCH    optional, default: the branch this deployment was built from
 import crypto from 'node:crypto';
 
@@ -14,7 +14,7 @@ export function config() {
   return {
     password: e.ADMIN_PASSWORD || '',
     token: e.GITHUB_TOKEN || '',
-    repo: e.GITHUB_REPO || 'anantap/rollamonth',
+    repo: e.GITHUB_REPO || 'anantap/dotwork2026',
     branch: e.GITHUB_BRANCH || e.VERCEL_GIT_COMMIT_REF || 'main',
     api: e.GITHUB_API || 'https://api.github.com',
     secret: e.SESSION_SECRET || crypto.createHash('sha256').update(`${e.ADMIN_PASSWORD}|${e.GITHUB_TOKEN}`).digest('hex'),

@@ -22,7 +22,7 @@ One-time setup in Vercel → your project → *Settings → Environment Variable
 | Name | Value |
 |---|---|
 | `ADMIN_PASSWORD` | the password for the admin; pick a long one |
-| `GITHUB_TOKEN` | a fine-grained token: github.com → Settings → Developer settings → Fine-grained tokens → *Generate new token*; Repository access: only `anantap/rollamonth`; Permissions: *Contents → Read and write* |
+| `GITHUB_TOKEN` | a fine-grained token: github.com → Settings → Developer settings → Fine-grained tokens → *Generate new token*; Repository access: only `anantap/dotwork2026`; Permissions: *Contents → Read and write* |
 | `GITHUB_BRANCH` | optional: the branch Vercel deploys as production, if it isn't the one the deployment was built from |
 
 The token stays on the server (`api/`), never in the browser. Until both are set, the admin says so instead of
