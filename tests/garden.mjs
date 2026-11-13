@@ -18,7 +18,9 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   await p.goto(BASE); await p.waitForFunction(() => window.__frames > 30); await sleep(3000);
   await p.screenshot({ path: `${OUT}/${name}-1-globe.png` });
 
-  check((await p.textContent('#status')) === content.status && await p.evaluate(() => getComputedStyle(document.getElementById('status'), '::before').backgroundColor !== 'rgba(0, 0, 0, 0)'), `${name}: status line from content.json, with its green dot`, await p.textContent('#status'));
+  await p.waitForFunction(() => document.getElementById('status').textContent.length > 0, null, { timeout: 5000 }).catch(() => {}); // (empty for a moment between two lines)
+  const stText = await p.textContent('#status'); // the lines type themselves out, so any start of one counts
+  check(!!stText && [].concat(content.status).some(l => l.startsWith(stText)) && await p.evaluate(() => getComputedStyle(document.getElementById('status'), '::before').backgroundColor !== 'rgba(0, 0, 0, 0)'), `${name}: status line from content.json, with its green dot`, stText);
   const meshes = await p.evaluate(() => window.__scene.children.map(o => o.type));
   check(meshes.join() === 'LineSegments', `${name}: the globe is its topic lines only`, meshes);
   const buttons = await p.evaluate(() => [...document.querySelectorAll('.m-bar button')].filter(b => !b.hidden).map(b => b.textContent));

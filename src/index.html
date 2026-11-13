@@ -60,7 +60,7 @@ button:focus-visible { outline: 1px solid var(--link); outline-offset: 2px; }
 .head { max-width: 440px; transition: opacity .35s ease, transform .5s var(--ease); }
 h1 { margin: 0; font: 400 48px/1 var(--pixel); letter-spacing: -0.01em; }
 .status { margin-top: 4px; font: 400 16px var(--pixel); letter-spacing: .02em; color: var(--live); }
-.status.online { display: flex; align-items: center; gap: 8px; }
+.status.online { display: flex; align-items: center; gap: 8px; min-height: 1.25em; }
 .status.online::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--live); } /* the "online" dot */
 .menu { display: flex; justify-content: center; transition: opacity .3s, visibility .3s; }
 .m-bar { pointer-events: auto; display: flex; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
@@ -243,7 +243,23 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
   const T = tagList.length, counts = tagList.map((_, i) => frames.filter(f => f.ti.includes(i)).length);
   document.getElementById('name').textContent = CONTENT.name || '';
   document.title = CONTENT.name || document.title;
-  { const st = document.getElementById('status'); st.textContent = CONTENT.status || ''; st.classList.toggle('online', !!CONTENT.status); st.hidden = !CONTENT.status; }
+  { // the line under the name: one text, or a list that types itself out in random order (the first one first)
+    const st = document.getElementById('status'), lines = [].concat(CONTENT.status || []).filter(Boolean);
+    st.textContent = lines[0] || ''; st.classList.toggle('online', !!lines.length); st.hidden = !lines.length;
+    if (lines.length > 1 && !reduced) {
+      const wait = ms => new Promise(r => setTimeout(r, ms));
+      (async () => {
+        let cur = lines[0];
+        for (;;) {
+          await wait(3500);
+          for (let n = cur.length; n > 0; n--) { st.textContent = cur.slice(0, n - 1); await wait(28); }
+          const rest = lines.filter(l => l !== cur); cur = rest[Math.floor(Math.random() * rest.length)];
+          await wait(250);
+          for (let n = 1; n <= cur.length; n++) { st.textContent = cur.slice(0, n); await wait(55 + Math.random() * 45); }
+        }
+      })();
+    }
+  }
 
   // Photos: the light versions from scripts/optimize-images.py when there are any, so each screen loads the size it needs
   const IMG = {}; // filled in by scripts/build-pages.mjs: {"img/name.jpg": "<hash>"}
