@@ -131,6 +131,21 @@
         "img/cpc-01.jpg",
         "img/cpc-02.jpg"
       ]
+    },
+    {
+      "title": "Roll Converter",
+      "text": "A Mac app I’m building for my own film scans, still a work in progress: drop in a folder with a roll and it turns the negatives into positives with one colour balance for the whole roll, saved as a 16-bit TIFF and a JPEG.",
+      "tags": [
+        "app",
+        "code",
+        "film"
+      ],
+      "images": [
+        "img/roll-converter-1.jpg",
+        "img/roll-converter-2.jpg",
+        "img/roll-converter-3.jpg",
+        "img/roll-converter-4.jpg"
+      ]
     }
   ]
 }
