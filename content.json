@@ -146,6 +146,25 @@
         "img/roll-converter-3.jpg",
         "img/roll-converter-4.jpg"
       ]
+    },
+    {
+      "title": "Ukur",
+      "text": "A light meter app for my film cameras, still a work in progress. Point the phone, pick average or spot metering, and read shutter speed and aperture off a slide rule, set up for the film you’ve loaded and the lenses you own. Ukur is Indonesian for “measure”.",
+      "tags": [
+        "app",
+        "code",
+        "film"
+      ],
+      "images": [
+        "img/ukur-1.jpg",
+        "img/ukur-2.jpg",
+        "img/ukur-3.jpg",
+        "img/ukur-4.jpg",
+        "img/ukur-5.jpg",
+        "img/ukur-6.jpg",
+        "img/ukur-7.jpg",
+        "img/ukur-8.jpg"
+      ]
     }
   ]
 }
