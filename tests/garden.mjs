@@ -124,7 +124,7 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   }
   await tap(p.locator('.m-bar [data-sec=about]')); await sleep(700);
   const ab = await p.evaluate(() => { const r = document.querySelector('.m-panel').getBoundingClientRect(), b = document.querySelector('.m-bar [data-sec=about]');
-    return { intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: !!document.getElementById('aPhoto'), heading: !!document.querySelector('.m-panel h3'),
+    return { intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: !!document.getElementById('aPhoto'), heading: !!document.querySelector('.m-panel section[data-sec="about"] h3'),
       cv: document.querySelectorAll('#cvList li').length, projectList: !!document.getElementById('aProjects'),
       offCentre: [Math.round(r.left + r.width / 2 - innerWidth / 2), Math.round(r.top + r.height / 2 - innerHeight / 2)], button: b.getAttribute('aria-label'), xShown: getComputedStyle(b.querySelector('.x')).display !== 'none' }; });
   check(await p.evaluate(() => !/@/.test(document.getElementById('aContact').textContent)), `${name}: About shows contact buttons, no bare email address`);

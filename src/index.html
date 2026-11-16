@@ -177,9 +177,11 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
   #dClose { display: none; }
   .d-xb { display: grid; place-items: center; position: fixed; z-index: 2; left: 50%; top: calc(100% - 64px); width: 40px; height: 40px; margin-left: -20px; padding: 0; border-radius: 50%;
     border: 1px solid var(--line); background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); color: var(--ink); cursor: pointer; }
-}
-@media (max-width: 560px) {
-  .m-panel { padding: 16px; }
+  /* About and Friends fill the screen like a project, the ✕ floating over them at the bottom */
+  .m-panel { left: 0; top: 0; width: 100%; height: 100%; max-height: none; border: 0; border-radius: 0; background: #000; box-shadow: none; transform: translateY(10px);
+    padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 120px max(16px, env(safe-area-inset-left, 0px)); }
+  .menu.open .m-panel { transform: none; }
+  .m-bar { position: relative; z-index: 9; }
 }
 </style>
 
