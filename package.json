@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "serve . -l 3000",
-    "test": "node tests/garden.mjs && node tests/routes.mjs && node tests/drag.mjs && node tests/labels.mjs && node tests/safe-area.mjs && node tests/fallback.mjs && node tests/admin.mjs",
-    "test:admin": "node tests/admin.mjs",
+    "test": "node tests/garden.mjs && node tests/routes.mjs && node tests/drag.mjs && node tests/labels.mjs && node tests/safe-area.mjs && node tests/fallback.mjs && node tests/friends.mjs && node tests/admin.mjs",
+    "test:admin": "node tests/friends.mjs && node tests/admin.mjs",
     "admin:local": "node tests/admin-server.mjs",
     "build": "node scripts/build-three.mjs && python3 scripts/optimize-images.py && node scripts/build-pages.mjs",
     "build:fonts": "python3 scripts/build-fonts.py",

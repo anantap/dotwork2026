@@ -45,6 +45,10 @@ for (const [t, ps] of tags) if (ps.length >= 2) {
   const s = slugOf(t); must(!pages.has(s), `topic "${t}" has the same address as a project: /${s}/`);
   pages.set(s, { title: t, desc: `${ps.length} projects: ${ps.map(p => p.title).join(', ')}`, image: ogOf(ps[0]) });
 }
+if ((content.friends || []).length) { // the Friends card has its own address
+  must(!pages.has('friends'), 'a project or topic has the address /friends/, which Friends uses');
+  pages.set('friends', { title: 'Friends', desc: `Friends: ${content.friends.map(f => f.name).join(', ')}`, image: `${SITE}/og.jpg` });
+}
 for (const s of pages.keys()) must(s && !reserved.has(s), `"/${s}/" can't be used as an address`);
 const name = (html.match(/<title>([^<]*)<\/title>/) || [])[1] || 'Ananta Mulyono';
 const listFile = 'js/pages.json', old = fs.existsSync(listFile) ? JSON.parse(fs.readFileSync(listFile, 'utf8')) : [];

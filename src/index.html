@@ -87,6 +87,14 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
 .cv li { display: grid; grid-template-columns: 104px 1fr; gap: 8px; align-items: baseline; font-size: 14px; }
 .cv .yrs { font: 400 12px var(--pixel); color: var(--muted); font-variant-numeric: tabular-nums; }
 .cv .role { display: block; font-size: 12px; color: var(--muted); }
+/* Friends: the same card, a list of names that link to their sites (address /friends/) */
+.f-head { margin: 0; font: 400 24px/1 var(--pixel); letter-spacing: .01em; }
+.f-head span { color: var(--live); }
+.friends { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
+.friends a, .friends span { font-size: 14px; line-height: 20px; color: var(--ink); text-decoration: none; }
+.friends a:hover { color: var(--muted); }
+.friends a::after { content: " ↗"; color: var(--muted); font-size: 12px; }
+@media (max-width: 480px) { .friends { grid-template-columns: 1fr; } }
 
 /* Buttons shared by the layers */
 .back { font: 400 12px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
@@ -185,6 +193,10 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
       <section data-sec="about" aria-label="About" hidden>
         <div><p class="lede" id="aIntro"></p><div class="contact" id="aContact"></div></div>
         <ul class="cv" id="cvList" aria-label="Experience"></ul>
+      </section>
+      <section data-sec="friends" aria-label="Friends" hidden>
+        <h2 class="f-head">Friends <span aria-hidden="true">♥</span></h2>
+        <ul class="friends" id="fList"></ul>
       </section>
     </div>
     <div class="m-bar" id="mBar">
@@ -390,19 +402,28 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
     document.getElementById('aIntro').textContent = CONTENT.intro || '';
     document.getElementById('aContact').innerHTML = (CONTENT.links || []).map(l => `<a href="${esc(l.href)}"${/^mailto:/.test(l.href) ? '' : ' target="_blank" rel="noopener"'}>${esc(l.label)}</a>`).join('');
     document.getElementById('cvList').innerHTML = (CONTENT.cv || []).map(e => `<li><span class="yrs">${esc(e.years)}</span><span>${esc(e.place)}${e.role ? `<span class="role">${esc(e.role)}</span>` : ''}</span></li>`).join('');
+    // Friends: alphabetical, each name links to their site; About links to the list
+    const friends = [...(CONTENT.friends || [])].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+    document.getElementById('fList').innerHTML = friends.map(f => `<li>${f.href ? `<a href="${esc(f.href)}" target="_blank" rel="noopener">${esc(f.name)}</a>` : `<span>${esc(f.name)}</span>`}</li>`).join('');
+    if (friends.length) {
+      const a = document.createElement('a'); a.href = 'friends/'; a.innerHTML = 'Friends <span aria-hidden="true">♥</span>';
+      a.addEventListener('click', e => { e.preventDefault(); setMenu('friends'); });
+      document.getElementById('aContact').appendChild(a);
+    }
   }
   // The About button opens the card; the same button (now a ✕), Esc or a tap on the globe closes it
   let menuSec = null;
   function setMenu(sec) {
-    menuSec = sec;
+    const was = menuSec; menuSec = sec;
     menu.classList.toggle('open', !!sec);
-    menu.querySelectorAll('.m-bar button').forEach(b => { b.setAttribute('aria-expanded', String(b.dataset.sec === sec)); b.setAttribute('aria-label', b.dataset.sec === sec ? 'Close' : 'About'); });
-    if (sec) mPanel.querySelectorAll('section').forEach(el => { el.hidden = el.dataset.sec !== sec; });
+    menu.querySelectorAll('.m-bar button').forEach(b => { b.setAttribute('aria-expanded', String(!!sec)); b.setAttribute('aria-label', sec ? 'Close' : 'About'); }); // About or Friends open: the button closes
+    if (sec) { mPanel.querySelectorAll('section').forEach(el => { el.hidden = el.dataset.sec !== sec; }); mPanel.scrollTop = 0; }
     else setHl(null);
+    if (sec === 'friends') goTo('friends'); else if (was === 'friends') goTo(''); // Friends has its own address
     measureUI();
   }
   const closeMenu = () => { if (menuSec) setMenu(null); };
-  menu.querySelector('.m-bar').addEventListener('click', e => { const b = e.target.closest('button[data-sec]'); if (b) setMenu(menuSec === b.dataset.sec ? null : b.dataset.sec); });
+  menu.querySelector('.m-bar').addEventListener('click', e => { const b = e.target.closest('button[data-sec]'); if (b) setMenu(menuSec ? null : b.dataset.sec); });
 
   // State: view is 'globe' or 'focus' (a topic page is open); hl is the topic the pointer or focus is on
   let view = 'globe', focus = null, hl = null, focusGoal = null, focusList = [];
@@ -426,7 +447,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
   const ROOT = new URL('./', document.baseURI).pathname, SITE_TITLE = document.title;
   let routing = false;
   const here = () => (location.pathname.startsWith(ROOT) ? decodeURIComponent(location.pathname.slice(ROOT.length)) : '').replace(/\/+$/, '');
-  const pageTitle = slug => { const f = slug && frames.find(f => slugOf(f.title) === slug), t = slug && tagList.find(t => slugOf(t.name) === slug); return f ? `${f.title} · ${SITE_TITLE}` : t ? `${t.name} · ${SITE_TITLE}` : SITE_TITLE; };
+  const pageTitle = slug => { const f = slug && frames.find(f => slugOf(f.title) === slug), t = slug && tagList.find(t => slugOf(t.name) === slug); return f ? `${f.title} · ${SITE_TITLE}` : t ? `${t.name} · ${SITE_TITLE}` : slug === 'friends' ? `Friends · ${SITE_TITLE}` : SITE_TITLE; };
   function goTo(slug, replace) { // the address follows what is on screen
     if (routing || here() === slug) return;
     history[replace ? 'replaceState' : 'pushState']({}, '', ROOT + (slug ? slug + '/' : '')); document.title = pageTitle(slug);
@@ -560,7 +581,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
       return;
     }
     if (e.key !== 'Escape') return;
-    if (menuSec) { const b = menu.querySelector(`.m-bar [data-sec="${menuSec}"]`); closeMenu(); if (menu.contains(document.activeElement)) b.focus(); }
+    if (menuSec) { const b = menu.querySelector('.m-bar button'); closeMenu(); if (menu.contains(document.activeElement)) b.focus(); }
     else exitFocus();
   });
 
@@ -671,6 +692,13 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
     try {
       const f = slug && frames.find(f => slugOf(f.title) === slug);
       const ti = f || !slug ? -1 : tagList.findIndex((t, i) => slugOf(t.name) === slug && counts[i] >= MIN_SHARED);
+      if (slug === 'friends' && CONTENT.friends && CONTENT.friends.length) { // Friends: the card on the globe
+        if (!det.hidden && !closing) closeDetail();
+        if (view === 'focus') exitFocus();
+        if (menuSec !== 'friends') setMenu('friends');
+        document.title = pageTitle(slug); return;
+      }
+      if (menuSec === 'friends') setMenu(null);
       if (f) { if (det.hidden || closing) openDetail(f); else if (detFrame !== f) { detFrame = f; renderDetail(); } }
       else {
         if (!det.hidden && !closing) closeDetail();
