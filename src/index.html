@@ -89,7 +89,6 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
 .cv .role { display: block; font-size: 12px; color: var(--muted); }
 /* Friends: the same card, a list of names that link to their sites (address /friends/) */
 .f-head { margin: 0; font: 400 24px/1 var(--pixel); letter-spacing: .01em; }
-.f-head span { color: var(--live); }
 .friends { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
 .friends a, .friends span { font-size: 14px; line-height: 20px; color: var(--ink); text-decoration: none; }
 .friends a:hover { color: var(--muted); }
@@ -195,7 +194,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
         <ul class="cv" id="cvList" aria-label="Experience"></ul>
       </section>
       <section data-sec="friends" aria-label="Friends" hidden>
-        <h2 class="f-head">Friends <span aria-hidden="true">♥</span></h2>
+        <h2 class="f-head">Friends!</h2>
         <ul class="friends" id="fList"></ul>
       </section>
     </div>
@@ -406,7 +405,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
     const friends = [...(CONTENT.friends || [])].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
     document.getElementById('fList').innerHTML = friends.map(f => `<li>${f.href ? `<a href="${esc(f.href)}" target="_blank" rel="noopener">${esc(f.name)}</a>` : `<span>${esc(f.name)}</span>`}</li>`).join('');
     if (friends.length) {
-      const a = document.createElement('a'); a.href = 'friends/'; a.innerHTML = 'Friends <span aria-hidden="true">♥</span>';
+      const a = document.createElement('a'); a.href = 'friends/'; a.textContent = 'Friends';
       a.addEventListener('click', e => { e.preventDefault(); setMenu('friends'); });
       document.getElementById('aContact').appendChild(a);
     }
