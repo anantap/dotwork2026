@@ -424,12 +424,39 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
   let menuSec = null;
   function setMenu(sec) {
     const was = menuSec; menuSec = sec;
-    menu.classList.toggle('open', !!sec); if (sec) menu.dataset.sec = sec;
+    menu.classList.toggle('open', !!sec);
     menu.querySelectorAll('.m-bar button').forEach(b => { b.setAttribute('aria-expanded', String(!!sec)); b.setAttribute('aria-label', sec ? 'Close' : 'About'); }); // About or Friends open: the button closes
-    if (sec) { mPanel.querySelectorAll('section').forEach(el => { el.hidden = el.dataset.sec !== sec; }); mPanel.scrollTop = 0; }
+    if (sec && was && was !== sec && !reduced) switchSec(was, sec);
+    else if (sec) showSec(sec);
     else setHl(null);
     if (sec === 'friends') goTo('friends'); else if (was === 'friends') goTo(''); // Friends has its own address
     measureUI();
+  }
+  function showSec(sec) {
+    menu.dataset.sec = sec;
+    mPanel.querySelectorAll('section').forEach(el => { el.hidden = el.dataset.sec !== sec; }); mPanel.scrollTop = 0;
+  }
+  // About → Friends: on wide screens the card grows into the bigger one while the list fades in; on phones About fades out and Friends fades in
+  let secAnim = [];
+  function switchSec(was, sec) {
+    secAnim.forEach(a => a.cancel()); secAnim = [];
+    const from = mPanel.querySelector(`section[data-sec="${was}"]`), to = mPanel.querySelector(`section[data-sec="${sec}"]`), head = document.querySelector('.head');
+    if (matchMedia('(max-width: 760px)').matches) {
+      const out = [from, ...(sec === 'friends' ? [head] : [])].map(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease', fill: 'forwards' })); // Friends covers the name, so it goes too
+      secAnim = out;
+      out[0].onfinish = () => {
+        showSec(sec); measureUI(); out.forEach(a => a.cancel());
+        secAnim = [to.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease', fill: 'backwards' })];
+      };
+      return;
+    }
+    const h0 = mPanel.getBoundingClientRect().height;
+    showSec(sec);
+    const h1 = mPanel.getBoundingClientRect().height;
+    measureUI(); // labels make way for the card's final size straight away
+    secAnim = [mPanel.animate([{ height: `${h0}px` }, { height: `${h1}px` }], { duration: 450, easing: EASE }),
+      to.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 150, easing: 'ease', fill: 'backwards' })];
+    secAnim[0].onfinish = measureUI;
   }
   const closeMenu = () => { if (menuSec) setMenu(null); };
   menu.querySelector('.m-bar').addEventListener('click', e => { const b = e.target.closest('button[data-sec]'); if (b) setMenu(menuSec ? null : b.dataset.sec); });
@@ -637,6 +664,18 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
     const hb = `${Math.ceil(document.querySelector('.head').getBoundingClientRect().bottom)}px`; // phones: About opens below the name
     if (hb !== headB) document.documentElement.style.setProperty('--head-b', headB = hb);
     uiRects = ['.head', '.m-bar', ...(menuSec ? ['.m-panel'] : [])].map(sel => document.querySelector(sel).getBoundingClientRect()).filter(r => r.width).map(r => [r.left - 6, r.top - 4, r.right + 6, r.bottom + 4]);
+    if (menuSec) uiRects[uiRects.length - 1][1] -= 10; // the card slides 10px up as it opens: keep its whole path clear
+    hideCoveredLabels();
+  }
+  // Labels under the card (or the name, or the button) disappear at once rather than fading after the next frame
+  function hideCoveredLabels() {
+    const hidden = labelEls.filter(el => {
+      const r = el.getBoundingClientRect();
+      return r.width && +el.style.opacity > 0 && uiRects.some(q => r.left < q[2] && r.right > q[0] && r.top < q[3] && r.bottom > q[1]);
+    });
+    if (!hidden.length) return;
+    hidden.forEach(el => { el.style.transition = 'none'; el.style.opacity = 0; });
+    requestAnimationFrame(() => requestAnimationFrame(() => hidden.forEach(el => { el.style.transition = ''; })));
   }
   function resize() {
     renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight;
