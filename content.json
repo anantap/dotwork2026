@@ -12,26 +12,90 @@
     "Certified Pixel Pusher"
   ],
   "friends": [
-    { "name": "Jan-Roelof de Vries", "href": "https://richdust.com/" },
-    { "name": "Sjoerd Koopmans", "href": "https://richdust.com/" },
-    { "name": "Daniël van der Winden", "href": "https://www.daniel.pizza/" },
-    { "name": "Erik Gelderblom", "href": "https://erikgelderblom.com/" },
-    { "name": "Frederique Matti", "href": "https://frederiquematti.com/" },
-    { "name": "Jordi van der Oord", "href": "https://jordivanderoord.com/" },
-    { "name": "Kevin van der Wijst", "href": "https://kevinvanderwijst.nl/" },
-    { "name": "Larix Kortbeek", "href": "https://larixkortbeek.com/" },
-    { "name": "Len Koster", "href": "https://www.lenkoster.com/" },
-    { "name": "Marc Vermeeren", "href": "https://marcvermeeren.com/" },
-    { "name": "Niek Dekker", "href": "https://niekdekker.com/" },
-    { "name": "Samuel Beek", "href": "https://samuelbeek.com/" },
-    { "name": "Patrick Pietens", "href": "https://www.patrickpietens.com/" },
-    { "name": "Onno Blase", "href": "https://onnobla.se/" },
-    { "name": "Sjoerd van Rijen", "href": "https://pojoloco.nl/" },
-    { "name": "Thomas Offinga", "href": "https://offinga.xyz/" },
-    { "name": "Thomas Schrijer", "href": "https://thomasschrijer.com/" },
-    { "name": "Timo Kuilder", "href": "https://timokuilder.com/" },
-    { "name": "Joeri Woudstra", "href": "http://www.joeriwoudstra.nl/" },
-    { "name": "Sophie Mittelberg", "href": "https://www.kunst-club.nl/" }
+    {
+      "name": "Jan-Roelof de Vries",
+      "href": "https://richdust.com/"
+    },
+    {
+      "name": "Sjoerd Koopmans",
+      "href": "https://richdust.com/"
+    },
+    {
+      "name": "Daniël van der Winden",
+      "href": "https://www.daniel.pizza/"
+    },
+    {
+      "name": "Erik Gelderblom",
+      "href": "https://erikgelderblom.com/"
+    },
+    {
+      "name": "Frederique Matti",
+      "href": "https://frederiquematti.com/"
+    },
+    {
+      "name": "Jordi van der Oord",
+      "href": "https://jordivanderoord.com/"
+    },
+    {
+      "name": "Kevin van der Wijst",
+      "href": "https://kevinvanderwijst.nl/"
+    },
+    {
+      "name": "Larix Kortbeek",
+      "href": "https://larixkortbeek.com/"
+    },
+    {
+      "name": "Len Koster",
+      "href": "https://www.lenkoster.com/"
+    },
+    {
+      "name": "Marc Vermeeren",
+      "href": "https://marcvermeeren.com/"
+    },
+    {
+      "name": "Niek Dekker",
+      "href": "https://niekdekker.com/"
+    },
+    {
+      "name": "Samuel Beek",
+      "href": "https://samuelbeek.com/"
+    },
+    {
+      "name": "Patrick Pietens",
+      "href": "https://www.patrickpietens.com/"
+    },
+    {
+      "name": "Onno Blase",
+      "href": "https://onnobla.se/"
+    },
+    {
+      "name": "Sjoerd van Rijen",
+      "href": "https://pojoloco.nl/"
+    },
+    {
+      "name": "Thomas Offinga",
+      "href": "https://offinga.xyz/"
+    },
+    {
+      "name": "Thomas Schrijer",
+      "href": "https://thomasschrijer.com/"
+    },
+    {
+      "name": "Timo Kuilder",
+      "href": "https://timokuilder.com/"
+    },
+    {
+      "name": "Joeri Woudstra",
+      "href": "http://www.joeriwoudstra.nl/"
+    },
+    {
+      "name": "Sophie Mittelberg",
+      "href": "https://www.kunst-club.nl/"
+    },
+    {
+      "name": "Simon Scheiber",
+      "href": "https://simonscheiber.com/"
+    }
   ],
   "role": "UX designer",
   "intro": "My work is about making complexity legible. I observe, ask questions, challenge assumptions, and bring structure across stakeholders, processes, and the design itself. I’m drawn to problems where the answer isn’t just on the screen, but in the people and context around it.",
