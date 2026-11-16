@@ -126,10 +126,11 @@ for (const [name, opts] of [['desktop', { viewport: { width: 1440, height: 900 }
   const ab = await p.evaluate(() => { const r = document.querySelector('.m-panel').getBoundingClientRect(), b = document.querySelector('.m-bar [data-sec=about]');
     return { intro: document.getElementById('aIntro').textContent.length, links: [...document.querySelectorAll('#aContact a')].map(a => a.textContent), photo: !!document.getElementById('aPhoto'), heading: !!document.querySelector('.m-panel section[data-sec="about"] h3'),
       cv: document.querySelectorAll('#cvList li').length, projectList: !!document.getElementById('aProjects'),
-      offCentre: [Math.round(r.left + r.width / 2 - innerWidth / 2), Math.round(r.top + r.height / 2 - innerHeight / 2)], button: b.getAttribute('aria-label'), xShown: getComputedStyle(b.querySelector('.x')).display !== 'none' }; });
+      offCentre: [Math.round(r.left + r.width / 2 - innerWidth / 2), Math.round(r.top + r.height / 2 - innerHeight / 2)], belowHead: Math.round(r.top - document.querySelector('.head').getBoundingClientRect().bottom), button: b.getAttribute('aria-label'), xShown: getComputedStyle(b.querySelector('.x')).display !== 'none' }; });
   check(await p.evaluate(() => !/@/.test(document.getElementById('aContact').textContent)), `${name}: About shows contact buttons, no bare email address`);
   check(ab.intro > 50 && ab.links.length === content.links.length + ((content.friends || []).length ? 1 : 0) && !ab.photo && !ab.heading && ab.cv === content.cv.length && !ab.projectList, `${name}: About has intro, contact and experience (no photo, no heading)`, ab);
-  check(Math.abs(ab.offCentre[0]) <= 2 && Math.abs(ab.offCentre[1]) <= 2, `${name}: About panel is centred on the page`, ab.offCentre);
+  if (opts.viewport.width <= 760) check(Math.abs(ab.offCentre[0]) <= 2 && Math.abs(ab.belowHead) <= 2, `${name}: About fills the screen below the name and status`, [ab.offCentre[0], ab.belowHead]);
+  else check(Math.abs(ab.offCentre[0]) <= 2 && Math.abs(ab.offCentre[1]) <= 2, `${name}: About panel is centred on the page`, ab.offCentre);
   check(ab.button === 'Close' && ab.xShown, `${name}: the About button turns into a close ✕`, ab.button);
   await p.screenshot({ path: `${OUT}/${name}-5-about.png` });
   await tap(p.locator('.m-bar [data-sec=about]')); await sleep(700);

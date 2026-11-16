@@ -66,7 +66,8 @@ h1 { margin: 0; font: 400 48px/1 var(--pixel); letter-spacing: -0.01em; }
 .m-bar { pointer-events: auto; display: flex; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: rgba(0,0,0,.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .m-bar button { font: 400 12px var(--sans); color: var(--ink); background: transparent; border: 0; border-radius: 999px; padding: 8px 12px; cursor: pointer; white-space: nowrap; transition: background-color .2s, color .2s; }
 .m-bar button .x { display: none; }
-.m-bar button[aria-expanded="true"] { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; background: var(--ink); color: var(--bg); } /* About turns into a round ✕ */
+.m-bar button[aria-expanded="true"] { width: 32px; height: 32px; padding: 0; display: grid; place-items: center; } /* About turns into a round ✕, outlined like the project one */
+.menu.open .m-bar { padding: 3px; } /* 40px across, the same as the project ✕ */
 .m-bar button[aria-expanded="true"] .lbl { display: none; }
 .m-bar button[aria-expanded="true"] .x { display: block; }
 body[data-view="focus"] .head { opacity: 0; transform: translateY(-10px); }
@@ -88,7 +89,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
 .cv .yrs { font: 400 12px var(--pixel); color: var(--muted); font-variant-numeric: tabular-nums; }
 .cv .role { display: block; font-size: 12px; color: var(--muted); }
 /* Friends: the same card, a list of names that link to their sites (address /friends/) */
-.f-head { margin: 0; font: 400 24px/1 var(--pixel); letter-spacing: .01em; }
+.f-head { margin: 0; font: 400 48px/1 var(--pixel); letter-spacing: -0.01em; } /* as big as the name */
 .f-index { columns: 2; column-gap: 24px; }
 .f-group { break-inside: avoid; padding-bottom: 16px; }
 .f-letter { margin: 0 0 4px; font: 400 16px/20px var(--pixel); letter-spacing: .02em; color: var(--muted); }
@@ -96,7 +97,6 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
 .friends a, .friends span { font-size: 14px; line-height: 20px; color: var(--ink); text-decoration: none; }
 .friends a:hover { color: var(--muted); }
 .friends a::after { content: " \2197\FE0E"; color: var(--muted); font-size: 12px; }
-@media (max-width: 480px) { .f-index { columns: 1; } }
 
 /* Buttons shared by the layers */
 .back { font: 400 12px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
@@ -152,7 +152,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
 
 /* Phones on their side */
 @media (max-height: 500px) and (orientation: landscape) {
-  h1 { font-size: 24px; }
+  h1, .f-head { font-size: 24px; }
   .status { font-size: 14px; }
   .m-panel { max-height: calc(100vh - 110px); }
 }
@@ -166,7 +166,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
 /* Phones */
 @media (max-width: 760px) {
   .ui { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-  h1 { font-size: 32px; }
+  h1, .f-head { font-size: 32px; }
   .status { font-size: 14px; }
   .ftitle { font-size: 32px; }
   #sheet { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
@@ -181,6 +181,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
   .m-panel { left: 0; top: 0; width: 100%; height: 100%; max-height: none; border: 0; border-radius: 0; background: #000; box-shadow: none; transform: translateY(10px);
     padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 120px max(16px, env(safe-area-inset-left, 0px)); }
   .menu.open .m-panel { transform: none; }
+  .menu[data-sec="about"] .m-panel { top: var(--head-b, 0px); height: calc(100% - var(--head-b, 0px)); padding-top: 32px; } /* About keeps the name and status above it */
   .m-bar { position: relative; z-index: 9; }
 }
 </style>
@@ -423,7 +424,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
   let menuSec = null;
   function setMenu(sec) {
     const was = menuSec; menuSec = sec;
-    menu.classList.toggle('open', !!sec);
+    menu.classList.toggle('open', !!sec); if (sec) menu.dataset.sec = sec;
     menu.querySelectorAll('.m-bar button').forEach(b => { b.setAttribute('aria-expanded', String(!!sec)); b.setAttribute('aria-label', sec ? 'Close' : 'About'); }); // About or Friends open: the button closes
     if (sec) { mPanel.querySelectorAll('section').forEach(el => { el.hidden = el.dataset.sec !== sec; }); mPanel.scrollTop = 0; }
     else setHl(null);
@@ -631,7 +632,10 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
   let labelSize = labelEls.map(() => [0, 0]), uiRects = [];
   const labelOrder = labelEls.map((_, i) => i);
   const measureLabels = () => { labelSize = labelEls.map(el => [el.offsetWidth, el.offsetHeight]); };
+  let headB = '';
   function measureUI() {
+    const hb = `${Math.ceil(document.querySelector('.head').getBoundingClientRect().bottom)}px`; // phones: About opens below the name
+    if (hb !== headB) document.documentElement.style.setProperty('--head-b', headB = hb);
     uiRects = ['.head', '.m-bar', ...(menuSec ? ['.m-panel'] : [])].map(sel => document.querySelector(sel).getBoundingClientRect()).filter(r => r.width).map(r => [r.left - 6, r.top - 4, r.right + 6, r.bottom + 4]);
   }
   function resize() {
