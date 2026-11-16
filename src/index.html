@@ -89,11 +89,14 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
 .cv .role { display: block; font-size: 12px; color: var(--muted); }
 /* Friends: the same card, a list of names that link to their sites (address /friends/) */
 .f-head { margin: 0; font: 400 24px/1 var(--pixel); letter-spacing: .01em; }
-.friends { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; }
+.f-index { columns: 2; column-gap: 24px; }
+.f-group { break-inside: avoid; padding-bottom: 16px; }
+.f-letter { margin: 0 0 4px; font: 400 16px/20px var(--pixel); letter-spacing: .02em; color: var(--muted); }
+.friends { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .friends a, .friends span { font-size: 14px; line-height: 20px; color: var(--ink); text-decoration: none; }
 .friends a:hover { color: var(--muted); }
-.friends a::after { content: " ↗"; color: var(--muted); font-size: 12px; }
-@media (max-width: 480px) { .friends { grid-template-columns: 1fr; } }
+.friends a::after { content: " \2197\FE0E"; color: var(--muted); font-size: 12px; }
+@media (max-width: 480px) { .f-index { columns: 1; } }
 
 /* Buttons shared by the layers */
 .back { font: 400 12px var(--sans); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px; cursor: pointer; }
@@ -195,7 +198,7 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
       </section>
       <section data-sec="friends" aria-label="Friends" hidden>
         <h2 class="f-head">Friends!</h2>
-        <ul class="friends" id="fList"></ul>
+        <div class="f-index" id="fList"></div>
       </section>
     </div>
     <div class="m-bar" id="mBar">
@@ -403,7 +406,11 @@ body[data-view="focus"] .menu { opacity: 0; visibility: hidden; } /* About belon
     document.getElementById('cvList').innerHTML = (CONTENT.cv || []).map(e => `<li><span class="yrs">${esc(e.years)}</span><span>${esc(e.place)}${e.role ? `<span class="role">${esc(e.role)}</span>` : ''}</span></li>`).join('');
     // Friends: alphabetical, each name links to their site; About links to the list
     const friends = [...(CONTENT.friends || [])].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
-    document.getElementById('fList').innerHTML = friends.map(f => `<li>${f.href ? `<a href="${esc(f.href)}" target="_blank" rel="noopener">${esc(f.name)}</a>` : `<span>${esc(f.name)}</span>`}</li>`).join('');
+    // grouped under their first letter, like the index of a book (Ö goes under O)
+    const initial = f => f.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').charAt(0).toUpperCase();
+    const groups = [];
+    for (const f of friends) { const l = initial(f); if (!groups.length || groups[groups.length - 1].l !== l) groups.push({ l, list: [] }); groups[groups.length - 1].list.push(f); }
+    document.getElementById('fList').innerHTML = groups.map(g => `<div class="f-group" role="group" aria-label="${esc(g.l)}"><h3 class="f-letter" aria-hidden="true">${esc(g.l)}</h3><ul class="friends">${g.list.map(f => `<li>${f.href ? `<a href="${esc(f.href)}" target="_blank" rel="noopener">${esc(f.name)}</a>` : `<span>${esc(f.name)}</span>`}</li>`).join('')}</ul></div>`).join('');
     if (friends.length) {
       const a = document.createElement('a'); a.href = 'friends/'; a.textContent = 'Friends';
       a.addEventListener('click', e => { e.preventDefault(); setMenu('friends'); });
