@@ -25,11 +25,11 @@ html = html.replace('<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/bui
   .replace('<link rel="preload" href="content.json"', `<link rel="preload" href="${three}" as="script">\n<link rel="preload" href="content.json"`);
 // photos with light versions
 must(html.includes('  const IMG = {};'), 'IMG placeholder not found');
-html = html.replace('  const IMG = {};', `  const IMG = ${JSON.stringify(manifest)};`);
+html = html.replace('  const IMG = {};', () => `  const IMG = ${JSON.stringify(manifest)};`);
 // minify the inline CSS and scripts
 let before = html.length;
-for (const m of [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)]) html = html.replace(m[0], `<style>${(await transform(m[1], { loader: 'css', minify: true })).code.trim()}</style>`);
-for (const m of [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]) html = html.replace(m[0], `<script>${(await transform(m[1], { loader: 'js', minify: true, target: 'es2019' })).code.trim()}</script>`);
+for (const m of [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)]) { const code = (await transform(m[1], { loader: 'css', minify: true })).code.trim(); html = html.replace(m[0], () => `<style>${code}</style>`); }
+for (const m of [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]) { const code = (await transform(m[1], { loader: 'js', minify: true, target: 'es2019' })).code.trim(); html = html.replace(m[0], () => `<script>${code}</script>`); } // a function, so $' or $& in the code stays as it is
 html = html.replace('<meta charset="utf-8">', `<meta charset="utf-8">\n${MARK}`);
 fs.writeFileSync('index.html', html);
 console.log(`index.html ${(before / 1024).toFixed(0)} KB -> ${(html.length / 1024).toFixed(0)} KB`);
