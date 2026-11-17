@@ -229,11 +229,28 @@
         "app",
         "code",
         "AI",
-        "sport"
+        "sport",
+        "personal software"
       ],
       "images": [
         "img/cpc-01.jpg",
         "img/cpc-02.jpg"
+      ]
+    },
+    {
+      "title": "Dual Scan",
+      "text": "Software for my Minolta Dimage Scan Dual IV, a film scanner from 2005, so I no longer need VueScan. It scans a roll once at full quality, lets me make a base edit live without rescanning, and exports a JPEG, a 16-bit TIFF or the raw scan. Built with Claude Code; it talks to the scanner through the open-source SANE driver, built right into the app.",
+      "tags": [
+        "personal software",
+        "app",
+        "code",
+        "film"
+      ],
+      "images": [
+        "img/dual-scan-1.jpg",
+        "img/dual-scan-2.jpg",
+        "img/dual-scan-3.jpg",
+        "img/dual-scan-4.jpg"
       ]
     },
     {
@@ -243,7 +260,8 @@
         "app",
         "code",
         "film",
-        "WIP"
+        "WIP",
+        "personal software"
       ],
       "images": [
         "img/roll-converter-1.jpg",
